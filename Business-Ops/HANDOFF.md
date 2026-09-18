@@ -80,3 +80,27 @@
 1. Owner follows `05-Hosting-Setup-Guide.md`, gets two live URLs.
 2. Once shared, update both proposal drafts and the pipeline CSV with the real links (removes the last blocker on those two drafts besides bid amount/timeline, which only the owner can set).
 3. Owner then decides whether to actually submit either bid — still nothing sent without explicit go-ahead.
+
+---
+
+## 2026-09-17 (same session, part 5) — Claude Code
+**Decided:** Owner asked to always push this workspace's work to GitHub going forward (standing instruction, saved to Claude's memory as `feedback_git_workflow`).
+
+**Changed:**
+- Installed Git for Windows via winget (owner approved).
+- Initialized a git repo at `D:\my stuff` root, added a `.gitignore` (excludes `Temp\` and `FormAndFlow\` — see important finding below), made the first commit (47 files, hash `8a78d69`).
+- Git identity was already configured on this machine (`user.name = ebenxo`, matching owner's known email) — used as-is for the commit.
+
+**Important finding — read this before touching anything at the workspace root:**
+`D:\my stuff\FormAndFlow\` is **not** an empty/leftover folder — it is a separate, actively in-progress project with its own git repository and a configured remote (`origin`), being built live during this very session (files timestamped minutes apart, commits as recent as the session's current time). Almost certainly Codex working concurrently in this shared workspace, per this workspace's own dual-tool design. It contains a `dist/` build (index.html/style.css/app.js), a `qa/` folder with Node `.cjs` scripts, an `.openai/hosting.json`, and its own git history — a real, unrelated project, not something to fold into this repo. It has been explicitly excluded via `.gitignore` (`FormAndFlow/`) so it's never accidentally absorbed as a broken embedded-repo reference again (git initially warned about exactly this on the first `git add -A`). **Do not modify, commit into, or delete anything under `FormAndFlow\`** — it belongs to whatever other session is building it.
+
+**Blocker:** Pushing to GitHub still needs, from the owner:
+1. Confirm/provide the exact GitHub username or org to push under (found a plausible hint: local git config has `user.name = ebenxo`, which may or may not match the actual GitHub login — needs owner confirmation, not assumed).
+2. Private vs. public repo preference (recommended: private, since `Business-Ops\` will hold real client/financial data over time).
+3. Owner creates the actual empty repo on GitHub (Claude Code cannot create it — requires the owner's GitHub login). Suggested: create it empty, no README/license/.gitignore from GitHub's side, so it doesn't conflict with the existing local history.
+4. Once the remote exists, Claude Code will run `git remote add origin <url>` and `git push -u origin master` — this should trigger Git Credential Manager's browser-based login for the owner to authenticate directly with GitHub (Claude Code will not see or handle any password/token).
+
+**Next steps:**
+1. Owner answers the 3 items above.
+2. Claude Code adds the remote and pushes.
+3. Going forward: commit + push after meaningful units of work (a project reaching `Final\`, a Business-Ops update), not after every micro-edit.
