@@ -3,3 +3,8 @@ Temp/
 # git repo/remote (appears to be active concurrent work, likely by Codex) -
 # never absorb it into this repo.
 FormAndFlow/
+
+# Auto-copied full source repo from an @-attachment (2026-09-19) - the actual
+# installed skill lives in .claude/skills/, this is just the raw vendor
+# download and doesn't belong in this workspace's git history.
+ui-ux-pro-max-skill-main/
