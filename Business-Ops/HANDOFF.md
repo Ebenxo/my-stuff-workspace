@@ -101,6 +101,8 @@
 4. Once the remote exists, Claude Code will run `git remote add origin <url>` and `git push -u origin master` — this should trigger Git Credential Manager's browser-based login for the owner to authenticate directly with GitHub (Claude Code will not see or handle any password/token).
 
 **Next steps:**
-1. Owner answers the 3 items above.
-2. Claude Code adds the remote and pushes.
+1. ~~Owner answers the 3 items above.~~ Done — username `ebenxo`, private repo `my-stuff-workspace` created.
+2. ~~Claude Code adds the remote and pushes.~~ Done, with a caveat: the sandboxed shell used by Claude Code cannot complete Git Credential Manager's interactive browser login (`git push` fails instantly with "terminal prompts disabled"). The owner ran the first `git push` from their own terminal instead, which cached the credential in Windows Credential Manager — Claude Code can push normally from here on.
 3. Going forward: commit + push after meaningful units of work (a project reaching `Final\`, a Business-Ops update), not after every micro-edit.
+
+**Resolved 2026-09-19:** Repo live at https://github.com/ebenxo/my-stuff-workspace (private). Local `master` in sync with `origin/master` (commits `8a78d69`, `764483a`). `FormAndFlow\` remains excluded via `.gitignore` — still someone else's (likely Codex's) separate in-progress project, do not touch it.
