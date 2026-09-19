@@ -106,3 +106,18 @@
 3. Going forward: commit + push after meaningful units of work (a project reaching `Final\`, a Business-Ops update), not after every micro-edit.
 
 **Resolved 2026-09-19:** Repo live at https://github.com/ebenxo/my-stuff-workspace (private). Local `master` in sync with `origin/master` (commits `8a78d69`, `764483a`). `FormAndFlow\` remains excluded via `.gitignore` — still someone else's (likely Codex's) separate in-progress project, do not touch it.
+
+---
+
+## 2026-09-19 (part 2) — Claude Code
+**Decided:** Refreshed the opportunity pipeline while waiting on owner inputs elsewhere (Netlify URLs, bid amounts, account creation) — nothing to push forward there, so kept the pipeline itself moving.
+
+**Changed:**
+- Re-checked both proposal-drafted opportunities: still **Open** as of today. Important new data point on "Clean Portfolio Site Design" — **61 competing proposals already in**, several bidders with 400+ reviews at 5.0 rating. Worth the owner weighing realistic win odds against a newcomer profile with zero platform history before committing time to that one specifically; "3-Page Portfolio HTML Build" didn't show a visible proposal count on the same pass.
+- Added 2 new strong-fit leads to `01-Opportunity-Pipeline.csv`: "Portfolio Site UI/UX & Build" (client explicitly accepts plain HTML/CSS/JS) and "Classic Personal Bio Website" (single page, lowest-effort item in the whole pipeline — client wants Chinese-language content but supplies the text themselves, no translation needed from us).
+- Minor data-quality note: one listing's page showed "Posted 1 minute ago" on a revisit two days after first found — likely a Freelancer.com activity-timestamp quirk rather than fake data (bidder usernames/ratings/client history all check out as real), but exact "days left" countdowns shouldn't be treated as precise. Removed the specific "expires ~Sept 23" claim from the pipeline for the two older rows since it can't be confirmed reliably.
+
+**Next steps:**
+1. Owner reviews the 2 new leads and decides whether to pursue (would need new draft proposals, same process as the first two).
+2. Still waiting on: Netlify URLs, real bid amounts/timelines for the 2 existing drafts, Freelancer.com account creation, and the original 5 business-plan assumptions.
+3. Nothing bid or sent — still just pipeline maintenance.
