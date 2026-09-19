@@ -118,6 +118,26 @@
 - Minor data-quality note: one listing's page showed "Posted 1 minute ago" on a revisit two days after first found — likely a Freelancer.com activity-timestamp quirk rather than fake data (bidder usernames/ratings/client history all check out as real), but exact "days left" countdowns shouldn't be treated as precise. Removed the specific "expires ~Sept 23" claim from the pipeline for the two older rows since it can't be confirmed reliably.
 
 **Next steps:**
-1. Owner reviews the 2 new leads and decides whether to pursue (would need new draft proposals, same process as the first two).
-2. Still waiting on: Netlify URLs, real bid amounts/timelines for the 2 existing drafts, Freelancer.com account creation, and the original 5 business-plan assumptions.
+1. ~~Owner reviews the 2 new leads and decides whether to pursue~~ — proceeded proactively, see below.
+2. Still waiting on: Netlify URLs, real bid amounts/timelines for all 4 drafts now, Freelancer.com account creation, and the original 5 business-plan assumptions.
 3. Nothing bid or sent — still just pipeline maintenance.
+
+---
+
+## 2026-09-19 (part 3) — Claude Code
+**Decided:** Applied the same proven playbook (matching demo + draft proposal) to the 2 new leads found earlier this session, since nothing else was unblocked to work on.
+
+**Changed:**
+- Built a third demo project, `Projects\portfolio-demo-personal-bio\` ("Eleanor Voss" — single-page classic/serif personal bio site), to match the "Classic Personal Bio Website" opportunity. Checked at mobile width, contrast computed ~5.9:1 (passes AA), promoted to Final. See that project's own HANDOFF.md.
+- Correction while researching this one: the real budget is **£250-750 GBP** (not the $30-250 USD I'd guessed when first logging it) — 34 competing proposals averaging £346. Fixed in the pipeline CSV.
+- Drafted 2 more tailored, unsent proposals: `2026-09-19_classic-personal-bio-website.md` and `2026-09-19_portfolio-site-ui-ux-build.md` (the latter reuses the existing `portfolio-demo-creative-grid` demo — no new build needed for that one).
+- Updated pipeline CSV: both new rows now "Proposal drafted."
+
+**Note on the bio-page proposal specifically:** the client wants their bio written in Chinese (个人简介). The draft proposal explicitly asks the client to supply that text rather than assuming we'd write/translate it — don't let this slide into an implied translation service without the owner deciding that's actually something to offer.
+
+**Running total: 4 drafted, unsent proposals now waiting on the owner** (2 from 2026-09-17, 2 from today). All have the same 3 blockers: hosting link, real bid amount/timeline, and a Freelancer.com account.
+
+**Next steps:**
+1. Owner reviews all 4 draft proposals in `Proposals-Drafts\` and decides which (if any) to actually pursue — with 4 now queued, worth prioritizing rather than trying to bid on all of them.
+2. Still waiting on: Netlify URLs, bid amounts/timelines, Freelancer.com account, and the original 5 business-plan assumptions.
+3. Nothing bid or sent.

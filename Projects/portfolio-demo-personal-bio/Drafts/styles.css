@@ -1,0 +1,120 @@
+/* ===== Design tokens ===== */
+:root {
+  --color-paper: #f4f2ec;
+  --color-surface: #ffffff;
+  --color-ink: #2b2a26;
+  --color-ink-soft: #5c5a52;
+  --color-accent: #3d4a5c;
+  --color-border: #ddd9cd;
+
+  --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2rem;
+  --space-5: 3rem;
+  --space-6: 4rem;
+  --space-7: 6rem;
+
+  --max-width: 760px;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-serif);
+  color: var(--color-ink);
+  background: var(--color-paper);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2 { font-weight: 600; line-height: 1.2; margin: 0 0 var(--space-2); }
+p { margin: 0 0 var(--space-3); color: var(--color-ink-soft); }
+a { color: var(--color-accent); text-decoration: none; border-bottom: 1px solid transparent; }
+a:hover { border-bottom-color: var(--color-accent); }
+
+.container { max-width: var(--max-width); margin: 0 auto; padding: 0 var(--space-3); }
+
+.demo-banner {
+  background: var(--color-ink);
+  color: #fff;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  padding: 0.4rem var(--space-2);
+  letter-spacing: 0.02em;
+}
+
+.page {
+  padding: var(--space-7) 0;
+}
+
+.bio-head {
+  display: flex;
+  gap: var(--space-5);
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+.portrait {
+  width: 148px;
+  height: 148px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: linear-gradient(150deg, #c9cdd6 0%, #8b93a3 100%);
+}
+.bio-head h1 {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  letter-spacing: -0.01em;
+}
+.bio-title {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-accent);
+  margin-bottom: var(--space-1);
+}
+
+.bio-intro p { font-size: 1.1rem; color: var(--color-ink); max-width: 62ch; }
+
+.section-label {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-soft);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-2);
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+.future-note {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--color-ink-soft);
+}
+
+.contact-links {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+}
+
+a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+
+/* ===== Responsive ===== */
+@media (max-width: 560px) {
+  .bio-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    text-align: left;
+  }
+  .portrait { width: 108px; height: 108px; }
+  .page { padding: var(--space-5) 0; }
+}
