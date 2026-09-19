@@ -141,3 +141,20 @@
 1. Owner reviews all 4 draft proposals in `Proposals-Drafts\` and decides which (if any) to actually pursue — with 4 now queued, worth prioritizing rather than trying to bid on all of them.
 2. Still waiting on: Netlify URLs, bid amounts/timelines, Freelancer.com account, and the original 5 business-plan assumptions.
 3. Nothing bid or sent.
+
+---
+
+## 2026-09-19 (part 4) — Claude Code
+**Decided:** Owner asked for a new, well-researched, deliberately non-generic industry site, and provided a detailed checklist of "AI slop" tells to avoid (matching Nielsen Norman Group's published findings on generic AI-prototype appearance). Treated this as a real design brief, not a quick add.
+
+**Changed:**
+- Researched the residential appliance-repair industry via web search before writing any copy: real diagnostic fee norms ($60-120, credited if approved), the actual "50% rule" for repair-vs-replace decisions, real appliance lifespans, and the correct EPA Section 608 (Type I) certification name for refrigerant-handling technicians. Sources logged in the project's own HANDOFF.md.
+- Built a fourth demo project, `Projects\portfolio-demo-appliance-repair\` ("Halloway Appliance Repair") — fills a real gap, since local trades (plumbing/HVAC/appliance-style businesses) are a common real client type for this freelance business and none of the first three demos covered that category.
+- Deliberately built against the owner's checklist: no fabricated testimonials/trust badges, no generic Inter/Space Grotesk font choice, real `tel:`/`sms:` links instead of fake contact-form success states, explicit list of what the business doesn't service, named technician with a real correctly-named credential.
+- Found and fixed a real responsive bug during QA: the header nav/logo wrapped awkwardly between ~620-900px width because the stack-to-column breakpoint was too narrow. Widened it to 860px.
+- This demo isn't tied to a specific pipeline opportunity yet — it was built to fill the local-trades category gap, ready for whenever a matching lead appears.
+
+**Next steps:**
+1. Owner spot-checks this new demo against their own checklist (self-review has blind spots).
+2. Manual desktop-width visual check recommended (same known tooling limitation as the other three demos).
+3. Still waiting on everything listed above from prior entries — nothing bid or sent.
