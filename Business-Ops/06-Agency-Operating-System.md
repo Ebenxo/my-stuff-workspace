@@ -140,6 +140,6 @@ Do not judge any channel until this is filled in with real hours.
 
 1. **Accessibility fix across all samples and the portfolio:** add skip links and `id`/`tabindex` on `main` (found by the `modern-web-guidance` accessibility guide), then re-review. Owner-visible change; Drafts first.
 2. **Host the portfolio** (owner creates account; see `05-Hosting-Setup-Guide.md`).
-3. **Decide the canonical site:** reconcile `FormAndFlow/` (Codex, concept site with interactive demo) and this portfolio. Options: link the concept site as one project inside this portfolio, or merge visual identity. Needs a decision by the owner; do not edit `FormAndFlow/` from Claude.
+3. **Canonical site: DECIDED 2026-09-21 by the owner: `FormAndFlow/` (Codex) is the public site.** `Projects/portfolio-studio-site/` becomes source material: the four case studies, the "what I will not ship" standards, the notes and the process page are candidates to port into FormAndFlow, done by Codex or by Claude only with the owner's explicit permission to edit that folder. Until then do not edit `FormAndFlow/` from Claude, and do not publish the portfolio as a second Form & Flow site.
 4. **Research the next vertical** (plumbing) and build the next sample only after the owner confirms the direction.
 5. **Add real conversion evidence** the moment any exists (calls, replies, wins). Until then the KPI log stays honest and short.
