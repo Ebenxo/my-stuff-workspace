@@ -63,11 +63,11 @@ The owner has 40+ hours a week available (confirmed 2026-09-21). Use them on con
 
 ## 6. Where things honestly stand (facts as of 2026-09-21)
 
-- 4 sample builds and a 12-page portfolio exist locally. **None is hosted. No public URL.**
+- 4 sample builds exist, and their case studies and notes have been ported into the Codex site `FormAndFlow/dist` (Work, 4 case studies, Notes). **None of it is hosted. No public URL.**
 - 7 leads logged; 4 proposals drafted; **0 sent; 0 replies; 0 clients; 0 income.**
 - Marketplace competition observed: one lead went from 34 to 197 proposals in two days; another sat at 61. Several bidders have 400+ reviews at 5.0. A zero-review newcomer competes at a disadvantage on price-led marketplaces.
-- No Freelancer.com account, no hosting account, no confirmed hours, budget, location or income target.
-- Two versions of "Form & Flow" exist: the Codex-built concept site (`FormAndFlow/`, navy and lime) and this portfolio (bone and cobalt). They need one canonical home (see section 13).
+- No Freelancer.com account and no hosting account. Owner is in Lagos, Nigeria, wants global clients and has 40+ hours a week (confirmed 2026-09-21). Budget ceiling and income target still unknown.
+- Canonical site decided: the Codex-built `FormAndFlow/` (navy and lime). `Projects/portfolio-studio-site/` is now source material and generator (`build.py`, `port.py`), not a second public site.
 
 ## 7. Strategy: hypotheses to test, not forecasts
 
