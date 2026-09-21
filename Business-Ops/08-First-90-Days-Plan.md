@@ -72,13 +72,15 @@ Everything else is free: Netlify hosting, GitHub, Payoneer account opening, the 
 | Hours | Activity | Agents help with |
 |---|---|---|
 | 12 | Outreach: reviewing, personalising and **sending** messages; replies; calls | lead-scout, proposal-writer draft the research and messages |
-| 6 | Warm network and agency partnerships (see `research/global-from-lagos.md`) | proposal-writer drafts |
-| 4 | Marketplace bids on listings under about 40 proposals | lead-scout, proposal-writer |
+| 9 | Warm network first, then agency partnerships (see `research/global-from-lagos.md`) | proposal-writer drafts |
+| 1 | Marketplace: at most ONE test bid (see note below), otherwise none | lead-scout re-checks weekly |
 | 10 | Delivery (once a project exists) or the next sample or audit (until then) | site-builder, qa-reviewer |
 | 4 | Admin, payment set-up, accountant, contracts and invoices | ops-bookkeeper |
 | 4 | Content and portfolio upkeep (notes, case studies) | industry-researcher |
 
 Before the first client, delivery hours go to outreach and preparing audits, not to building more samples.
+
+**Marketplace evidence, 2026-09-21 (lead-scout, director-verified on the 3-Page Portfolio lead):** every logged open lead has 48 to 197 proposals; fresh briefs pass 100 proposals within hours; no trade or clinic briefs appeared. The one lead worth a single test bid is "3-Page Portfolio HTML Build" (open, 48 proposals, plain HTML/CSS explicitly requested, budget $30-250) but its average bid is $114, so $200 sits well above what others bid. Treat marketplaces as a low-odds side channel; put the hours into the warm network and direct outreach. Freelancer will not supply trade leads, so plumbing and HVAC belong to direct outreach.
 
 ## 4. Checkpoints (adjust, do not just persist)
 | By | Must be true | If not |
