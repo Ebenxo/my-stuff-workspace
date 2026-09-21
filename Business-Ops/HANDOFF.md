@@ -158,3 +158,23 @@
 1. Owner spot-checks this new demo against their own checklist (self-review has blind spots).
 2. Manual desktop-width visual check recommended (same known tooling limitation as the other three demos).
 3. Still waiting on everything listed above from prior entries — nothing bid or sent.
+
+
+---
+
+## 2026-09-21 (part 5): Agency operating system - Claude Code
+**Decided:** Owner asked for "a full automation agency working together to scale Form & Flow" and help making it a real venture. Built it as a human-gated multi-agent system, not autonomous income: agents prepare, the owner decides and sends. Honest premise recorded in `06-Agency-Operating-System.md`.
+
+**Added:**
+- `.claude/agents/`: lead-scout, industry-researcher, proposal-writer, site-builder, qa-reviewer, ops-bookkeeper, venture-analyst. Each has a narrow tool list and the same hard rules (never send, submit, sign up, spend, publish; never invent claims; never touch FormAndFlow/).
+- `.claude/commands/`: `/agency-weekly` and `/agency-vertical <trade>` run the cycles (the second stops before Final).
+- `Business-Ops/06-Agency-Operating-System.md`: roles, approval gates, project lifecycle, weekly rhythm, facts as of today, five hypotheses (H1-H5) with tests and stop conditions, vertical queue, unit-economics worksheet, risks, missing owner inputs, continue/stop criteria, backlog.
+- `Business-Ops/07-KPI-Log.md`: baseline row. Sent 0, replies 0, won 0, cash 0.
+- CLAUDE.md and AGENTS.md now point both Claude and Codex at the operating system and state who owns which project.
+- Tested that `modern-web-guidance` `search` and `retrieve` work. Its accessibility guide showed the samples and portfolio lack skip links; queued as backlog item 1.
+
+**Not verified:** the agents and commands have not been run. Subagent types load at session start, so they should appear after a fresh session or reload. First real test: `/agency-weekly`. Frontmatter checked structurally only.
+
+**Blockers (owner):** hosting and Freelancer account; hours/budget/location/income target; price and timeline for the first offer; decision on which "Form & Flow" site is canonical (FormAndFlow/ concept site by Codex vs the portfolio); confirm the AI-assistant line on the About page.
+
+**Next:** owner reads section 6-12 of the operating system and answers section 11. Then run `/agency-weekly` in a fresh session.
