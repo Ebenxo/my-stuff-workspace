@@ -11,3 +11,6 @@ ui-ux-pro-max-skill-main/
 
 # Mirror folder created by the skills installer; duplicates .claude/skills
 .agents/
+
+# Python bytecode
+__pycache__/
