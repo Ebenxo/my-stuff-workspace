@@ -2,6 +2,8 @@
 
 Last updated: 2026-09-21. Owner: ebenezeraaron001@gmail.com
 
+**Targets and plan (owner, 2026-09-21):** $2,000 cash in 90 days on a $70 budget. The arithmetic, budget, weekly time split and day 7/14/30/60/90 checkpoints are in `08-First-90-Days-Plan.md`. Studio name recommendation (Plainwork, not yet adopted): `09-Studio-Name.md`.
+
 ## 1. The honest premise
 
 A team of AI agents can research, draft, build, check and keep records far faster than one person. It cannot create demand, win trust, or take responsibility for a client. Income here depends on one chain: **real conversations, then trust, then paid work, then real proof.** The agents shorten the work between those steps. They do not replace the owner in any step that involves another person or money.
