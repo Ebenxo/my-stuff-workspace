@@ -65,7 +65,8 @@ def work_index():
     for a, b in [("No invented proof.", "No made-up reviews, ratings, customer counts or logos. If a claim has no source, it is not on the page."),
                  ("Every control works.", "Buttons and links do what they say. No forms that fake a success message."),
                  ("Specific to the business.", "If the name could be swapped for a competitor\u2019s and the page still made sense, it is not finished."),
-                 ("Terms stated plainly.", "Price, what is included and excluded, and what happens after contact.")]:
+                 ("Terms stated plainly.", "Price, what is included and excluded, and what happens after contact."),
+                 ("Made with AI assistance, stated openly.", "The samples and case studies were made with AI research and coding assistants. Where a claim depends on a source, the source is linked, and anything I could not verify is said so.")]:
         o += f"<li><strong>{a}</strong><span>{b}</span></li>"
     o += '</ul></div></section>\n</main>\n' + foot("../")
     write("work/index.html", o)

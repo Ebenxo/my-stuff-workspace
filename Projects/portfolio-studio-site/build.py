@@ -41,13 +41,13 @@ PROJECTS = [
  dict(slug="halloway", name="Halloway Appliance Repair", kind="Local trade", year="2026",
   hard="A one-truck repair business has to answer price, scope and “is it worth fixing?” before the phone rings.",
   h1="A repair site that answers the fee question before anyone has to call.",
-  facts=[("Type","Sample build, fictional business"),("Sector","Residential appliance repair"),("Stack","Hand-written HTML and CSS, no JavaScript"),("Status","Finished sample, not a client project")],
+  facts=[("Type","Sample build, fictional business"),("Sector","Residential appliance repair"),("Stack","Plain HTML and CSS, no JavaScript"),("Status","Finished sample, not a client project")],
   brief="A one-technician appliance repair business needs a single page that helps a homeowner with a broken fridge or dryer decide whether to call, and what happens if they do. The business is fictional. The industry facts are not.",
-  research=["Diagnostic fees in this trade commonly run $60–120 and are credited toward the repair when the customer approves the work. I used $79, credited.",
+  research=["In the sources I read, diagnostic fees for this trade run about $60–120 and are often credited toward the repair when the customer approves the work. I used $79, credited.",
             "The usual repair-or-replace rule has two conditions: the repair costs more than half a comparable new unit <em>and</em> the appliance is past roughly half its expected life. Cost alone is not the test.",
             "Anyone opening a refrigerant circuit in a residential fridge needs EPA Section 608 certification. Type I covers small appliances, so the technician is listed with that credential rather than a vague “certified expert”."],
   sources=[("Diagnostic fee norms","https://bozmanfix.com/appliance-repair-pricing-transparency/"),("The 50% rule","https://howlongitlasts.com/the-appliance-50-rule-explained/"),("EPA Section 608","https://www.epa.gov/section608/section-608-technician-certification")],
-  decisions=[("The fee is on the first screen.","It is the objection callers raise first, and competitors tend to bury it. Stating $79 and when it is credited up front filters out the wrong calls."),
+  decisions=[("The fee is on the first screen.","A caller deciding whether to book needs to know what a visit costs, so the fee and the rule for crediting it come first. This is a design choice to test, not a proven result."),
              ("Call and text links, no contact form.","There is no backend, so a form would have to pretend to send. A form that reports success and delivers nothing is worse than no form. <code>tel:</code> and <code>sms:</code> links do exactly what they say."),
              ("A list of what the business will not fix.","Small countertop appliances, commercial equipment, HVAC and new gas lines are excluded and explained. Saying no clearly saves both sides a wasted trip."),
              ("Repair-or-replace is explained with the real rule.","It is the honest answer to “is my 11-year-old washer worth it?”, and it is the page most likely to be read before a decision."),
@@ -55,29 +55,29 @@ PROJECTS = [
   left="No testimonials, star ratings or “trusted by” strip. They would all be invented, so the section does not exist. No live chat or booking widget either: nothing behind them would work.",
   measure="On a real launch I would count calls and texts that start from the page, how many callers already know the fee, and how many jobs end at the diagnostic stage. I would not promise a lift in any of them beforehand.",
   found="QA turned up a real layout bug: between about 620 and 900 px wide the logo wrapped onto three lines. The stack-to-column breakpoint was too narrow. Fixed and re-checked.",
-  swatches=["#f7f4ec","#1c1a17","#c76a1a"], sample="sample/halloway/index.html", stack="Hand-written HTML and CSS", scope="Single page"),
+  swatches=["#f7f4ec","#1c1a17","#c76a1a"], sample="sample/halloway/index.html", stack="Plain HTML and CSS", scope="Single page"),
  dict(slug="marlow-street", name="Marlow Street Dental", kind="Health practice", year="2026",
   hard="A dental site that puts the first-visit price, the X-ray policy and an emergency guide in front of a nervous patient.",
   h1="A dentist’s site that itemises the first visit and knows when to say “go to the ER”.",
-  facts=[("Type","Sample build, fictional practice"),("Sector","One-dentist family practice"),("Stack","Hand-written HTML and CSS, no JavaScript"),("Status","Rebuild of an earlier, weaker version")],
+  facts=[("Type","Sample build, fictional practice"),("Sector","One-dentist family practice"),("Stack","Plain HTML and CSS, no JavaScript"),("Status","Rebuild of an earlier, weaker version")],
   brief="A one-dentist family practice needs a single page for new patients: what the first visit costs, how insurance works, what to do in an emergency, and what the practice does not treat. The practice, dentist and address are fictional. The fee ranges and clinical guidance are researched.",
-  research=["Without insurance, a new-patient exam commonly runs $75–150, bitewing X-rays $25–50, a full-mouth series $100–250 and a cleaning $75–200. In-house membership plans are commonly $200–400 a year. The sample’s own fees sit inside those ranges and are labelled as sample fees.",
+  research=["In the sources I read, a new-patient exam without insurance runs about $75–150, bitewing X-rays $25–50, a full-mouth series $100–250 and a cleaning $75–200, and in-house membership plans about $200–400 a year. The sample’s own fees sit inside those ranges and are labelled as sample fees.",
             "ADA/FDA guidance on X-rays is risk-based, not calendar-based: for a low-risk adult, bitewings roughly every two to three years, and more often for someone with a history of decay. The page says so instead of implying every patient is X-rayed every visit.",
             "The ADA describes a knocked-out permanent tooth as time-critical, with the best chance of saving it inside about 30 minutes. Published dental guidance lists swelling, uncontrolled bleeding and severe pain as reasons for urgent care. I added the line that trouble swallowing or breathing means the emergency room, as ordinary safety practice rather than something I sourced to the ADA."],
   sources=[("Dental visit cost ranges","https://www.aflac.com/resources/dental-insurance/how-much-do-dental-x-rays-cost.aspx"),("ADA on dental emergencies","https://www.mouthhealthy.org/all-topics-a-z/dental-emergencies"),("ADA on X-rays","https://www.ada.org/resources/ada-library/oral-health-topics/x-rays-radiographs")],
-  decisions=[("The first visit is a table with a total.","Exam $95, X-rays $55, cleaning $115, $265 typical. Most practices give a range or nothing. A nervous patient who can see the number can decide whether to call."),
-             ("The page explains how X-ray decisions are made.","A patient who fears being over-X-rayed is also asking whether the practice sells procedures. Saying “not on a calendar” answers the real question."),
+  decisions=[("The first visit is a table with a total.","Exam $95, X-rays $55, cleaning $115, $265 typical. A nervous patient who can see the number can decide whether to call. I did not survey other practices, so I make no claim about what they publish."),
+             ("The page explains how X-ray decisions are made.","A patient who worries about being over-X-rayed is asking how the practice decides. Saying “not on a calendar” answers that, and it matches the risk-based guidance."),
              ("An emergency guide that sends people elsewhere when needed.","Red is used once on the page, for this block only. The guide tells the reader when the right call is the emergency room, not the practice."),
              ("The membership section says when not to join.","It costs $299 and pays back if you would visit twice. If you would come once, the page says do not buy it. That sentence is the trust signal."),
              ("Booking by phone or text only.","There is no backend, so no form. The links open the phone or messages app and do exactly what the button says.")],
   left="No patient reviews, star rating, patient count or “trusted by families” claim. No emoji icons. No online booking widget. No before-and-after photos.",
   measure="On a real launch I would count first-visit calls and texts from the page, how many mention the fee, and how many emergency callers are told to go elsewhere. I would not promise a lift.",
   found="The first version of this sample was worse. It claimed a 4.9/5 rating, 1,200+ patients seen and “70% less radiation”, none of which was true or sourced, and used emoji as icons. It failed my own standards, so I replaced it rather than edit it. The old version is still in the project history.",
-  swatches=["#f4f6f2","#16241f","#0e5a55","#8c2f1b"], sample="sample/marlow-street/index.html", stack="Hand-written HTML and CSS", scope="Single page"),
+  swatches=["#f4f6f2","#16241f","#0e5a55","#8c2f1b"], sample="sample/marlow-street/index.html", stack="Plain HTML and CSS", scope="Single page"),
  dict(slug="studio-noir", name="Studio Noir", kind="Creative portfolio", year="2026",
   hard="A portfolio grid that stays a plain, fast grid, and a detail page that can be reused for every new project.",
   h1="A portfolio that is a grid, a template and nothing else.",
-  facts=[("Type","Sample build, fictional persona"),("Sector","Independent designer"),("Stack","Hand-written HTML and CSS, three pages"),("Status","Finished sample, placeholder imagery")],
+  facts=[("Type","Sample build, fictional persona"),("Sector","Independent designer"),("Stack","Plain HTML and CSS, three pages"),("Status","Finished sample, placeholder imagery")],
   brief="Two live job briefs asked for the same thing: a clean portfolio where the work leads, an even grid with no sliders or masonry, and pages the owner can extend later without a developer. Studio Noir is a sample built to that spec for a fictional designer.",
   research=["Both briefs ruled out sliders and masonry and asked for plain HTML and CSS, so the structure is three static pages: an intro, a work grid, and one reusable project page.",
             "The grid collapses from three columns to two to one at set widths. Every thumbnail shares one aspect ratio so rows stay aligned."],
@@ -89,11 +89,11 @@ PROJECTS = [
   left="Filters, a lightbox and animated transitions. None of them help a visitor decide to get in touch.",
   measure="For a real portfolio the test is whether a visitor reaches a project page and then the contact link. Load time on a mid-range phone matters more than any effect.",
   found="Honest limitation: a portfolio lives or dies on its real imagery, and this sample has none. The structure is finished; the content is a stand-in.",
-  swatches=["#faf9f6","#1a1a1a","#c8553d"], sample="sample/studio-noir/index.html", stack="Hand-written HTML and CSS", scope="Three pages"),
+  swatches=["#faf9f6","#1a1a1a","#c8553d"], sample="sample/studio-noir/index.html", stack="Plain HTML and CSS", scope="Three pages"),
  dict(slug="eleanor-voss", name="Eleanor Voss", kind="Personal bio page", year="2026",
   hard="One quiet page in serif type that has to survive being extended later without a rebuild.",
   h1="One page, set in serif, built to grow downward.",
-  facts=[("Type","Sample build, fictional person"),("Sector","Independent editor"),("Stack","Hand-written HTML and CSS, one page"),("Status","Finished sample, English placeholder copy")],
+  facts=[("Type","Sample build, fictional person"),("Sector","Independent editor"),("Stack","Plain HTML and CSS, one page"),("Status","Finished sample, English placeholder copy")],
   brief="A live brief asked for a small, classic personal bio page: clean serif type, a muted resume-style palette, one portrait, simple contact links, and a layout that can take work experience and a portfolio later. Eleanor Voss is a fictional sample of that.",
   research=["The brief’s acceptance criteria were specific: load in under 3 seconds on 4G, pass WCAG AA contrast, render correctly on phone, tablet and desktop. The page is a static file with one web font, which is why load time is a fair thing to promise.",
             "Body text is #5c5a52 on #f4f2ec, about 5.9:1, above the 4.5:1 AA threshold for normal text."],
@@ -104,21 +104,21 @@ PROJECTS = [
   left="Animation, a dark mode toggle and social-feed embeds. A bio page is read once and needs to be legible.",
   measure="The 3-second load criterion is the one to verify on a real connection. I have not measured it for this sample, so I am not claiming it.",
   found="The portrait is a gradient block. Any real photo needs sizing and an alt text written for that specific person.",
-  swatches=["#f4f2ec","#2b2a26","#3d4a5c"], sample="sample/eleanor-voss/index.html", stack="Hand-written HTML and CSS", scope="One page"),
+  swatches=["#f4f2ec","#2b2a26","#3d4a5c"], sample="sample/eleanor-voss/index.html", stack="Plain HTML and CSS", scope="One page"),
 ]
 
 NOTES = [
  dict(slug="price-first-screen", title="Put the price where the caller looks first",
   dek="Two trades, two researched sites, and the same conclusion about the fee.",
-  body="""<p class="lead">When I researched appliance repair and family dentistry for two sample sites, the same thing kept appearing: the fee is the question people carry into the first call, and most sites make them ask for it.</p>
+  body="""<p class="lead">When I researched appliance repair and family dentistry for two sample sites, the sources I read agreed on a price range but did not tell a customer what any one business charges. I did not survey enough company sites to say how common it is to leave the price off.</p>
 <h2>What the numbers look like</h2>
-<p>Appliance repair diagnostic fees run about $60–120 nationally, and the better shops credit the fee toward the repair if you approve the work. A new dental patient without insurance can expect roughly $75–150 for an exam, $25–50 for bitewing X-rays and $75–200 for a cleaning. Neither trade publishes a single price. Both have a normal range, and a customer who has no idea where the range is will assume the worst.</p>
+<p>In the sources I read, appliance repair diagnostic fees run about $60–120, and many shops credit the fee toward the repair if you approve the work. A new dental patient without insurance can expect roughly $75–150 for an exam, $25–50 for bitewing X-rays and $75–200 for a cleaning. Neither trade has one price; both have a normal range. A customer who does not know the range may assume the worst.</p>
 <h2>What I did with it</h2>
 <p>On the repair site the fee is on the first screen: $79, credited if you approve the repair. On the dental site the first visit is a table with a total of $265, and a note that a cleaning may be swapped for a different treatment if the exam shows gum disease. In both cases the price comes with the rule that decides when it changes. A bare number with no conditions would be a promise the business might not keep.</p>
 <h2>When this does not work</h2>
 <p>Some businesses cannot quote before seeing the job: a roofer, a kitchen fitter. The answer there is not to hide the price. It is to say what it depends on, give a realistic starting point if one exists, and explain what happens at the quoting visit. “Contact us for a quote” with nothing else is the version I would not ship.</p>
 <h2>What I have not measured</h2>
-<p>I have not tested whether a visible fee produces more calls. These are sample builds with no traffic. The claim is narrower: a caller who already knows the fee asks a better first question, and a business that states its fee has to decide what it is.</p>""",
+<p>I have not tested whether a visible fee produces more calls. These are sample builds with no traffic. The claim is narrower: stating the fee forces a business to decide what it is, and it gives a caller something concrete to weigh before phoning.</p>""",
   sources=[("Appliance repair diagnostic fees","https://bozmanfix.com/appliance-repair-pricing-transparency/"),("Dental visit costs without insurance","https://www.aflac.com/resources/dental-insurance/how-much-do-dental-x-rays-cost.aspx")]),
  dict(slug="writing-for-pain", title="Writing for the person in pain",
   dek="What changed when I wrote a dentist’s emergency guide from the ADA’s own guidance.",
@@ -213,7 +213,7 @@ def about_page():
     o += '<main>\n' + page_title("One person, early in the work, and honest about it.", "Form &amp; Flow is a working name for a small studio that builds websites for small businesses.")
     o += '<div class="wrap">\n'
     o += row("Where things stand", '<div class="prose"><p>The portfolio holds four sample builds for fictional businesses. There are no client projects yet, and nothing on this site implies otherwise. I am taking on first projects.</p><p>I would rather show four pieces of work I can defend line by line than a long list I cannot.</p></div>')
-    o += row("What I make", '<div class="prose"><p>Landing pages and small sites for businesses that sell a service: repair, health, trades, independent professionals. Each starts with research into how that business actually works, and ends with a page that could not be reskinned for a competitor.</p><p>I write the HTML and CSS directly. No page builders or frameworks, so the result loads quickly and is easy to hand over.</p></div>')
+    o += row("What I make", '<div class="prose"><p>Landing pages and small sites for businesses that sell a service: repair, health, trades, independent professionals. Each starts with research into how that business actually works, and ends with a page that could not be reskinned for a competitor.</p><p>The HTML and CSS are plain, with no page builders or frameworks, so the result loads quickly and is easy to hand over.</p></div>')
     o += row("How the work is made", '<div class="prose"><p>I use AI coding assistants for research and drafting, and I check the results myself: in a browser, at phone width, for contrast and keyboard use, and against the standards on the home page. Where a claim comes from research, the case study links the source. Where I could not check something, it says so.</p></div>')
     o += row("Standards", '<div class="prose"><p>No invented reviews, ratings, customer counts or logos. No buttons that do nothing. No page that would fit any business. No hidden terms. The reasoning is in the <a href="notes/index.html">notes</a>.</p></div>')
     o += row("Contact", f'<div class="prose"><p>The best way to reach me is email.</p></div><div class="actions"><a class="btn" href="mailto:{EMAIL}">{EMAIL}</a></div>')

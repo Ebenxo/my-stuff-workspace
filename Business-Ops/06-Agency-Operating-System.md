@@ -75,6 +75,8 @@ The owner has 40+ hours a week available (confirmed 2026-09-21). Use them on con
 
 Each one has a smallest test and a stop condition. None of the numbers below is a prediction.
 
+**H0. The warm network is the first channel to test** (analyst review 2026-09-21): people the owner knows who run or know a small business, 10-15 personal messages in 10 days, kill at 0 replies. Details in `08-First-90-Days-Plan.md`.
+
 **H1. Marketplaces are a low-odds channel for a newcomer, worth using selectively.**
 Test: bid only where proposals are under about 40 and the brief matches a researched vertical. Track replies. Stop after 10 bids with zero replies.
 
@@ -119,7 +121,7 @@ Do not judge any channel until this is filled in with real hours.
 
 - **Legal and tax:** business registration or trading status, tax on freelance income, a written contract and invoice template, and data-protection rules for any outreach. Agents are not lawyers or accountants; get proper advice where the stakes justify it.
 - **Health, legal and financial claims** in a client's site need review by a qualified professional.
-- **AI disclosure:** the About page states that AI assistants are used and results are checked by the owner. Clients may ask; answer honestly. Do not claim work you did not do or credentials you do not have.
+- **AI disclosure:** the canonical site now says on its Work page that samples and case studies were made with AI assistance. A fuller About block (name, place, AI wording) is drafted in `10-Offer-and-Site-Fixes-Draft.md` and needs the owner's approval; the About page in `Projects/portfolio-studio-site` was not ported. Clients may ask how the work was done; answer honestly and be able to explain every sourced claim. Do not claim work you did not do or credentials you do not have.
 - **Reputation:** one fake review or invented statistic would undo the studio's whole positioning.
 - **Overreach:** spreading across many verticals before one produces a paying client.
 
