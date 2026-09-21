@@ -14,3 +14,8 @@ ui-ux-pro-max-skill-main/
 
 # Python bytecode
 __pycache__/
+
+# Crypto bot runtime files
+Projects/crypto-bot/paper_state.json
+Projects/crypto-bot/paper_log.txt
+Projects/crypto-bot/*.tmp
