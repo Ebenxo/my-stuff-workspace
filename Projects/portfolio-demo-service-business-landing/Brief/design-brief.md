@@ -1,43 +1,18 @@
-# Design Brief — Portfolio Demo: Local Service Business Landing Page
+# Design Brief - Marlow Street Dental (rebuild, 2026-09-21)
 
-Date: 2026-09-17
-Requested by: owner (self-initiated, for portfolio/business-pilot purposes — see Business-Ops\00-Business-Plan.md)
+Replaces the original "Bright Path Dental" sample (2026-09-17), which failed the owner's anti-generic checklist: invented stats (4.9/5, 1,200+ patients, 70% less radiation), fake testimonials, emoji icons, placeholder-feeling copy. Old version remains in git history (commit before this rebuild).
 
-## 1. What is this?
-A single-page responsive landing page for a fictional local service business, built as a **portfolio/demo piece** — not a real client project. Purpose is to have a concrete, checkable, reusable asset to show prospects and link from proposals (Business-Ops\02-Proposal-Template.md), since there is no real client history yet.
+## Purpose
+A sample site for a fictional one-dentist family practice that a real dental client's site could be judged against: specific, sourced, no invented proof.
 
-## 2. Purpose / goal
-Demonstrate build quality (clean layout, responsive, accessible) and speed. Structure and CSS should be easy to reskin (swap colors/logo/copy) for different verticals — dental, fitness, home services, consulting — so it doubles as the base template for the productized "Small Business Landing Page" service (Business-Ops\04-Service-Catalog.md).
+## Research (web search, 2026-09-21)
+- New-patient costs without insurance: exam $75-150, bitewings $25-50, full-mouth series $100-250, panoramic $100-200, cleaning $75-200; membership plans commonly $200-400/yr. Sources: Aflac, Aspen Dental, MySmile Dental Care, Denscore.
+- Emergency criteria and knocked-out-tooth 30-minute window: ADA MouthHealthy (mouthhealthy.org/all-topics-a-z/dental-emergencies), Cleveland Clinic.
+- X-ray frequency: ADA/FDA guidance is risk-based, low-risk adults typically every 24-36 months for bitewings, higher-risk 6-12 months; ADA X-rays page.
+The practice's own fees ($95 / $55 / $115 = $265; full-mouth $165; pano $130; membership $299) sit inside those ranges and are labelled as sample fees.
 
-## 3. Audience
-End audience (fictional): local customers looking to book/contact a service business. Real audience: prospective freelance clients evaluating whether to hire the owner.
+## Must-have / must-avoid
+Have: itemised first-visit fee table, x-ray decision explainer, emergency guide that says when to go to the ER instead, insurance stance, membership maths that admits when not to join, explicit scope and referrals, named (fictional) dentist. Avoid: reviews/ratings/patient counts, emoji, forms that fake submission, "Book now" widgets. Booking is phone/text only via tel:/sms: links.
 
-## 4. Must-haves
-- [x] Hero section with clear value prop + primary CTA (book/contact)
-- [x] Services/offerings section
-- [x] Social proof (testimonials)
-- [x] About/trust section
-- [x] Contact/CTA section with fictional form (no real backend/submission)
-- [x] Footer with fictional business info
-- [x] Fully responsive (mobile, tablet, desktop) — no horizontal overflow
-- [x] CSS variables for colors/fonts so it can be reskinned per future client in minutes
-
-## 5. Must-avoid
-- No real business names/logos/testimonials — everything is clearly placeholder/fictional.
-- No frameworks/build step (no Node.js in this environment) — plain HTML/CSS/vanilla JS only.
-- No stock-photo dependency — use CSS/SVG shapes or clearly-labeled placeholders instead of downloading images, to avoid licensing questions on a demo piece.
-
-## 6. Brand context
-New, fictional brand for this demo: "Bright Path Dental" (chosen as a relatable, universally-understood service vertical). Palette/type kept minimal per DESIGN_WORKFLOW.md default style.
-
-## 7. References
-None placed yet — using general current landing-page conventions (clear hero, scannable sections, sticky CTA) rather than copying any specific competitor site.
-
-## 8. Format & deliverables
-Responsive single-page site: `index.html` + `styles.css` (+ minimal `script.js` for mobile nav toggle only), viewable directly in a browser with no build step.
-
-## 9. Timeline / priority
-No external deadline — built proactively to unblock outreach/proposals.
-
-## 10. Open questions
-- Which vertical(s) should the reskin variants prioritize first, once real opportunities are sourced? (Pipeline in Business-Ops\01-Opportunity-Pipeline.csv will inform this.)
+## Format
+Single page, Newsreader + Public Sans, pine/paper palette with a reserved brick-red for the emergency block only. No JavaScript.
