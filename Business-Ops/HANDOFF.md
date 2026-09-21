@@ -191,3 +191,14 @@
 **Superseded:** `Projects/portfolio-studio-site/` is no longer a second public site; it is the source for the ported content. Do not host it separately.
 **In progress:** venture-analyst research on paying, trust and outreach law for a Lagos-based global studio, to be saved as `Business-Ops/research/global-from-lagos.md`.
 **Next:** owner hosts `FormAndFlow/dist` (Netlify Drop, whole `dist` folder); then choose niche and market from the research and start the owner-sent outreach test.
+
+
+---
+
+## 2026-09-21 (part 7): plumbing sample promoted and added to the Form & Flow site - Claude Code
+**Owner approvals (2026-09-21):** real Texas towns as the sample service area (yes); keep the fictional name "Kestrel Bend Plumbing" ("alright", read as keep; still NOT name-cleared, only weakly searched); add the sample to the public Form & Flow site (yes).
+**Done:** Plumbing sample: researched (`research/plumbing.md`), built by the site-builder agent, independently reviewed by qa-reviewer (verdict fix), fixed and re-checked by the director, promoted to `Projects/portfolio-demo-plumbing/Final/`, and added as sample 03 with a case study to `FormAndFlow/dist` (`work/kestrel-bend.html`, `samples/kestrel-bend/`). The site now has 1 concept + 5 samples. Unsupported claims removed across the case studies; AI-assistance line added on the Work page.
+**Verified:** 11 pages, no overflow at 375/1280px, 0 broken links, enquiry demo intact, live window loads with `noindex`.
+**Caveats:** FormAndFlow changes are not committed (its repo holds Codex's own uncommitted work) and are not backed up to GitHub; the site is still not hosted; the QA agent once ended all Python processes with taskkill; independent re-review after fixes was not repeated, the director re-checked; no keyboard or screen-reader run.
+**Lead scout result:** all logged leads have 48-197 proposals; plan hours moved off marketplaces toward the warm network.
+**Waiting on owner:** first 5 warm-network messages sent by 2026-09-24; About block (name, Lagos, AI wording); hero and Tier-1 package wording; the first-project scope; hosting.

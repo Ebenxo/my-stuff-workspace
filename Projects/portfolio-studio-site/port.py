@@ -10,7 +10,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 DIST = sys.argv[1] if len(sys.argv) > 1 else r"D:\my stuff\FormAndFlow\dist"
 EMAIL = build.EMAIL
 MARKET = {"halloway": "United States (fees in USD)", "marlow-street": "United States (fees in USD)",
-          "studio-noir": "Not market-specific", "eleanor-voss": "Not market-specific"}
+          "kestrel-bend": "United States, Texas (fees in USD)", "studio-noir": "Not market-specific", "eleanor-voss": "Not market-specific"}
 NUM = {p["slug"]: f"{i+2:02d}" for i, p in enumerate(build.PROJECTS)}   # concept 001 is 01
 
 FAVICON = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1933'/%3E"
@@ -55,9 +55,9 @@ def work_rows(base, concept=True):
     return rows
 
 def work_index():
-    o = head("Work \u2014 Form & Flow", "One interactive concept and four researched sample builds, each with the reasoning behind it.", "../") + header("../", "work")
-    o += '<main id="main">\n<section class="wrap page-head"><h1>Five pieces of work, each argued.</h1>'
-    o += '<p>One interactive concept about what happens after an enquiry, and four sample service sites for fictional businesses. Each sample has a live page and a case study covering the research, the decisions, what was left out, and what went wrong.</p></section>\n'
+    o = head("Work \u2014 Form & Flow", "One interactive concept and five researched sample builds, each with the reasoning behind it.", "../") + header("../", "work")
+    o += '<main id="main">\n<section class="wrap page-head"><h1>Six pieces of work, each argued.</h1>'
+    o += '<p>One interactive concept about what happens after an enquiry, and five sample service sites for fictional businesses. Each sample has a live page and a case study covering the research, the decisions, what was left out, and what went wrong.</p></section>\n'
     o += index_bar("SELECTED WORK", "NO CLIENT WORK YET")
     o += f'<div class="wrap"><ul class="work-list">{work_rows("../")}</ul>'
     o += '<p class="note-box">There is no client work here yet, and none is implied. Every sample is for a fictional business and labelled as one. Real projects will be added when they exist, with the client\u2019s permission.</p></div>\n'
@@ -130,7 +130,7 @@ def patch_home():
     sec = ('<section class="wrap more-work" id="more-work" aria-labelledby="more-title">'
            '<div class="section-index"><span>MORE WORK</span><span>SAMPLE BUILDS · FICTIONAL BUSINESSES</span></div>'
            '<div class="section-heading"><h2 id="more-title">Service pages,<br>researched first.</h2>'
-           '<p>Four sample sites for fictional businesses, each built from real industry research. Open a live page, or read why it was built that way.</p></div>'
+           '<p>Five sample sites for fictional businesses, each built from real industry research. Open a live page, or read why it was built that way.</p></div>'
            f'<ul class="work-list">{work_rows("", concept=False)}</ul>'
            '<p class="fine">No client work is shown because there is none yet. <a href="work/index.html">See all work and how it was built</a>.</p></section>\n')
     import re
