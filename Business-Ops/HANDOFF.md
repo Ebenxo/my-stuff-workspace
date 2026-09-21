@@ -178,3 +178,16 @@
 **Blockers (owner):** hosting and Freelancer account; hours/budget/location/income target; price and timeline for the first offer; decision on which "Form & Flow" site is canonical (FormAndFlow/ concept site by Codex vs the portfolio); confirm the AI-assistant line on the About page.
 
 **Next:** owner reads section 6-12 of the operating system and answers section 11. Then run `/agency-weekly` in a fresh session.
+
+
+---
+
+## 2026-09-21 (part 6): Codex site adopted, portfolio content ported - Claude Code
+**Owner decisions:** `FormAndFlow/` (Codex) is the public Form & Flow site; Claude may edit it. Owner is in Lagos, Nigeria, wants global clients, has 40+ hours a week.
+
+**Done:** Ported the four case studies, the Work index and three notes into `FormAndFlow/dist/` in Codex's design system: new files only (`work/`, `notes/`, `samples/`, `ff-work.css`) plus one nav link, one stylesheet link and one new `#more-work` section in `index.html`. Codex's `style.css` and `app.js` untouched. Backups of Codex's in-progress files in `Temp/FormAndFlow-backup-*`. Full change list for Codex: `FormAndFlow/CLAUDE-CHANGES.md`. Generator: `Projects/portfolio-studio-site/port.py` (content from `build.py`).
+**Verified:** 10 pages, no overflow at 375/1280px, 0 broken links, Codex's enquiry demo still works, live sample windows load over http.
+**Not done / caveats:** changes in FormAndFlow are not committed (its repo also holds Codex's uncommitted work; not mine to commit) and FormAndFlow is gitignored from this repo, so they are not backed up to GitHub yet. Not hosted. No desktop screenshots or contrast/performance measurements.
+**Superseded:** `Projects/portfolio-studio-site/` is no longer a second public site; it is the source for the ported content. Do not host it separately.
+**In progress:** venture-analyst research on paying, trust and outreach law for a Lagos-based global studio, to be saved as `Business-Ops/research/global-from-lagos.md`.
+**Next:** owner hosts `FormAndFlow/dist` (Netlify Drop, whole `dist` folder); then choose niche and market from the research and start the owner-sent outreach test.

@@ -59,7 +59,7 @@ Agents stop and write `APPROVAL NEEDED:` before any of these. None can be delega
 | Tue-Thu | Research and build one thing at a time; QA every build | Review drafts, send approved messages |
 | Fri | KPI row filled from real counts; two-line reflection | 15 min |
 
-Keep the owner's weekly commitment realistic. The plan assumed 15-20 hours a week but that is unconfirmed (see section 11).
+The owner has 40+ hours a week available (confirmed 2026-09-21). Use them on conversations and delivery, not on building more samples.
 
 ## 6. Where things honestly stand (facts as of 2026-09-21)
 
@@ -123,7 +123,7 @@ Do not judge any channel until this is filled in with real hours.
 
 ## 11. Owner inputs still missing
 
-1. Real weekly hours, monthly budget ceiling, country and timezone, income target for the first three months.
+1. ~~Hours, country, timezone~~ **Answered 2026-09-21:** based in Lagos, Nigeria (WAT, UTC+1); wants GLOBAL clients, not only local; 40+ hours a week. Still missing: monthly budget ceiling and income target for the first three months. Implications (payment receiving, outreach law by destination, trust for a Nigeria-based newcomer) are being researched in `Business-Ops/research/global-from-lagos.md`.
 2. Any real past paid work (even informal), so proposals stay truthful.
 3. Hosting and a Freelancer.com account, each created by the owner.
 4. Price and timeline for the first offer.
