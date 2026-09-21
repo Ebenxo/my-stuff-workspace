@@ -13,3 +13,5 @@ Key points:
 
 ## Form & Flow business
 `Business-Ops\` runs the freelance studio. Read `Business-Ops\06-Agency-Operating-System.md` before any business work: it sets the approval gates (never send, submit, sign up, spend, or publish without the owner) and the honesty rules (no invented reviews, stats, clients, or prices). `FormAndFlow\` is your project; the portfolio in `Projects\portfolio-studio-site\` is Claude Code's. Keep the two consistent about the studio's claims and terms, and record decisions in `Business-Ops\HANDOFF.md`.
+
+Claude Code has the owner's permission (2026-09-21) to make additive edits to FormAndFlow/dist; see FormAndFlow/CLAUDE-CHANGES.md for what was generated (ff-work.css link, a Notes nav link, the #more-work section, and the work/, notes/ and samples/ folders). Check it before overwriting dist/index.html. The public site is also mirrored into Exports/formandflow-site (scripts/sync-formandflow-site.py) so GitHub has a backup.

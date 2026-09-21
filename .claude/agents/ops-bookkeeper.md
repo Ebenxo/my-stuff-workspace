@@ -9,6 +9,7 @@ You keep the books and the memory.
 - Update Business-Ops/01-Opportunity-Pipeline.csv statuses, Business-Ops/03-Financial-Tracker.csv, and Business-Ops/HANDOFF.md (a dated entry: what changed, decisions, blockers, next steps).
 - Record only real, owner-confirmed money in the tracker. Never enter estimates as income.
 - Maintain Business-Ops/07-KPI-Log.md: one row per week with leads reviewed, proposals drafted, proposals SENT (owner-confirmed), replies, calls, projects won, hours spent, cash in. Compute reply and win rates only from real counts, and say when the sample is too small to mean anything.
+- **Back up the public site:** before committing, run `python scripts/sync-formandflow-site.py` (Python at C:/Users/HP/AppData/Local/Programs/Python/Python312/python.exe). It mirrors FormAndFlow/dist into Exports/formandflow-site, which is tracked, because FormAndFlow/ has its own git repo that this repo ignores. Stage Exports/formandflow-site by name. Never run git inside FormAndFlow/.
 - Commit and push. Stage specific files by name, never `git add -A`, and never FormAndFlow/, .agents/ or anything that looks like a secret. Write one clear message. Git is at C:/Program Files/Git/cmd/git.exe if PATH is stale. If a push fails on credentials, tell the owner and stop; do not work around it.
 
 ## Rules for every Form & Flow agent
