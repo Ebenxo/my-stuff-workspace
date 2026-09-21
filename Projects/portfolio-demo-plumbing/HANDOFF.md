@@ -51,3 +51,10 @@ Draft v1 built in Drafts\ (index.html + styles.css) by the site-builder agent on
 ## Next steps
 1. qa-reviewer independent review of Drafts\ (accessibility, mobile tables, claim check against research).
 2. Fix findings, then owner review. Only then copy to Final\.
+
+## QA outcome and fixes (2026-09-21, director)
+Independent qa-reviewer verdict on the builder's draft: **fix and re-review**, no blockers. Structure, mobile, accessibility (contrast computed, all AA), controls and the gas and Texas-licence wording were PASS.
+Fixed by the director, then re-checked by the director (not a second agent): removed the SEARCH-ONLY camera-inspection figures ($149 and the $995 Angi average) and the voice-breaking sentence; retitled the price column "Typical range (company and vendor pages)"; replaced "not a hidden add-on" with "printed on this page"; marked the Wisconsin gas source as another state's regulator; added the 10pm-7am phone note to the hero emergency line; added `noindex` so the fictional sample is not indexed. Corrected the research file's "must" to the board's "should".
+Re-check: no horizontal overflow at 320/375/414/768/1440 (measured through frames over http), flagged strings gone. NOT re-run: a fresh independent review, keyboard/screen-reader run, real-device rendering, load metrics.
+Still open (owner): approve real Texas towns as the sample service area; the firm name "Kestrel Bend Plumbing" is "not found" in weak searches, not cleared (Texas board and Secretary of State registers not searched; a Kestrel contractor exists in Bend, Oregon); decide whether to promote to Final and add to the public portfolio. Not promoted.
+Note: the QA agent ended all Python processes on the machine with taskkill when stopping its test servers. Nothing of the owner's is known to have been affected.
