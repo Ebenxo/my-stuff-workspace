@@ -8,9 +8,9 @@ Phase: **Pre-launch — no client contact made yet.** Nothing has been sent, app
 
 ## Assumptions (confirm/correct with owner)
 - Skills: web design/dev (HTML/CSS/JS landing pages), brand identity, social graphics, presentation decks; comfortable directing Claude Code/Codex to build quickly. No claimed prior paid client work — do not imply any in proposals until owner confirms real history.
-- Time available: ~15-20 hrs/week (unconfirmed).
+- Time available: 40+ hrs/week (owner-confirmed 2026-09-21).
 - Budget: ~$0-50/month beyond existing Codex/Claude Code subscriptions. No new spend without explicit approval.
-- Location: unknown — defaulting to remote/global platforms (Upwork, Fiverr) priced in USD. If owner is in a specific city, local small-business outreach may outperform global platforms — revisit once known.
+- Location: Lagos, Nigeria (WAT, UTC+1), owner-confirmed 2026-09-21. Wants GLOBAL clients. Best-fit markets are a hypothesis: UK/Ireland and US East first. See `research/global-from-lagos.md` for payment, trust and outreach-law findings.
 - Income target: conservative default — 1 paid pilot ($150-$500) within 4 weeks, then $800-$1,500/month by month 3. Unconfirmed.
 
 ## Model comparison (full research, 2026-09-17)

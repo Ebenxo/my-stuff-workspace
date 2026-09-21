@@ -77,7 +77,7 @@ Each one has a smallest test and a stop condition. None of the numbers below is 
 Test: bid only where proposals are under about 40 and the brief matches a researched vertical. Track replies. Stop after 10 bids with zero replies.
 
 **H2. Direct outreach to local businesses in researched verticals has the best upside.**
-The studio's differentiator (industry-specific, honest sites) is easiest to show to a business whose current site is thin, generic or missing. Each message must contain a specific, true observation about that business's site and one concrete improvement. Test: 20 tailored messages over two weeks, all owner-reviewed and owner-sent, respecting data-protection and anti-spam rules where the owner lives. Stop and rethink after 40 messages with no reply.
+The studio's differentiator (industry-specific, honest sites) is easiest to show to a business whose current site is thin, generic or missing. Each message must contain a specific, true observation about that business's site and one concrete improvement. Test: 20 tailored messages over two weeks, all owner-reviewed and owner-sent. **US first** (lowest legal friction for B2B cold email; every message needs a real postal address and an opt-out). UK only for limited companies, checked on Companies House, because sole traders need consent. No cold email to Canada or Germany. Details and sources: `Business-Ops/research/global-from-lagos.md`. Stop and rethink after 40 messages with no reply.
 
 **H3. The fastest route to real proof is three discounted first projects in exchange for permission to publish the case study and an honest testimonial.**
 It costs margin, not integrity, as long as the discount is disclosed to the client and the testimonial is unedited and real.
@@ -106,7 +106,7 @@ Effective hourly rate = (price minus platform fee minus tool costs) divided by a
 | Input | Value |
 |---|---|
 | Intended project price | unknown, owner to set |
-| Platform fee (Freelancer.com; verify current rate) | unknown, verify |
+| Platform fee (Freelancer.com) | 10% or $5, whichever is greater, on fixed-price; 10% hourly; withdrawal $1 via Payoneer/PayPal, $25 wire, local bank free, $50 minimum (verified 2026-09-21). Upwork not verified. |
 | Tool and hosting costs per project | unknown |
 | Hours: research, build, QA, revisions, admin | unknown |
 | Target hourly rate | unknown, owner to set |
@@ -122,6 +122,8 @@ Do not judge any channel until this is filled in with real hours.
 - **Overreach:** spreading across many verticals before one produces a paying client.
 
 ## 11. Owner inputs still missing
+
+Payment and tax readiness for a Lagos-based studio is action 1 in `research/global-from-lagos.md` and comes before any outreach: an accountant session, a chosen trading name, and one bank-confirmed receiving route.
 
 1. ~~Hours, country, timezone~~ **Answered 2026-09-21:** based in Lagos, Nigeria (WAT, UTC+1); wants GLOBAL clients, not only local; 40+ hours a week. Still missing: monthly budget ceiling and income target for the first three months. Implications (payment receiving, outreach law by destination, trust for a Nigeria-based newcomer) are being researched in `Business-Ops/research/global-from-lagos.md`.
 2. Any real past paid work (even informal), so proposals stay truthful.
