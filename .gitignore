@@ -8,3 +8,6 @@ FormAndFlow/
 # installed skill lives in .claude/skills/, this is just the raw vendor
 # download and doesn't belong in this workspace's git history.
 ui-ux-pro-max-skill-main/
+
+# Mirror folder created by the skills installer; duplicates .claude/skills
+.agents/
