@@ -26,7 +26,7 @@ Phase: **Pre-launch — no client contact made yet.** Nothing has been sent, app
 - Fiverr: many top-rated web design packages run $350-900; platform takes a flat 20% cut. Upwork uses a sliding-scale commission. Freelancers on both often price 15-25% higher than direct-hire rates to absorb fees/revisions.
 - Small business full website budgets typically $1,000-5,000 (basic) to $5,000-20,000 (complex).
 - AI automation agency pricing (2026): setup fees ~$2,000-12,000 depending on scope (simple 1-2 workflow builds $500-1,500 up to full multi-system builds $10k+); ongoing retainers $500-5,000/mo, with small businesses landing around $1,000-3,500/mo for 2-3 monitored workflows. Productized fixed-scope packages work best for small-business buyers who want simplicity over a scoping conversation.
-- Cold outreach: 3-8% positive reply rate once list/pitch are dialed in; ~100 emails/week can produce 3-8 real conversations and 1-2 landed projects in month one. Warm network reactivation is faster (1-3 conversations within a week) than pure cold outreach. Combining warm + cold typically produces a first paid project within 2-3 weeks; beginners combining a complete platform profile with 5-10 daily proposals often land a first client within 2-4 weeks.
+- Cold outreach (VENDOR CLAIM, UNVERIFIED as of 2026-09-21: treat as marketing until our own log has data): 3-8% positive reply rate once list/pitch are dialed in; ~100 emails/week can produce 3-8 real conversations and 1-2 landed projects in month one. Warm network reactivation is faster (1-3 conversations within a week) than pure cold outreach. Combining warm + cold typically produces a first paid project within 2-3 weeks; beginners combining a complete platform profile with 5-10 daily proposals often land a first client within 2-4 weeks.
 - Effective cold outreach formula: name a specific problem the prospect has, reference it directly, briefly explain the fix, include 1-2 concrete work examples. A working cadence: email day 1, LinkedIn connect day 3, follow-up email day 7 if no response.
 
 ### Sources
@@ -51,11 +51,12 @@ Phase: **Pre-launch — no client contact made yet.** Nothing has been sent, app
 | Date | Decision | Who approved |
 |---|---|---|
 | 2026-09-17 | Adopted Model A as starting model; created Business-Ops tracking system | Claude (pending owner confirmation) |
+| 2026-09-21 | Public site is the Codex-built FormAndFlow; portfolio content ported into it; Claude may edit it | Owner (explicit) |
 | 2026-09-17 | Chose free static hosting (Netlify/GitHub Pages) over a Claude-hosted artifact link or file-attachment-only bids, for the two demo portfolio sites | Owner (explicit choice via question) |
 
 ## Open questions for owner
-1. Real weekly hours available?
-2. Real budget ceiling for tools/ads/platform fees?
-3. Country/timezone — remote-only or local-market outreach viable?
+1. ~~Real weekly hours available?~~ Answered: 40+.
+2. Real budget ceiling for tools/ads/platform fees? (still open)
+3. ~~Country/timezone~~ Answered: Lagos, Nigeria; wants global clients.
 4. Any past paid work (even informal/friends) I should know about, so proposals stay truthful?
 5. Preferred first channel: Upwork/Fiverr application, or direct cold outreach to specific businesses?
