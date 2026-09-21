@@ -1,4 +1,9 @@
-# Studio name: recommendation
+# Studio name
+
+## DECISION (owner, 2026-09-21): keep **Form & Flow**. Plainwork is parked as a reserve option.
+The owner prefers Form & Flow. Nothing needs renaming. Consequences: (1) `formandflow.co` was unregistered when checked on 2026-09-21 and is the sensible primary domain; `formandflow.com` is already registered (holder unknown, did not resolve). (2) The name is descriptive and shared by unrelated small businesses, so the CAC name search and a trademark search are still worth doing before spending on branding. (3) Everything below is kept for the record and for the reserve option.
+
+# Original recommendation (not adopted)
 
 Decided by Claude 2026-09-21 at the owner's request ("pick a trade name that resonates and is unique"). **Recommendation only.** Nothing has been renamed, registered or bought. Reversible until the owner does one of those.
 

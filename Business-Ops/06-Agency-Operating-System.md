@@ -2,7 +2,7 @@
 
 Last updated: 2026-09-21. Owner: ebenezeraaron001@gmail.com
 
-**Targets and plan (owner, 2026-09-21):** $2,000 cash in 90 days on a $70 budget. The arithmetic, budget, weekly time split and day 7/14/30/60/90 checkpoints are in `08-First-90-Days-Plan.md`. Studio name recommendation (Plainwork, not yet adopted): `09-Studio-Name.md`.
+**Targets and plan (owner, 2026-09-21):** $2,000 cash in 90 days on a $70 budget. The arithmetic, budget, weekly time split and day 7/14/30/60/90 checkpoints are in `08-First-90-Days-Plan.md`. Studio name: Form & Flow kept (owner decision), Plainwork parked: `09-Studio-Name.md`. First-project price to test: $200.
 
 ## 1. The honest premise
 

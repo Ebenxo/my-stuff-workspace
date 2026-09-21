@@ -4,12 +4,25 @@ Set by the owner 2026-09-21. Window: 2026-09-21 to about 2026-12-21. Owner: Lago
 
 **The $2,000 is a target, not a forecast.** There is no data yet (0 messages sent, 0 replies, 0 clients), so nobody can honestly say how likely it is. This plan shows the arithmetic, sets checkpoints, and says when to change course.
 
+## 0. Decisions so far (owner, 2026-09-21)
+- Studio name: **Form & Flow** (see `09-Studio-Name.md`).
+- First-project price to test: **$200.**
+
+### What $200 means for the target
+- Direct client: 10 projects = $2,000. Through Freelancer.com (10% fee, verified): $180 net each, so 12 projects for $2,160 net.
+- That is roughly one paid project a week from week 3. It is a lot of clients at one price. It can work, but only if each project is **tightly scoped and fast to deliver**, and only if the price is treated as an introductory test, not the permanent rate.
+- Effective hourly rate at $200 (marketplace, $180 net): 4 hours = $45/h; 6 hours = $30/h; 10 hours = $18/h. **Cap a $200 project at about 5 hours.** That means a defined scope (see below) and client-supplied content.
+- Suggested $200 scope (owner to confirm): one page, mobile layout, working call/text/email links, client supplies text and photos, one revision round, files handed over. Anything else (extra pages, enquiry form with a real destination, copywriting, care plan) is priced separately. This keeps $200 honest and protects your time.
+- Risks to watch: a low price can attract price-shoppers and scope creep, and can read as low quality to some buyers. Keep scope in writing. After 2-3 delivered projects with real testimonials, test a higher price (the plan's H3 and H4).
+- Ladder ideas to test (all hypotheses): $200 starter page; a higher-priced page-plus-enquiry-system project (the FormAndFlow package); a small monthly care plan; a paid site audit. Fewer clients are needed if some buy more than the starter.
+
 ## 1. The maths of $2,000
 
 Gross needed if paid through a marketplace at 10% (Freelancer.com, verified): $2,000 / 0.90 = **$2,222**. Add a Payoneer withdrawal cost of roughly 2% (reported, unverified) and it is a little higher. Direct clients avoid the platform fee.
 
 | First-project price (owner decides; illustrative) | Projects needed to net $2,000 direct | Through Freelancer.com |
 |---|---|---|
+| **$200 (chosen)** | **10** | **12** |
 | $400 | 5 | 6 |
 | $500 | 4 | 5 |
 | $650 | 4 | 4 |
@@ -28,6 +41,8 @@ Messages needed = clients wanted / (reply rate x conversion from reply to client
 | 10% | 30% | about 133 |
 | 5% | 25% | about 320 |
 | 2% | 20% | about 1,000 |
+
+For **10 clients** (the $200 path) the same formula gives about 333 messages at 10% x 30%, 800 at 5% x 25%, and 2,500 at 2% x 20%. Placeholders, not predictions. This is why the plan leans on several channels, on a fast scoped delivery, and on some clients buying more than the starter.
 
 Reading it: at 40+ hours a week, hours are not the constraint (even 320 tailored messages is feasible in 10 weeks if each takes about 20 minutes with prepared research). **The uncertainty is conversion.** So the first two weeks exist to measure it, and the plan diversifies channels rather than betting on one.
 
