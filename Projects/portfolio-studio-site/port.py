@@ -1,6 +1,15 @@
 """Port the portfolio's case studies and notes into the Form & Flow site (Codex's dist/) using its design system.
 Source of truth for content: build.py in this folder. Writes only NEW files under dist/ plus two idempotent insertions in dist/index.html.
 Run:  python port.py [path-to-FormAndFlow-dist]
+
+WARNING (2026-09-22): work_index() below fully overwrites dist/work/index.html from build.PROJECTS plus the
+hardcoded Enquiry Desk row. It does NOT know about the 8 hand-authored concept case studies added directly to
+dist/work/ on 2026-09-22 (northstar-growth, enquiry-desk-automation, halloway-content, northstar-ops,
+the-working-brief, edutrack, dripforge, brand-identity-studies) or the next-project link in dist/work/studio-noir.html
+that was hand-edited to point to northstar-growth.html. Rerunning `python port.py` will silently drop those 8 rows
+from the work list and revert studio-noir's next-project link to eleanor-voss.html. Before rerunning, either add
+those 8 as PROJECTS-style entries here, or re-apply the hand edits afterwards (see FormAndFlow/CLAUDE-CHANGES.md,
+"Update 2026-09-22").
 """
 import os, sys, shutil, html
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
