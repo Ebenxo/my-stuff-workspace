@@ -25,6 +25,7 @@ Done — built, checked, promoted to `Final\`. Fictional business ("Halloway App
 |---|---|---|---|
 | 2026-09-19 | Claude Code | Built full single-page site (utility bar, hero, appliance grid, brands, process, repair-vs-replace, pricing, exclusions, technician, service area, FAQ, closing, footer) | Drafts\index.html, Drafts\styles.css |
 | 2026-09-19 | Claude Code | QA'd in-browser (mobile 375px and a mid-width ~628px both confirmed); found and fixed a real bug — header nav/logo wrapped awkwardly between 620-900px because the stack-to-column breakpoint was too narrow. Fixed by widening that breakpoint to 860px. Promoted to Final. | Drafts\styles.css, Final\* |
+| 2026-09-22 | Claude Code | Backported refinements that had been made directly to the public site's copy of this sample without ever reaching this project's own `Final\`: added `design.css` (workshop-inspired refinement pass), an equipment-illustration SVG in the hero panel, revised demo-banner and hero copy, and a "H." initial in the previously-blank technician-photo placeholder. Reconciled from `Projects\portfolio-studio-site\Final\sample\halloway\`, which now matches `FormAndFlow\dist\samples\halloway\` exactly. | Final\index.html, Final\design.css (new) |
 
 ## Verification results
 | Date | Checked | Result |

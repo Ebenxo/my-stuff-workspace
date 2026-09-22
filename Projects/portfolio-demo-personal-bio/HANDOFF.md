@@ -17,6 +17,7 @@ Done — built, checked, promoted to `Final\`. Fictional persona ("Eleanor Voss"
 |---|---|---|---|
 | 2026-09-19 | Claude Code | Built single-page site + stylesheet | Drafts\index.html, Drafts\styles.css |
 | 2026-09-19 | Claude Code | Verified in browser (mobile 375px confirmed clean, no overflow; contrast checked by calculation, ~5.9:1 for body text, passes AA), promoted to Final\ | Final\index.html, Final\styles.css |
+| 2026-09-22 | Claude Code | Backported refinements that had been made directly to the public site's copy without ever reaching this project's own `Final\`: added `design.css`, a masthead line and a refined portrait monogram ("e." / "WORDS & RECORDS"), replaced the placeholder "This page is intentionally quiet..." copy and the "What's next" stub with real "Areas of focus" content, and pointed the contact section at the actual case-study page instead of a bare "#" link. Reconciled from `Projects\portfolio-studio-site\Final\sample\eleanor-voss\`, which now matches `FormAndFlow\dist\samples\eleanor-voss\` exactly. | Final\index.html, Final\design.css (new) |
 
 ## Verification results
 | Date | Checked | Result |

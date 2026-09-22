@@ -18,6 +18,7 @@ Draft v1 built in Drafts\ (index.html + styles.css) by the site-builder agent on
 | Date | Tool | What changed | Files touched |
 |---|---|---|---|
 | 2026-09-21 | Claude Code (site-builder) | Built Draft v1 | Drafts\index.html, Drafts\styles.css, HANDOFF.md |
+| 2026-09-22 | Claude Code | Backported refinements that had been made directly to the public site's copy without ever reaching this project's own `Final\`: added `design.css` (verdigris/copper "estimate sheet" refinement, including the pipe-emblem SVG) and changed the licence line from "RMP licence no. [client to supply]" to the more honest "Fictional business · no licence claimed". Separately, ran the newly-installed `impeccable` skill's audit and typeset commands against this sample: removed `text-transform: uppercase` from over-length table captions (were 38-101 characters, hard to read at that length) and shortened the "Typical range (company and vendor pages)" column header to "Typical range" (the dropped qualifier was already stated in the table's own caption). Reconciled from `Projects\portfolio-studio-site\Final\sample\kestrel-bend\`, which now matches `FormAndFlow\dist\samples\kestrel-bend\` exactly. | Final\index.html, Final\styles.css, Final\design.css (new) |
 
 ## Verification results (builder self-checks, NOT approval)
 | Date | Checked | Result |
