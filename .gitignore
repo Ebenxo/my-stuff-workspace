@@ -15,6 +15,16 @@ ui-ux-pro-max-skill-main/
 # Python bytecode
 __pycache__/
 
+# Demo/example media that some installed skills ship (OpenMontage's video/audio
+# generation skills, 2026-09-22) - not needed for Claude to read and use the
+# skill's instructions, and large enough (tens of MB) to bloat the repo.
+.claude/skills/**/*.mp4
+.claude/skills/**/*.mov
+.claude/skills/**/*.mp3
+.claude/skills/**/*.wav
+.claude/skills/**/*.webm
+.claude/skills/**/*.avi
+
 # Crypto bot runtime files
 Projects/crypto-bot/paper_state.json
 Projects/crypto-bot/paper_log.txt
