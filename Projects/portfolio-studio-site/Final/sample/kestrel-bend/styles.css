@@ -142,7 +142,7 @@ dd { margin: 0; font-weight: 500; }
 
 /* tables */
 .data { width: 100%; border-collapse: collapse; margin: var(--s2) 0 var(--s3); background: #fff; font-size: .97rem; }
-.data caption { text-align: left; font: 600 .85rem/1.4 var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding-bottom: .5rem; }
+.data caption { text-align: left; font: 600 .85rem/1.4 var(--sans); color: var(--muted); padding-bottom: .5rem; }
 .data th, .data td { padding: .7rem .7rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule); }
 .data thead th { background: var(--verd); color: #fff; font-size: .82rem; text-transform: uppercase; letter-spacing: .05em; border-bottom: 0; }
 .data tbody th { font-weight: 600; }
