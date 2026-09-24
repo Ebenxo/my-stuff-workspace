@@ -29,3 +29,7 @@ __pycache__/
 Projects/crypto-bot/paper_state.json
 Projects/crypto-bot/paper_log.txt
 Projects/crypto-bot/*.tmp
+
+# JobThread is a separate product with its own git repo (approved 2026-09-25) -
+# never absorb it into this portfolio repo.
+Projects/jobthread/
