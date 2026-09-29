@@ -1,0 +1,104 @@
+[project]
+name = "nexus-api"
+version = "0.1.0"
+description = "NEXUS OS local API and agent runtime"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "pydantic>=2.8",
+  "pydantic-settings>=2.4",
+  "sqlalchemy[asyncio]>=2.0.30",
+  "aiosqlite>=0.20",
+  "alembic>=1.13",
+  "httpx>=0.27",
+  "keyring>=25",
+  "platformdirs>=4.2",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "pytest-asyncio>=0.24",
+  "ruff>=0.6",
+  "mypy>=1.11",
+  "import-linter>=2.0",
+  "pip-audit>=2.7",
+]
+
+[project.scripts]
+nexus = "app.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-exclude = ["migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC", "S", "SIM", "RUF"]
+ignore = ["S101", "B008", "RUF012"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B"]
+"migrations/**" = ["S"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = ["migrations/"]
+
+[[tool.mypy.overrides]]
+module = ["keyring.*", "alembic.*"]
+ignore_missing_imports = true
+
+[tool.importlinter]
+root_package = "app"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Layered architecture (dependencies point downward only)"
+type = "layers"
+layers = [
+  "app.api",
+  "app.services",
+  "app.scheduler",
+  "app.workflows",
+  "app.orchestration",
+  "app.agents",
+  "app.tools | app.memory",
+  "app.permissions | app.providers | app.files | app.tasks",
+  "app.events",
+  "app.repositories",
+  "app.models",
+  "app.schemas",
+  "app.core",
+]
+
+[[tool.importlinter.contracts]]
+name = "Runtime modules never import the web framework"
+type = "forbidden"
+source_modules = [
+  "app.orchestration", "app.agents", "app.tools", "app.memory", "app.permissions",
+  "app.providers", "app.workflows", "app.scheduler", "app.events", "app.repositories",
+]
+forbidden_modules = ["fastapi", "starlette"]
+
+[[tool.importlinter.contracts]]
+name = "Orchestration and agents do not touch the ORM directly"
+type = "forbidden"
+source_modules = ["app.orchestration", "app.agents", "app.workflows", "app.scheduler"]
+forbidden_modules = ["sqlalchemy", "app.models"]
