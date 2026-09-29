@@ -48,6 +48,7 @@ def create_app(
         container = await build_container(cfg, secrets=secrets, clock=clock, http=http)
         app.state.container = container
         await container.settings_service.get()  # ensure the settings row exists
+        await container.tool_row_store.sync(container.tools.mirror_rows())
         await container.bus.emit(EventType.SYSTEM_STARTED, payload={"version": __version__})
         log.info("NEXUS API %s ready on %s:%s (home=%s)", __version__, cfg.host, cfg.port, cfg.home)
         try:

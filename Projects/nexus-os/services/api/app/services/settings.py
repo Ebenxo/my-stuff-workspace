@@ -120,3 +120,17 @@ class SettingsService:
             row.updated_at = self._clock.now()
         await self._bus.emit(EventType.SETTINGS_UPDATED, actor="user", payload={"changed": ["routing_rules"]})
         return rules
+
+    async def get_search_config(self) -> dict[str, object]:
+        async with self._db.session() as session:
+            row = await UserSettingsRepository(session).get_or_create()
+            return dict(row.search_backend or {})
+
+    async def set_search_config(self, config: dict[str, object]) -> None:
+        async with self._db.session() as session:
+            row = await UserSettingsRepository(session).get_or_create()
+            row.search_backend = config
+            row.updated_at = self._clock.now()
+        await self._bus.emit(
+            EventType.SETTINGS_UPDATED, actor="user", payload={"changed": ["search_backend"]}
+        )
