@@ -1,8 +1,10 @@
 import { unwrap } from "@nexus/shared";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router";
 import { api } from "../lib/api";
 import { errorMessage } from "../lib/queries";
 import { useEvents } from "../stores/events";
+import { useOverlays } from "../stores/overlays";
 
 interface Line {
   id: number;
@@ -16,8 +18,29 @@ const HELP = [
   "  status            system health summary",
   "  events [n]        show the last n events (default 10)",
   "  verify            verify the audit-log hash chain",
+  "  approvals         list actions waiting for your decision",
+  "  open <page>       go to a page: " + "home, projects, agents, workflows, approvals, memory, settings, providers, tools, integrations, usage, health",
+  "  search <words>    search projects, objectives, deliverables and memory",
+  "  palette           open the command palette (Ctrl/⌘ K)",
+  "  keys              show keyboard shortcuts",
   "  clear             clear this screen",
 ];
+
+const PAGES: Record<string, string> = {
+  home: "/",
+  projects: "/projects",
+  agents: "/agents",
+  workflows: "/workflows",
+  approvals: "/approvals",
+  memory: "/memory",
+  search: "/search",
+  settings: "/settings",
+  providers: "/settings/providers",
+  tools: "/settings/tools",
+  integrations: "/settings/integrations",
+  usage: "/settings/usage",
+  health: "/settings/health",
+};
 
 let counter = 0;
 const line = (kind: Line["kind"], text: string): Line => ({ id: ++counter, kind, text });
@@ -27,6 +50,7 @@ export function Terminal() {
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
@@ -63,6 +87,30 @@ export function Terminal() {
             : line("err", `audit log BROKEN at event #${v.first_bad_seq}: ${v.detail ?? ""}`),
         );
       }
+      case "approvals": {
+        const pending = await unwrap(api.GET("/api/approvals", { params: { query: { status_filter: "PENDING", limit: 20 } } }));
+        return push(
+          ...(pending.length
+            ? pending.map((a) => line("out", `${a.risk_level.padEnd(9)} ${a.tool_name}  ${a.reason}`.slice(0, 160)))
+            : [line("out", "nothing is waiting for you")]),
+        );
+      }
+      case "open": {
+        const to = PAGES[(args[0] ?? "").toLowerCase()];
+        if (!to) return push(line("err", `open what? One of: ${Object.keys(PAGES).join(", ")}`));
+        void navigate(to);
+        return push(line("out", `opened ${args[0]}`));
+      }
+      case "search": {
+        const q = args.join(" ").trim();
+        if (!q) return push(line("err", "search for what? e.g. `search pricing notes`"));
+        void navigate(`/search?q=${encodeURIComponent(q)}`);
+        return push(line("out", `searching for “${q}”`));
+      }
+      case "palette":
+        return useOverlays.getState().setPalette(true);
+      case "keys":
+        return useOverlays.getState().setShortcuts(true);
       default:
         return push(line("err", `unknown command: ${cmd}. Try \`help\`.`));
     }

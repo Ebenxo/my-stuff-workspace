@@ -1,7 +1,7 @@
 import { Button, FieldError, Label, Select, Switch, toast } from "@nexus/ui";
 import { FlaskConical, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useCreateObjective, useStartDemo } from "../../lib/objectiveQueries";
 import { errorMessage, useHasRealProvider, useProjects } from "../../lib/queries";
 
@@ -18,6 +18,9 @@ export function ObjectiveComposer({ projectId, onNewProject }: { projectId?: str
   const [project, setProject] = useState(projectId ?? "");
   const [review, setReview] = useState(true);
   const [priv, setPriv] = useState(false);
+  const [params] = useSearchParams();
+  // Focus only on a deliberate request to write one (?focus=objective, e.g. from the command palette).
+  const focus = params.get("focus") === "objective";
 
   const selectedProject = project || projects.data?.[0]?.id || "";
   const noProvider = useHasRealProvider() === false;
@@ -55,6 +58,7 @@ export function ObjectiveComposer({ projectId, onNewProject }: { projectId?: str
       </label>
       <textarea
         id="objective"
+        autoFocus={focus}
         rows={3}
         value={text}
         maxLength={20_000}

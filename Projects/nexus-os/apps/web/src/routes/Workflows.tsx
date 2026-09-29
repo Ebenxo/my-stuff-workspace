@@ -7,6 +7,7 @@ import { WorkflowRunList } from "../features/workflows/WorkflowRunList";
 import { errorMessage, useProjects } from "../lib/queries";
 import { useCreateWorkflow, useWorkflows } from "../lib/workflowQueries";
 import { Page, PageHeader, Section } from "./Page";
+import { useParamFlag } from "../lib/useParamFlag";
 
 function NewWorkflowDialog({ open, onOpenChange, projectId }: { open: boolean; onOpenChange: (o: boolean) => void; projectId?: string | undefined }) {
   return (
@@ -76,7 +77,7 @@ function NewWorkflowForm({ projectId, onDone }: { projectId: string | undefined;
 
 export function WorkflowList({ projectId }: { projectId?: string | undefined }) {
   const workflows = useWorkflows(projectId);
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useParamFlag("new");
   if (workflows.isPending) return <Skeleton className="h-24" />;
   if (workflows.isError) return <ErrorState message={errorMessage(workflows.error)} onRetry={() => void workflows.refetch()} />;
   return (

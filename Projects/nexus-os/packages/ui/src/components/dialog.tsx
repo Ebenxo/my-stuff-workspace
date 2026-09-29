@@ -12,8 +12,9 @@ export function DialogContent({
   children,
   title,
   description,
+  hideTitle = false,
   ...props
-}: ComponentProps<typeof DialogPrimitive.Content> & { title: string; description?: string }) {
+}: ComponentProps<typeof DialogPrimitive.Content> & { title: string; description?: string; hideTitle?: boolean }) {
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px] data-[state=open]:animate-[nx-fade-in_150ms_ease-out]" />
@@ -25,7 +26,8 @@ export function DialogContent({
         )}
         {...props}
       >
-        <DialogPrimitive.Title className="text-base font-semibold text-fg">{title}</DialogPrimitive.Title>
+        {/* A hidden title still names the dialog for screen readers. */}
+        <DialogPrimitive.Title className={hideTitle ? "sr-only" : "text-base font-semibold text-fg"}>{title}</DialogPrimitive.Title>
         {description ? (
           <DialogPrimitive.Description className="mt-1 text-sm text-fg-muted">
             {description}
@@ -33,7 +35,7 @@ export function DialogContent({
         ) : (
           <DialogPrimitive.Description className="sr-only">{title}</DialogPrimitive.Description>
         )}
-        <div className="mt-4">{children}</div>
+        <div className={hideTitle ? undefined : "mt-4"}>{children}</div>
         <DialogPrimitive.Close
           aria-label="Close"
           className="absolute right-3 top-3 rounded-md p-1.5 text-fg-muted transition-colors hover:bg-raised hover:text-fg"

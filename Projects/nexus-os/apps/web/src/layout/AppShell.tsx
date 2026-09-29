@@ -1,5 +1,11 @@
+import { Spinner } from "@nexus/ui";
 import { Outlet } from "react-router";
 import { useEventStream } from "../features/events/useEventStream";
+import { Onboarding } from "../features/onboarding/Onboarding";
+import { CommandPalette } from "../features/palette/CommandPalette";
+import { ShortcutsDialog } from "../features/shortcuts/ShortcutsDialog";
+import { useShortcuts } from "../features/shortcuts/useShortcuts";
+import { useSettings } from "../lib/queries";
 import { useUi } from "../stores/ui";
 import { BottomPanel } from "./BottomPanel";
 import { RightPanel } from "./RightPanel";
@@ -9,7 +15,18 @@ import { Topbar } from "./Topbar";
 
 export function AppShell() {
   useEventStream();
+  useShortcuts();
   const { rightOpen, bottomOpen } = useUi();
+  const settings = useSettings();
+  if (settings.isPending) {
+    return (
+      <div className="flex h-full items-center justify-center bg-canvas">
+        <Spinner label="Starting NEXUS" />
+      </div>
+    );
+  }
+  // First run. (If settings cannot be read, the app still opens: its pages show the error.)
+  if (settings.data && !settings.data.onboarding_completed) return <Onboarding settings={settings.data} />;
   return (
     <div className="flex h-full bg-canvas">
       <a
@@ -30,6 +47,8 @@ export function AppShell() {
         {bottomOpen ? <BottomPanel /> : null}
         <StatusBar />
       </div>
+      <CommandPalette />
+      <ShortcutsDialog />
     </div>
   );
 }

@@ -1,10 +1,46 @@
 # NEXUS OS — build state
 
-_Last updated: 2026-09-29 (end of Phase 9)_
+_Last updated: 2026-09-29 (end of Phase 10: the MVP build is complete)_
 
 ## Current phase
 
-**Phase 9 — MCP servers: complete.** Phases 0–9 done. Next: Phase 10, command palette, onboarding, polish, scripted end-to-end tests and dependency audits in `check.py`, desktop polish.
+**Phase 10 — polish and end-to-end verification: complete.** Phases 0–10 are done, and every item of the 20-point MVP definition is verified (table below): by unit and integration tests, and again in one scripted browser walkthrough that runs in `scripts/check.py` (items 4 and 14 through the demo objective). What remains is listed under *Not verified / not done*: above all, real models (only scripted ones and a local stand-in were available here), the Tauri shell (cannot be compiled here) and packaging the API for the desktop app.
+
+### Added in Phase 10 (polish and verification)
+
+- **First-run onboarding**: name, default permission level (with what each level means), workspace folder, connecting a model (the provider dialog, then a connection test with the result shown), then *Try the demo* or *Go to the Command Center*. Skippable; saved once, at the end. Shown until `onboarding_completed` is set.
+- **Command palette** (Ctrl/⌘+K, or the top bar's *Commands* button): pages, settings sections, create actions (objective, project, workflow, MCP server, provider), the demo, panel toggles, the command line, shortcuts; the person's projects; live search results; and "Search everything for …". Ranked by prefix, word start, substring and scattered letters, with keywords (typing "mcp" or "api key" finds the right page). Full keyboard use (↑ ↓ Enter Esc) with combobox/listbox semantics. Create actions open their dialogs through `?new=1`/`?add=1` links, so they also work as bookmarks.
+- **Keyboard shortcuts**: `/` search, `?` help, `G` then a letter to go to a page, Ctrl/⌘+J bottom panel, Ctrl/⌘+. activity panel. Letters never fire while typing in a field or inside a dialog; modifier shortcuts always do. A help dialog lists them all with the right modifier for the platform.
+- **NEXUS command line**: `approvals` (what waits for you), `open <page>`, `search <words>`, `palette`, `keys`, besides `help`, `status`, `events`, `verify`, `clear`.
+- **End-to-end walkthrough in `check.py`** (`scripts/e2e.py` + `scripts/e2e/mvp.mjs`): boots an isolated stack (fresh data folder, free ports, its own token, a scripted OpenAI-compatible stand-in model) and drives Chromium through onboarding → palette → project → an agent's tools and an approval → the demo objective to verification → memory and search → a workflow built in the editor and run twice → audit-log verification → shortcuts → 21 pages at 1440 and 390 px checked for sideways scrolling and basic accessibility (named controls, labelled fields, image alt text, unique ids, one main landmark, an h1, page language). The audit first proves it catches planted problems. Any console error or failed request fails the run. Skipped, and reported as skipped, when no browser is installed.
+- **Dependency audits in `check.py`**: `pip-audit` (the API's environment) and `pnpm audit` (all JavaScript packages, dev tools included). Clean today. `--offline` skips them.
+- Small fixes: System Health lists the MCP check after the core checks; the shared dialog can hide its title visually while keeping it for screen readers.
+
+## The 20-point MVP definition of done
+
+| # | Item | Verified by |
+|---|---|---|
+| 1 | Launch locally | `scripts/dev.py`; E2E boots API, web app and model and completes onboarding |
+| 2 | Connect a provider | provider API tests against mock upstreams; E2E onboarding connects an OpenAI-compatible endpoint and its connection test passes |
+| 3 | Create a project | API tests; E2E creates one from the command palette |
+| 4 | Give an objective | objective API and UI tests; E2E starts the demo objective (a real objective through the composer is covered by UI tests and the Phase 5–6 live check) |
+| 5 | Planner creates tasks | orchestration tests with scripted models; E2E reviews the plan |
+| 6 | See a task graph | React Flow component tests; E2E counts ≥ 6 graph nodes |
+| 7 | Orchestrator delegates | orchestrator tests (assignments recorded); E2E sees ≥ 3 distinct agents on the objective's tasks |
+| 8 | Multiple agents work | as 7: Researcher, Writer, Critic and Verifier in the demo |
+| 9 | Agents use tools | agent-loop and executor tests; E2E: the File Manager lists a folder and deletes a file |
+| 10 | Review tool activity | tool-call API tests; E2E finds both calls in the project's Tool activity |
+| 11 | Approve restricted actions | approval tests (once / session / deny / edit); E2E: the delete waits, the file exists until *Approve once*, then it is gone |
+| 12 | Read/write project files | filesystem tests incl. traversal and symlink escapes; E2E writes a file through the files API and an agent reads the folder and removes it |
+| 13 | Receive artifacts | artifact versioning tests; E2E opens the verified report |
+| 14 | Critic reviews | orchestration tests (review → revise loop); the demo's Critic asks for one revision (graph nodes in E2E) |
+| 15 | Verifier checks | PASS / PARTIAL / FAIL tests; E2E sees *Verified* with every criterion met |
+| 16 | Store project memory | memory service tests incl. sensitive-data refusal; E2E keeps the objective's memory suggestion |
+| 17 | Search memory | retrieval and search tests; E2E search lists Memory and Deliverables results |
+| 18 | Create a reusable workflow | workflow API and editor tests; E2E builds one in the editor and saves version 2 |
+| 19 | Re-run a workflow | engine tests; E2E runs it twice with different inputs and sees two runs with the right outputs |
+| 20 | Inspect full activity log | event-log and hash-chain tests; E2E verifies the chain in System Health and finds the key events recorded |
+
 
 ### Added in Phase 9 (MCP)
 
@@ -109,6 +145,8 @@ _Last updated: 2026-09-29 (end of Phase 9)_
 - Workflows have no webhook, file-watch or event triggers yet (manual, schedule and sub-workflow only). The canvas has no undo; saved versions are the history. Workflows cannot be exported or imported.
 - **MCP has been verified against the in-repo fixture server only** (stdio and streamable HTTP, over real processes and sockets). No third-party MCP server (npx/uvx packages) was run: this environment does not install them. The older HTTP+SSE transport is not supported. MCP servers are not sandboxed. Agents cannot read MCP resources or use server prompts yet (the person can browse them); no OAuth flow for remote servers (tokens go in secret headers). A stdio command on Windows that is a `.cmd` shim (such as `npx`) is untested there.
 - Memory recall quality with real models is untested; ranking is verified with unit tests and the scripted demo.
+- **The end-to-end run uses a scripted stand-in model** (and the scripted demo), not a real one. Its accessibility checks are structural heuristics, not a full audit (no axe-core, which would be a new dependency): colour contrast was computed for the design tokens in Phase 1, and no screen reader has been used. Keyboard use is covered for the palette, shortcuts and forms, not exhaustively.
+- The desktop shell received no Phase 10 changes it could not verify: the web app's shortcuts and palette work inside it by design, but the Tauri window itself has still never been built here.
 
 ## Testing status
 
@@ -116,7 +154,7 @@ _Last updated: 2026-09-29 (end of Phase 9)_
 |---|---|
 | Backend (pytest) | 954 passed |
 | Lint / format (ruff), strict types (mypy), import contracts (3) | clean |
-| Frontend (vitest) | 135 passed (shared 9, web 126) |
+| Frontend (vitest) | 147 passed (shared 9, web 138) |
 | ESLint, `tsc` (all packages) | clean |
 | Web production build | ok |
 | Rust sidecar (`cargo test`) | 8 passed |
@@ -126,9 +164,24 @@ _Last updated: 2026-09-29 (end of Phase 9)_
 | Live memory check (Playwright, real API + web app, scripted demo model) | Demo objective → "Remember this for next time?" → Remember (nav badge showed the suggestion); project Memory tab: add a pinned memory, a key refused in the dialog with its category, "rank as agents would" lists both with reasons; a second demo objective: all 6 runs were given memory (12 items in total), the run page lists what was given; top-bar search finds the report with highlights. No console errors or failed requests besides the deliberate refusal; no overflow at 390 px on Memory, Search, run and objective pages; screenshots checked by eye |
 | Live workflow check (Playwright, real API + web app) | Create a workflow; build Start → Approval → Tool (`write_file`) → Output by clicking, add a Delay and connect it by dragging handle to handle (4 connections); validation says *Ready to run*; save as v2; run with an input: the run waits on the approval and the file does not exist (404), approve → Completed and the file holds the rendered text; a bad cron is explained in words; a weekday schedule is created and previewed. No console errors besides the deliberate bad-cron 422s; no overflow at 390 px on the list, editor and run pages; screenshots checked by eye |
 | Live MCP check (Playwright, real API + web app, fixture MCP server, local stand-in model) | Settings → Integrations: add the fixture as a program with a secret variable → Running, 11 tools · 2 resources · 1 prompt; tools, a resource preview and the server's log shown; the secret appears in no page, API response or event; Tools & approvals lists the 11 tools under the server. An agent allowed `mcp__fixture__*` proposed `mcp__fixture__echo`: the run waited on a HIGH approval whose card named the server and tool; approved → completed, result `echo: hello from an agent`, run tainted `mcp:fixture/echo`. Stop → 11 tools marked "Server not running" and still listed on the card; start → running; check → answered in 0.4 ms; a server with a wrong command explains it could not find the program. Stopping NEXUS stopped the server process too. No console errors or failed requests; no overflow at 390 px; screenshots checked by eye |
-| Scripted E2E in `check.py` | Phase 10 |
+| **Scripted E2E in `check.py`** (`scripts/e2e.py`, Chromium, isolated stack, stand-in model) | 10 steps pass in about a minute: audit self-check, onboarding with a connected model, palette → new project, File Manager tools with an approval (file present before, gone after, both calls in Tool activity), demo objective verified with ≥ 3 agents and ≥ 6 graph nodes, memory kept, search finds Memory and Deliverables, workflow built in the editor and run twice (right outputs, 2 runs), audit chain verified with the key events present, shortcuts; 21 pages at 1440 and 390 px with no sideways scrolling and no accessibility findings; no console errors or failed requests |
+| Dependency audits (`pip-audit`, `pnpm audit`) | no known vulnerabilities |
 
 Run everything: `python scripts/check.py`.
+
+## Architecture decisions made in Phase 10
+
+- The end-to-end run is a plain Playwright script driven by a Python runner, not a Playwright Test project: it needs to boot and tear down its own isolated stack (API, web, stand-in model) on free ports, and one ordered walkthrough mirrors the MVP story better than independent specs.
+- The stand-in model is a test fixture under `scripts/e2e/`, reached through the ordinary provider path (so onboarding's connection test is real); the scripted demo provider stays reserved for the demo.
+- Accessibility is checked with in-page heuristics plus a self-test, rather than adding axe-core; the trade-off is recorded above.
+- Palette create actions are URLs (`?new=1`, `?add=1`, `?focus=objective`), so every action is also a link, and pages stay the owners of their dialogs.
+- Single-letter shortcuts are disabled while typing and inside dialogs; only modifier shortcuts work everywhere, so a shortcut can never swallow what someone types.
+
+## Bugs found by tests and the end-to-end run in Phase 10 (all fixed, with regression tests)
+
+- **The palette acted on stale results**: it ranked commands on a deferred copy of the query, so pressing Enter straight after typing "new project" opened *New objective*. Found by the end-to-end run; commands now rank on the live query (only the network search is deferred), and the palette test types and presses Enter in one go.
+- Caught while building, not by a test: a form inside the onboarding step contained the provider dialog; React propagates events from portals through the component tree, so submitting the provider form would also have advanced the step. Moved outside the form before it shipped.
+- Walkthrough-script issues only (a shortcut pressed before the page had mounted, a wrong field name); the product was fine.
 
 ## Architecture decisions made in Phase 9
 
@@ -251,4 +304,9 @@ Run everything: `python scripts/check.py`.
 
 ## Next
 
-Phase 10: command palette and keyboard shortcuts, onboarding (first run: workspace, permission level, first provider, the demo), UI polish across pages, a scripted end-to-end run in `scripts/check.py`, dependency audits (`pip-audit`, `pnpm audit`) in `check.py`, desktop polish, and a final pass over the 20-point MVP definition of done.
+The MVP is built. The most valuable next steps, in order:
+
+1. **Try it with real models** (a local model through Ollama or LM Studio, or a cloud key): planning, the step protocol, reviews and verification have only met scripted models. Expect prompt and repair tuning.
+2. **Desktop build on a machine with the Tauri prerequisites**: compile `apps/desktop`, then package the API as a sidecar executable (PyInstaller or uv) so NEXUS runs without a Python toolchain.
+3. Windows pass: the sandbox's Windows path, `.cmd` MCP servers, the keychain.
+4. Deferred features with seams already in place: agents reading MCP resources and prompts, recovery that switches model/tool or delegates, webhook/file triggers for workflows, a neural embedder, scheduled memory tidying (opt-in), conversation memory.

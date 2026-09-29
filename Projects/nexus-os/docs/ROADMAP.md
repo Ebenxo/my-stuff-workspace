@@ -1,5 +1,7 @@
 # NEXUS OS — roadmap
 
+**Status (2026-09-29): phases 0–10 are built and verified; see `BUILD_STATE.md` for the evidence and what remains.**
+
 Each phase ends with the same gate: **lint · typecheck · tests · build · run the app · fix · update `BUILD_STATE.md` · commit**. A phase is not finished until its exit criteria hold. Later phases do not start before earlier ones are green.
 
 | Phase | Scope | Exit criteria |

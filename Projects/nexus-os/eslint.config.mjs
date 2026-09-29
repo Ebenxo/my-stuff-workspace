@@ -33,6 +33,11 @@ export default tseslint.config(
     },
   },
   {
+    // The end-to-end script runs in Node and passes functions (the accessibility audit) into the page.
+    files: ["scripts/**/*.mjs"],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
+  {
     // Component libraries legitimately export class-variance helpers next to components.
     files: ["packages/ui/**/*.{ts,tsx}"],
     rules: { "react-refresh/only-export-components": "off" },

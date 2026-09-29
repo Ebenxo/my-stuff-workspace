@@ -1,8 +1,10 @@
-import { Button, Dialog, DialogContent } from "@nexus/ui";
-import { Menu, Search } from "lucide-react";
+import { Button, Dialog, DialogContent, Kbd } from "@nexus/ui";
+import { Command, Menu, Search } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { NotificationBell } from "../features/notifications/NotificationBell";
+import { isMac } from "../features/shortcuts/keys";
+import { useOverlays } from "../stores/overlays";
 import { Logo } from "./Logo";
 import { NavList } from "./Sidebar";
 
@@ -52,6 +54,7 @@ function TopSearch() {
 export function Topbar() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const setPalette = useOverlays((s) => s.setPalette);
   return (
     <header className="flex h-12 shrink-0 items-center gap-2 border-b border-line bg-canvas px-3 md:px-4">
       <Dialog open={open} onOpenChange={setOpen}>
@@ -70,6 +73,20 @@ export function Topbar() {
       </Dialog>
       <h1 className="text-sm font-medium text-fg">{titleFor(pathname)}</h1>
       <div className="ml-auto flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="hidden text-fg-muted lg:inline-flex"
+          onClick={() => setPalette(true)}
+          aria-label="Open the command palette"
+          title="Go anywhere or do anything by typing"
+        >
+          <Command /> Commands
+          <Kbd>{isMac() ? "⌘K" : "Ctrl K"}</Kbd>
+        </Button>
+        <Button variant="ghost" size="icon-sm" className="lg:hidden" aria-label="Open the command palette" onClick={() => setPalette(true)}>
+          <Command />
+        </Button>
         <TopSearch />
         <Button asChild variant="ghost" size="icon-sm" className="md:hidden" aria-label="Search">
           <Link to="/search">

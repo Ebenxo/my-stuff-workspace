@@ -103,7 +103,7 @@ Append-only `events` table, hash-chained per project (`hash = SHA-256(prev_hash 
 
 ## 12. Supply chain and dependencies
 
-Lockfiles committed (`uv.lock`, `pnpm-lock.yaml`); minimal Python dependency set. Dependency vulnerability audits (`pip-audit`, `pnpm audit`) are **not yet automated** in `scripts/check.py` (they need network access to advisory databases); they are scheduled for Phase 10. MCP servers are launched only from user-added configuration, never auto-discovered, with a scrubbed environment plus the variables configured for them (§7). The MCP client is written in-house (JSON-RPC over stdio and streamable HTTP) rather than adding the MCP SDK and its dependency tree.
+Lockfiles committed (`uv.lock`, `pnpm-lock.yaml`); minimal Python dependency set. Dependency vulnerability audits run in `scripts/check.py`: `pip-audit` over the API's environment and `pnpm audit` over every JavaScript package, dev tools included; a known vulnerability fails the check. They need the advisory databases, so `--offline` skips them (and says so). MCP servers are launched only from user-added configuration, never auto-discovered, with a scrubbed environment plus the variables configured for them (§7). The MCP client is written in-house (JSON-RPC over stdio and streamable HTTP) rather than adding the MCP SDK and its dependency tree.
 
 ## 13. Known limitations (stated, not hidden)
 
@@ -111,5 +111,5 @@ Lockfiles committed (`uv.lock`, `pnpm-lock.yaml`); minimal Python dependency set
 - MCP servers are not sandboxed: a stdio server is a program the person chose to run, with their permissions. NEXUS controls what reaches it (arguments after approval, configured variables) and what comes back, not what it does.
 - Prompt-injection defences reduce, but cannot eliminate, model manipulation; the guarantee we make is that manipulation cannot bypass policy or approval.
 - The local hash chain does not defend against a privileged local attacker.
-- Dependency audits are manual until Phase 10 (see §12).
+- Dependency audits catch *known* vulnerabilities only, and only when the check runs with internet access (see §12).
 - Live-provider behaviour, keychain integration and the Tauri shell are not verifiable in the CI/build container and are marked as such in BUILD_STATE.md.

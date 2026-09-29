@@ -5,10 +5,11 @@ import { NewProjectDialog } from "../features/projects/NewProjectDialog";
 import { ProjectCard } from "../features/projects/ProjectCard";
 import { errorMessage, useProjects } from "../lib/queries";
 import { Page, PageHeader } from "./Page";
+import { useParamFlag } from "../lib/useParamFlag";
 
 export function ProjectsRoute() {
   const [showArchived, setShowArchived] = useState(false);
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useParamFlag("new");
   const projects = useProjects(showArchived ? "archived" : "active");
 
   return (

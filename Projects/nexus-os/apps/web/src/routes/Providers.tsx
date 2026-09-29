@@ -5,12 +5,13 @@ import { useState } from "react";
 import { ProviderCard } from "../features/providers/ProviderCard";
 import { ProviderDialog } from "../features/providers/ProviderDialog";
 import { errorMessage, useDeleteProvider, useProviders, useTestProvider } from "../lib/queries";
+import { useParamFlag } from "../lib/useParamFlag";
 
 export function ProvidersRoute() {
   const providers = useProviders();
   const remove = useDeleteProvider();
   const test = useTestProvider();
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useParamFlag("add");
   const [editing, setEditing] = useState<Provider | undefined>();
   const [deleting, setDeleting] = useState<Provider | undefined>();
   const [fresh, setFresh] = useState<Record<string, ConnectionTest>>({});

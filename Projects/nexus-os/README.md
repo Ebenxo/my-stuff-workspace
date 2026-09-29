@@ -40,6 +40,14 @@ python scripts/dev.py          # API on http://127.0.0.1:8765, web on http://loc
 
 `scripts/dev.py` stores data in `data/dev/` (gitignored), creates a per-launch API token, and hands it to the Vite dev proxy so it never ships in the browser bundle. Works on Windows, macOS and Linux. Only one API can use a data folder at a time; a second copy needs its own folder and port, e.g. `NEXUS_PORT=8766 python scripts/dev.py --api-only --home data/dev2`.
 
+## First run
+
+The first time NEXUS opens it asks four things: what to call you, how careful agents should be (cautious, balanced or permissive; deleting files, running commands and sending data out always ask), where project files live, and which model to use (or none yet). Then you can try the demo or go straight to the Command Center. **Skip setup** keeps the defaults.
+
+## Getting around
+
+Press **Ctrl K** (⌘K on a Mac) anywhere for the command palette: type part of a page, an action ("new workflow", "add an MCP server", "try the demo") or a project, or anything to search for. **?** lists every shortcut: **/** searches, **G** then a letter goes to a page (C Command Center, P Projects, A Agents, W Workflows, R Approvals, M Memory, S Settings), **Ctrl J** shows the bottom panel with events and the NEXUS command line (`help`, `status`, `approvals`, `open <page>`, `search <words>`, `verify`).
+
 ## Try the demo
 
 On the Command Center press **Try the demo**. It creates a demo project with three notes about fictional products (every file is labelled *DEMO DATA*) and the objective *Research three AI coding assistants and create a comparison report*. The agents' answers come from a scripted demo model, so it works without a provider and nothing leaves your machine; everything else (planning, validation, the task graph, tools, reviews, verification, deliverables, events) is the real system. Review the plan, press **Run plan**, and watch the Researcher, Writer, Critic and Verifier work.
@@ -67,10 +75,15 @@ Settings → **Integrations** connects [Model Context Protocol](https://modelcon
 ## Quality gates
 
 ```bash
-python scripts/check.py          # lint, strict types, import contracts, tests, API-type drift, build
-python scripts/check.py --fast   # skip the production build and cargo tests
-python scripts/gen_openapi.py    # regenerate TypeScript API types after changing the backend
+python scripts/check.py            # lint, strict types, import contracts, tests, API-type drift, build,
+                                   # dependency audits and the end-to-end walkthrough in a browser
+python scripts/check.py --fast     # skip the build, cargo tests, audits and the end-to-end run
+python scripts/check.py --offline  # everything except the dependency audits (they need the internet)
+python scripts/e2e.py --keep       # just the end-to-end walkthrough; keeps its screenshots
+python scripts/gen_openapi.py      # regenerate TypeScript API types after changing the backend
 ```
+
+The end-to-end walkthrough starts its own API, web app and a scripted stand-in model on free ports with a fresh data folder, then drives a real browser through onboarding, the command palette, an agent whose risky action waits for approval, the demo objective to verification, memory and search, a workflow built in the editor and run twice, audit-log verification, and every page at 1440 and 390 pixels wide with basic accessibility checks. It needs a Playwright browser (`pnpm exec playwright install chromium`); without one it reports itself as skipped.
 
 ## Security posture in one paragraph
 

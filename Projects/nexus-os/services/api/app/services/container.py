@@ -305,7 +305,6 @@ async def build_container(
     integration_store = IntegrationStore(db, clock)
     mcp_manager = MCPServerManager(tools, tool_row_store, bus, clock)
     mcp = MCPService(integration_store, mcp_manager, tool_row_store, secret_store, bus, settings.home, clock)
-    health.register("mcp", mcp.health_check)
     started_at = time.monotonic()
     register_core_checks(
         health,
@@ -318,6 +317,7 @@ async def build_container(
         started_at=started_at,
         registry=registry,
     )
+    health.register("mcp", mcp.health_check)
     return AppContainer(
         settings=settings,
         token=token,

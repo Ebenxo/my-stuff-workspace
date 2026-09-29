@@ -70,3 +70,12 @@ Shared log between Claude Code and Codex (neither shares chat history). Read `do
 **Bugs found (fixed, with tests):** a crashed server's failure event was cancelled mid-write by the cleanup it triggered; server updates skipped validation.
 **Not verified:** third-party MCP servers (none installed here), Windows `.cmd` shims; MCP servers are not sandboxed; agents cannot read resources or use prompts yet.
 **Next:** Phase 10, command palette, onboarding, polish, scripted E2E and dependency audits in `check.py`.
+
+## 2026-09-29 — Phase 10 (polish, end-to-end verification) — Claude Code
+
+**Built:** first-run onboarding (name, permission level, workspace, connect a model with a live connection test, then the demo or the Command Center); a command palette (Ctrl/⌘+K: pages, actions, projects, live search); keyboard shortcuts (`/`, `?`, `G`+letter, Ctrl/⌘+J, Ctrl/⌘+.) with a help dialog; more NEXUS command-line commands; a scripted end-to-end walkthrough (`scripts/e2e.py`) and dependency audits (`pip-audit`, `pnpm audit`), both now part of `python scripts/check.py`.
+**Verified:** `python scripts/check.py` green: 954 pytest, 147 vitest, 8 cargo, ruff, mypy strict, import contracts, eslint, tsc, build, API-type drift, both audits clean, and the E2E walkthrough (onboarding → palette → project → agent tools with an approval → demo objective verified → memory → search → workflow built and run twice → audit chain → shortcuts → 21 pages at 1440/390 px with layout and accessibility checks, no console errors). All 20 MVP items are mapped to evidence in `docs/BUILD_STATE.md`.
+**Bug the E2E run found (fixed, with a test):** pressing Enter right after typing in the palette acted on stale results.
+**Not verified:** real models (scripted and stand-in only); Tauri build and API packaging; Windows paths; accessibility beyond structural checks.
+**Next:** see "Next" in `docs/BUILD_STATE.md` (real models first, then the desktop build).
+
