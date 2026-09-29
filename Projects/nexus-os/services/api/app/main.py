@@ -23,10 +23,12 @@ from app.api.routers import (
     events,
     files,
     health,
+    memory,
     notifications,
     objectives,
     projects,
     providers,
+    search,
     settings,
     tools,
     usage,
@@ -72,6 +74,8 @@ def create_app(
                 await container.agent_service.sync_builtins()
                 await container.agent_service.recover()
                 await container.objective_service.recover()  # after runs are marked interrupted
+                await container.memory.reembed_stale()  # new items, or a changed embedder
+                await container.universal_search.ensure_built()
                 await container.bus.emit(EventType.SYSTEM_STARTED, payload={"version": __version__})
                 log.info("NEXUS API %s ready on %s:%s (home=%s)", __version__, cfg.host, cfg.port, cfg.home)
                 yield
@@ -108,6 +112,8 @@ def create_app(
         tools,
         artifacts,
         files,
+        memory,
+        search,
     ):
         app.include_router(module.router)
 

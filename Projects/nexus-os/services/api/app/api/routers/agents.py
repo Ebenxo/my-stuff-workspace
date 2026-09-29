@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from app.api.deps import Container
 from app.schemas.agents import AgentCreate, AgentDefinition, AgentUpdate
 from app.schemas.common import StrictModel
+from app.schemas.memory import ContextReport
 from app.schemas.runtime import AgentRunOut, AgentRunRequest, ToolCallOut
 
 router = APIRouter(prefix="/api", tags=["agents"])
@@ -17,6 +18,7 @@ class RunDetail(BaseModel):
     run: AgentRunOut
     steps: list[dict[str, Any]]
     tool_calls: list[ToolCallOut]
+    context: ContextReport | None = None  # what the agent was given besides its task, and why
 
 
 class AnswerBody(StrictModel):
@@ -69,8 +71,13 @@ async def list_runs(
 
 @router.get("/runs/{run_id}", response_model=RunDetail)
 async def get_run(run_id: str, c: Container) -> RunDetail:
-    run, steps, calls = await c.agent_service.run_detail(run_id)
-    return RunDetail(run=run, steps=steps, tool_calls=calls)
+    run, steps, calls, context = await c.agent_service.run_detail(run_id)
+    return RunDetail(
+        run=run,
+        steps=steps,
+        tool_calls=calls,
+        context=ContextReport.model_validate(context) if context else None,
+    )
 
 
 @router.post("/runs/{run_id}/cancel", response_model=AgentRunOut)

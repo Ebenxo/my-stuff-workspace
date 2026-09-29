@@ -198,6 +198,7 @@ class RunStore:
         model: str | None,
         request: dict[str, Any],
         attempt: int = 1,
+        context_report: dict[str, Any] | None = None,
     ) -> AgentRunOut:
         async with self._db.session() as s:
             row = AgentRun(
@@ -211,6 +212,7 @@ class RunStore:
                 request=request,
                 attempt=attempt,
                 checkpoint=[],
+                context_report=context_report,
                 started_at=self._clock.now(),
             )
             s.add(row)
@@ -231,6 +233,13 @@ class RunStore:
             if row is None:
                 raise NotFoundError(f"Run {run_id} not found")
             return dict(row.request), list(row.checkpoint)
+
+    async def context_report(self, run_id: str) -> dict[str, Any] | None:
+        async with self._db.session() as s:
+            row = await s.get(AgentRun, run_id)
+            if row is None:
+                raise NotFoundError(f"Run {run_id} not found")
+            return dict(row.context_report) if row.context_report else None
 
     async def save_progress(
         self,

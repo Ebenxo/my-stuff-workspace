@@ -57,3 +57,17 @@ export type TaskStatus = S["TaskStatus"];
 export type PlanTask = S["PlanTask"];
 export type PlanEdit = S["PlanEdit"];
 export type AgentMessage = S["AgentMessage"];
+
+export type MemoryItem = S["MemoryItemOut"];
+export type MemoryCreate = S["MemoryCreate"];
+export type MemoryUpdate = S["MemoryUpdate"];
+export type MemoryHit = S["MemoryHit"];
+export type MemoryStats = S["MemoryStats"];
+export type MemorySource = S["MemorySource"];
+export type ScoreBreakdown = S["ScoreBreakdown"];
+export type CompressionReport = S["CompressionReport"];
+export type ContextReport = S["ContextReport"];
+export type ContextEntry = S["ContextEntry"];
+export type SearchResults = S["SearchResults"];
+export type SearchHit = S["SearchHit"];
+export type SearchKind = S["SearchHit"]["kind"];

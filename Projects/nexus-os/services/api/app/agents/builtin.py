@@ -49,7 +49,8 @@ def _agent(
         icon=icon,
         color=color,
         system_prompt=prompt.strip(),
-        tools=tools,
+        # Every agent may recall; only those that may write memory can propose new memories.
+        tools=[*tools, "search_memory", *(["remember"] if memory_write else [])],
         permissions=AgentPermissions(max_risk=max_risk),
         memory_scope=MemoryScope(
             read=["conversation", "project", "global"], write=["project"] if memory_write else []

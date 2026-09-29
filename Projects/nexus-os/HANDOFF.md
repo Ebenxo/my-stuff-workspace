@@ -46,3 +46,11 @@ Shared log between Claude Code and Codex (neither shares chat history). Read `do
 **Bugs the live check found (fixed):** the Planner's full internal prompt showed in the Activity panel (runs now carry a short title); the task graph did not re-fit as reviews and revisions were added or when the details panel closed; task rows clipped on phones; after the demo, its scripted provider counted as a connected provider. Earlier backend bugs are listed in `docs/BUILD_STATE.md`.
 **Not verified:** planning, reviewing and verifying with a real model (scripted only here); model/tool switching and delegation in recovery are not built.
 **Next:** Phase 7, memory and the context engine.
+
+## 2026-09-29 — Phase 7 (memory, context engine, search) — Claude Code
+
+**Built:** memory (migration `0004`) with a sensitivity guard that refuses secrets and personal identifiers, duplicate reuse and merging, suggestions the person confirms, importance bands, delete/restore/erase, and reversible compression; ranked recall with a visible score breakdown and a local hashing embedder; a ContextBuilder that gives each run its inputs, pinned facts and relevant memories within a budget, stored with the run and shown on the run page; `search_memory`/`remember` tools on the built-in agents; taint and privacy carried through memory; universal search (FTS5, LIKE fallback) fed by the event log. UI: Memory page and project tab, objective "Remember this for next time?", run "What it was given", top-bar search and Search page.
+**Verified:** `python scripts/check.py` green (839 pytest, 115 vitest, 8 cargo, ruff, mypy strict, import contracts, eslint, tsc, build, API-type drift). Live with Playwright on the real API and web app: demo → suggestion kept → pinned memory added, a key refused by category → a second demo gave all 6 runs relevant memory → search found the report; no console errors; no overflow at 390 px.
+**Caught while building:** memories from private runs could have reached cloud runs through recall (now impossible, tested); a placeholder number was refused as a card; the compression threshold was tuned from measured similarities; tools could not pass taint on (now they can).
+**Not verified:** recall quality with real models; the embedder is lexical, not neural.
+**Next:** Phases 8–9, workflows, scheduler, MCP.

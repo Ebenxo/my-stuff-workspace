@@ -58,6 +58,12 @@ Every piece of external content that enters a run (web page, HTTP response, MCP 
 
 This is the structural answer to prompt injection: even a fully hijacked model can only *propose*; the proposal is checked against policy that no text can change, and the human sees where the suggestion came from.
 
+**Memory carries taint forward.** Injected text could try to persist itself as a "fact" for later runs (memory poisoning). A memory written by a tainted run is marked (`source.tainted`), shown with an "After outside content" flag, and capped at low importance; when a later run is given it (context) or recalls it (`search_memory`), that run becomes tainted too (`memory:<id>` in its taint set). Recalled memories are always fenced as data, agents cannot rewrite a person's own memories (a near-duplicate from an agent is dropped, not merged), and agent-proposed memory for all projects waits for the person.
+
+**Memory never stores secrets.** The sensitivity guard refuses (not redacts) API keys, private keys, tokens, credential assignments, cloud credentials, payment card numbers (Luhn-checked), national identity numbers and bank account numbers (IBAN-checked). The refusal and its `MEMORY_REJECTED` event name only the category; the matched text is never logged, stored or echoed.
+
+**Private stays private.** Memories written during a "keep on this device" run are marked `source.private` and are only ever recalled into other private runs (context and `search_memory`), so they can never reach a cloud model. Private and shareable memories never merge.
+
 ## 7. Prompt-injection defence (layered)
 
 1. **Trust segmentation** in the prompt: SYSTEM and USER OBJECTIVE are trusted; PROJECT CONTEXT, MEMORY, upstream OUTPUTS, EXTERNAL CONTENT and TOOL RESULTS are data. Data is placed in the user turn, never the system turn.

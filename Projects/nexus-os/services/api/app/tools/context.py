@@ -50,6 +50,9 @@ class ToolContextFactory:
         agent_id: str | None = None,
         unattended: bool = False,
         private: bool = False,
+        agent_slug: str | None = None,
+        memory_read: tuple[str, ...] = (),
+        memory_write: tuple[str, ...] = (),
     ) -> ToolContext:
         project_dir = await self._dir(project_id)
 
@@ -81,4 +84,7 @@ class ToolContextFactory:
             allowed_domains=await self._domains(project_id),
             unattended=unattended,
             private=private,
+            agent_slug=agent_slug,
+            memory_read=memory_read,
+            memory_write=memory_write,
         )

@@ -7,12 +7,15 @@ from dataclasses import dataclass
 
 import httpx
 
+from app.agents.context import ContextBuilder
 from app.agents.runner import AgentRunner
 from app.core.clock import Clock, SystemClock
 from app.core.secrets import SecretStore, build_secret_store
 from app.core.settings import Settings
 from app.events.bus import EventBus
 from app.files.artifacts import ArtifactStore
+from app.memory.embedder import HashingEmbedder
+from app.memory.service import MemoryService
 from app.models.database import Database
 from app.orchestration.orchestrator import Orchestrator
 from app.permissions.approvals import ApprovalService, SessionGrants
@@ -20,6 +23,7 @@ from app.providers.gateway import LLMGateway
 from app.providers.registry import ProviderRegistry, new_http_client
 from app.providers.router import ModelRouter
 from app.providers.usage import UsageService
+from app.repositories.memory_store import MemoryStore
 from app.repositories.orchestration_store import ObjectiveStore, TaskStore
 from app.repositories.runtime_store import (
     AgentStore,
@@ -29,6 +33,7 @@ from app.repositories.runtime_store import (
     ToolCallStore,
     ToolRowStore,
 )
+from app.repositories.search_index import SearchIndex
 from app.schemas.common import PermissionLevel
 from app.schemas.providers import Budgets
 from app.services.agents import AgentService
@@ -42,6 +47,7 @@ from app.services.projects import ProjectService
 from app.services.providers import ProviderService
 from app.services.settings import SettingsService
 from app.services.tools import ToolService
+from app.services.universal_search import UniversalSearch
 from app.tasks.queue import InProcessJobQueue, JobQueue
 from app.tools.builtin import builtin_tools
 from app.tools.context import ToolContextFactory
@@ -93,7 +99,11 @@ class AppContainer:
     tool_contexts: ToolContextFactory
     sandbox: SandboxManager
     safe_http: SafeHttpClient
-    search: SearchService
+    search: SearchService  # web search for agents
+    memory_store: MemoryStore
+    memory: MemoryService
+    search_index: SearchIndex
+    universal_search: UniversalSearch  # the app's own search box
     started_at: float
 
     async def close(self) -> None:
@@ -150,6 +160,9 @@ async def build_container(
     sandbox = LocalSandbox()
     safe_http = SafeHttpClient()
     search = SearchService(safe_http, settings_service.get_search_config, secret_store.get)
+    memory_store = MemoryStore(db, clock)
+    search_index = SearchIndex(db)
+    memory = MemoryService(memory_store, search_index, bus, HashingEmbedder(), clock)
 
     async def project_domains(project_id: str) -> list[str]:
         return (await projects.get(project_id)).settings.allowed_domains
@@ -162,6 +175,7 @@ async def build_container(
         artifacts=artifacts,
         bus=bus,
         search=search,
+        memory=memory,
     )
     executor = ToolExecutor(tools, approvals, tool_call_store, bus, tool_row_store, clock)
     approvals.set_validator(executor.validate_arguments)
@@ -175,6 +189,7 @@ async def build_container(
         tool_contexts=tool_contexts,
         approvals=approvals,
         bus=bus,
+        context_builder=ContextBuilder(memory),
     )
     agent_service = AgentService(
         agents=agent_store,
@@ -207,6 +222,7 @@ async def build_container(
         level_for=level_for,
         project_dir_for=projects.project_dir,
         clock=clock,
+        memory=memory,
     )
     objective_service = ObjectiveService(
         objectives=objective_store,
@@ -227,6 +243,10 @@ async def build_container(
     )
     tool_service = ToolService(tool_row_store, tool_call_store, tools, bus)
     files = FilesService(projects, bus)
+    universal_search = UniversalSearch(
+        search_index, projects=projects, objectives=objective_store, artifacts=artifacts, memory=memory
+    )
+    bus.add_listener(universal_search.on_event)
     started_at = time.monotonic()
     register_core_checks(
         health,
@@ -280,5 +300,9 @@ async def build_container(
         sandbox=sandbox,
         safe_http=safe_http,
         search=search,
+        memory_store=memory_store,
+        memory=memory,
+        search_index=search_index,
+        universal_search=universal_search,
         started_at=started_at,
     )

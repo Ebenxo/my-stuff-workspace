@@ -1321,6 +1321,58 @@
         "title": "ChainVerification",
         "type": "object"
       },
+      "CompressBody": {
+        "additionalProperties": false,
+        "properties": {
+          "older_than_days": {
+            "default": 30,
+            "maximum": 3650.0,
+            "minimum": 0.0,
+            "title": "Older Than Days",
+            "type": "integer"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id"
+        ],
+        "title": "CompressBody",
+        "type": "object"
+      },
+      "CompressionReport": {
+        "properties": {
+          "compressed": {
+            "title": "Compressed",
+            "type": "integer"
+          },
+          "groups": {
+            "title": "Groups",
+            "type": "integer"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "summaries": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Summaries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "project_id",
+          "groups",
+          "compressed",
+          "summaries"
+        ],
+        "title": "CompressionReport",
+        "type": "object"
+      },
       "ConnectionTestOut": {
         "properties": {
           "detail": {
@@ -1364,6 +1416,103 @@
           "detail"
         ],
         "title": "ConnectionTestOut",
+        "type": "object"
+      },
+      "ContextEntry": {
+        "properties": {
+          "included": {
+            "title": "Included",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "upstream",
+              "memory",
+              "given"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "memory_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Id"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "tokens": {
+            "title": "Tokens",
+            "type": "integer"
+          },
+          "truncated": {
+            "default": false,
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "source",
+          "kind",
+          "tokens",
+          "score",
+          "included",
+          "reason"
+        ],
+        "title": "ContextEntry",
+        "type": "object"
+      },
+      "ContextReport": {
+        "description": "What an agent was given besides its task, and why. Stored with the run and shown in the UI.",
+        "properties": {
+          "budget_tokens": {
+            "title": "Budget Tokens",
+            "type": "integer"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ContextEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "memory_query": {
+            "default": "",
+            "title": "Memory Query",
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "used_tokens": {
+            "title": "Used Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "budget_tokens",
+          "used_tokens"
+        ],
+        "title": "ContextReport",
         "type": "object"
       },
       "ConversationCreate": {
@@ -1675,6 +1824,193 @@
         "title": "HealthReport",
         "type": "object"
       },
+      "MemoryCreate": {
+        "additionalProperties": false,
+        "description": "A memory the person writes themselves.",
+        "properties": {
+          "content": {
+            "maxLength": 4000,
+            "minLength": 3,
+            "title": "Content",
+            "type": "string"
+          },
+          "pinned": {
+            "default": false,
+            "title": "Pinned",
+            "type": "boolean"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "scope": {
+            "default": "project",
+            "enum": [
+              "project",
+              "global"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "maxLength": 40,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 12,
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "title": "MemoryCreate",
+        "type": "object"
+      },
+      "MemoryHit": {
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/MemoryItemOut"
+          },
+          "score": {
+            "$ref": "#/components/schemas/ScoreBreakdown"
+          }
+        },
+        "required": [
+          "item",
+          "score"
+        ],
+        "title": "MemoryHit",
+        "type": "object"
+      },
+      "MemoryItemOut": {
+        "properties": {
+          "access_count": {
+            "title": "Access Count",
+            "type": "integer"
+          },
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "content_hash": {
+            "title": "Content Hash",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "importance": {
+            "title": "Importance",
+            "type": "number"
+          },
+          "last_accessed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Accessed At"
+          },
+          "merged_into": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merged Into"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "scope": {
+            "enum": [
+              "conversation",
+              "project",
+              "global"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/MemorySource"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "pending",
+              "deleted"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "scope",
+          "project_id",
+          "content",
+          "summary",
+          "importance",
+          "source",
+          "tags",
+          "status",
+          "content_hash",
+          "access_count",
+          "last_accessed_at",
+          "merged_into",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "MemoryItemOut",
+        "type": "object"
+      },
       "MemoryScope": {
         "additionalProperties": false,
         "properties": {
@@ -1704,6 +2040,151 @@
           }
         },
         "title": "MemoryScope",
+        "type": "object"
+      },
+      "MemorySource": {
+        "description": "Where a memory came from. Always shown next to it.",
+        "properties": {
+          "agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent"
+          },
+          "kind": {
+            "enum": [
+              "user",
+              "agent",
+              "objective",
+              "summary"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "objective_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective Id"
+          },
+          "private": {
+            "default": false,
+            "title": "Private",
+            "type": "boolean"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "tainted": {
+            "default": false,
+            "title": "Tainted",
+            "type": "boolean"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "MemorySource",
+        "type": "object"
+      },
+      "MemoryStats": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "deleted": {
+            "title": "Deleted",
+            "type": "integer"
+          },
+          "pending": {
+            "title": "Pending",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "active",
+          "pending",
+          "deleted"
+        ],
+        "title": "MemoryStats",
+        "type": "object"
+      },
+      "MemoryUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "minLength": 3,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "pinned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinned"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 40,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 12,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          }
+        },
+        "title": "MemoryUpdate",
         "type": "object"
       },
       "MessageCreate": {
@@ -3189,6 +3670,16 @@
       },
       "RunDetail": {
         "properties": {
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContextReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "run": {
             "$ref": "#/components/schemas/AgentRunOut"
           },
@@ -3229,6 +3720,125 @@
         ],
         "title": "RunStatus",
         "type": "string"
+      },
+      "ScoreBreakdown": {
+        "properties": {
+          "importance": {
+            "title": "Importance",
+            "type": "number"
+          },
+          "keyword": {
+            "title": "Keyword",
+            "type": "number"
+          },
+          "recency": {
+            "title": "Recency",
+            "type": "number"
+          },
+          "semantic": {
+            "title": "Semantic",
+            "type": "number"
+          },
+          "task": {
+            "title": "Task",
+            "type": "number"
+          },
+          "total": {
+            "title": "Total",
+            "type": "number"
+          }
+        },
+        "required": [
+          "semantic",
+          "keyword",
+          "recency",
+          "importance",
+          "task",
+          "total"
+        ],
+        "title": "ScoreBreakdown",
+        "type": "object"
+      },
+      "SearchHit": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "project",
+              "objective",
+              "artifact",
+              "memory"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "snippet": {
+            "title": "Snippet",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "project_id",
+          "title",
+          "snippet",
+          "score"
+        ],
+        "title": "SearchHit",
+        "type": "object"
+      },
+      "SearchResults": {
+        "properties": {
+          "engine": {
+            "enum": [
+              "fts5",
+              "like"
+            ],
+            "title": "Engine",
+            "type": "string"
+          },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/SearchHit"
+            },
+            "title": "Hits",
+            "type": "array"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "hits",
+          "engine"
+        ],
+        "title": "SearchResults",
+        "type": "object"
       },
       "SessionGrantOut": {
         "properties": {
@@ -5158,6 +5768,693 @@
         ]
       }
     },
+    "/api/memory": {
+      "get": {
+        "operationId": "list_memory",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "project",
+                    "global"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scope"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status_filter",
+            "required": false,
+            "schema": {
+              "default": "active",
+              "enum": [
+                "active",
+                "pending",
+                "deleted"
+              ],
+              "title": "Status Filter",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tag"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "user",
+                    "agent",
+                    "objective",
+                    "summary"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemoryItemOut"
+                  },
+                  "title": "Response List Memory",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Memory",
+        "tags": [
+          "memory"
+        ]
+      },
+      "post": {
+        "operationId": "create_memory",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/memory/compress": {
+      "post": {
+        "operationId": "compress_memory",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompressBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompressionReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Compress Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/memory/search": {
+      "get": {
+        "description": "What an agent in this project would recall for ``q``, with the score breakdown. The person sees\nprivate memories too; browsing does not count as use.",
+        "operationId": "search_memory",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "enum": [
+                "any",
+                "project",
+                "global"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "k",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "title": "K",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemoryHit"
+                  },
+                  "title": "Response Search Memory",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/memory/stats": {
+      "get": {
+        "operationId": "memory_stats",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryStats"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Memory Stats",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/memory/{item_id}": {
+      "delete": {
+        "description": "Delete (recoverable from the Deleted list) or, with ``purge``, erase permanently.",
+        "operationId": "delete_memory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "purge",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Purge",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Memory",
+        "tags": [
+          "memory"
+        ]
+      },
+      "get": {
+        "operationId": "get_memory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Memory",
+        "tags": [
+          "memory"
+        ]
+      },
+      "patch": {
+        "operationId": "update_memory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/memory/{item_id}/confirm": {
+      "post": {
+        "operationId": "confirm_memory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/memory/{item_id}/dismiss": {
+      "post": {
+        "operationId": "dismiss_memory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dismiss Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/memory/{item_id}/restore": {
+      "post": {
+        "operationId": "restore_memory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/memory/{item_id}/undo-compression": {
+      "post": {
+        "operationId": "undo_compression",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemoryItemOut"
+                  },
+                  "title": "Response Undo Compression",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Undo Compression",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
     "/api/models": {
       "get": {
         "operationId": "all_models",
@@ -7014,6 +8311,96 @@
         "summary": "Resume Run",
         "tags": [
           "agents"
+        ]
+      }
+    },
+    "/api/search": {
+      "get": {
+        "description": "Search projects, objectives, deliverables and memory at once.",
+        "operationId": "universal_search",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kinds",
+            "required": false,
+            "schema": {
+              "default": [],
+              "items": {
+                "enum": [
+                  "project",
+                  "objective",
+                  "artifact",
+                  "memory"
+                ],
+                "type": "string"
+              },
+              "title": "Kinds",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Universal Search",
+        "tags": [
+          "search"
         ]
       }
     },

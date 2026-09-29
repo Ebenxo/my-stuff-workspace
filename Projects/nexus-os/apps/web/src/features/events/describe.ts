@@ -155,6 +155,27 @@ export function describeEvent(e: EventRecord): EventView {
       return { text: `${p["created"] === true ? "Created" : "Updated"} ${str(p["path"]) ?? "a file"}`, tone: "neutral" };
     case "FILE_DELETED":
       return { text: `Moved ${str(p["path"]) ?? "a file"} to trash`, tone: "warning" };
+    case "MEMORY_CREATED":
+      return {
+        text: `${p["status"] === "pending" ? "Suggested remembering" : "Remembered"}: ${str(p["preview"]) ?? "a note"}`,
+        tone: p["status"] === "pending" ? "warning" : "info",
+      };
+    case "MEMORY_UPDATED": {
+      const change = str(p["change"]) ?? "edited";
+      const verb = { confirmed: "Kept", restored: "Restored", merged: "Merged into an existing memory", edited: "Edited" }[change] ?? "Updated";
+      return { text: `${verb}: ${str(p["preview"]) ?? "a memory"}`, tone: change === "confirmed" ? "success" : "neutral" };
+    }
+    case "MEMORY_DELETED":
+      return {
+        text: p["reason"] === "purged" ? "A memory was erased" : p["reason"] === "dismissed" ? "Memory suggestion dismissed" : "A memory was deleted",
+        tone: "neutral",
+      };
+    case "MEMORY_REJECTED": {
+      const cats = Array.isArray(p["categories"]) ? (p["categories"] as string[]).join(", ") : "sensitive data";
+      return { text: `Not remembered: it looked like it contained ${cats}`, tone: "warning" };
+    }
+    case "MEMORY_COMPRESSED":
+      return { text: `Folded ${String(p["merged"] ?? "some")} older notes into one summary`, tone: "info" };
     case "CLIPBOARD_REQUEST":
       return { text: `Copy offered: ${str(p["label"]) ?? "text"}`, tone: "info" };
     default:

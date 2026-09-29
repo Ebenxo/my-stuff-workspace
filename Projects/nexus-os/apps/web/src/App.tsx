@@ -6,12 +6,14 @@ import { retryPolicy } from "./lib/queries";
 import { AgentsRoute } from "./routes/Agents";
 import { ApprovalsRoute } from "./routes/Approvals";
 import { CommandCenterRoute } from "./routes/CommandCenter";
+import { MemoryRoute } from "./routes/Memory";
 import { NotFoundRoute } from "./routes/NotFound";
 import { ObjectiveRoute } from "./routes/Objective";
 import { ProjectDetailRoute } from "./routes/ProjectDetail";
 import { ProjectsRoute } from "./routes/Projects";
 import { ProvidersRoute } from "./routes/Providers";
 import { RunRoute } from "./routes/Run";
+import { SearchRoute } from "./routes/Search";
 import { GeneralSettingsRoute, HealthRoute, SettingsLayout, ToolsRoute } from "./routes/Settings";
 import { UsageRoute } from "./routes/Usage";
 
@@ -33,6 +35,8 @@ const router = createBrowserRouter([
       { path: "objectives/:objectiveId", element: <ObjectiveRoute /> },
       { path: "runs/:runId", element: <RunRoute /> },
       { path: "approvals", element: <ApprovalsRoute /> },
+      { path: "memory", element: <MemoryRoute /> },
+      { path: "search", element: <SearchRoute /> },
       {
         path: "settings",
         element: <SettingsLayout />,

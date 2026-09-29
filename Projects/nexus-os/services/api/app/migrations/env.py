@@ -5,6 +5,7 @@ from __future__ import annotations
 from alembic import context
 from sqlalchemy import create_engine, pool
 
+from app.migrate import include_name
 from app.models import Base
 from app.models.base import UTCDateTime
 
@@ -34,6 +35,7 @@ def run_migrations_offline() -> None:
         render_as_batch=True,
         compare_type=True,
         render_item=render_item,
+        include_name=include_name,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -48,6 +50,7 @@ def run_migrations_online() -> None:
             render_as_batch=True,
             compare_type=True,
             render_item=render_item,
+            include_name=include_name,
         )
         with context.begin_transaction():
             context.run_migrations()

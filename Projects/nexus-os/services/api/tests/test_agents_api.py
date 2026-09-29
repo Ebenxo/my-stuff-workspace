@@ -309,7 +309,7 @@ async def test_agent_endpoints_need_the_token(anon_client: httpx.AsyncClient) ->
 
 async def test_tool_catalogue_and_switches(client: httpx.AsyncClient, ae: AE) -> None:
     tools = {t["name"]: t for t in (await client.get("/api/tools")).json()}
-    assert len(tools) == 22 and tools["run_command"]["requires_approval"] is True
+    assert len(tools) == 24 and tools["run_command"]["requires_approval"] is True
     assert tools["read_file"]["risk_level"] == "SAFE" and tools["web_search"]["enabled"] is True
     assert "properties" in tools["write_file"]["input_schema"]
 

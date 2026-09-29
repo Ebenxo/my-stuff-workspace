@@ -1,7 +1,7 @@
 import { Button, Dialog, DialogContent } from "@nexus/ui";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { useState } from "react";
-import { useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { NotificationBell } from "../features/notifications/NotificationBell";
 import { Logo } from "./Logo";
 import { NavList } from "./Sidebar";
@@ -10,7 +10,42 @@ function titleFor(pathname: string): string {
   if (pathname === "/") return "Command Center";
   if (pathname.startsWith("/projects")) return pathname === "/projects" ? "Projects" : "Project";
   if (pathname.startsWith("/settings")) return "Settings";
+  if (pathname.startsWith("/agents") || pathname.startsWith("/runs")) return "Agents";
+  if (pathname.startsWith("/objectives")) return "Objective";
+  if (pathname.startsWith("/approvals")) return "Approvals";
+  if (pathname.startsWith("/memory")) return "Memory";
+  if (pathname.startsWith("/search")) return "Search";
   return "NEXUS";
+}
+
+/** The app-wide search box. It opens the Search page, which searches everything. */
+function TopSearch() {
+  const navigate = useNavigate();
+  const [text, setText] = useState("");
+  return (
+    <form
+      role="search"
+      className="relative hidden w-64 md:block"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!text.trim()) return;
+        void navigate(`/search?q=${encodeURIComponent(text.trim())}`);
+        setText("");
+      }}
+    >
+      <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-fg-subtle" aria-hidden="true" />
+      <label htmlFor="top-search" className="sr-only">
+        Search everything
+      </label>
+      <input
+        id="top-search"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Search…"
+        className="h-8 w-full rounded-md border border-line bg-surface pl-8 pr-2 text-[13px] text-fg placeholder:text-fg-subtle focus-visible:outline-2 focus-visible:outline-ring"
+      />
+    </form>
+  );
 }
 
 export function Topbar() {
@@ -34,6 +69,12 @@ export function Topbar() {
       </Dialog>
       <h1 className="text-sm font-medium text-fg">{titleFor(pathname)}</h1>
       <div className="ml-auto flex items-center gap-1">
+        <TopSearch />
+        <Button asChild variant="ghost" size="icon-sm" className="md:hidden" aria-label="Search">
+          <Link to="/search">
+            <Search />
+          </Link>
+        </Button>
         <NotificationBell />
       </div>
     </header>

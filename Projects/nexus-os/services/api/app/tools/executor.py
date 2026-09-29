@@ -391,6 +391,7 @@ class ToolExecutor:
         await self._calls.update(call_id, status=ToolCallStatus.RUNNING, risk_level=effective.value)
         started = time.monotonic()
         try:
+            ectx.tool_context.taint_sources = ectx.taint.sources
             raw = await asyncio.wait_for(tool.handler(ectx.tool_context, args), timeout=tool.timeout_s)
         except TimeoutError:
             return await self._fail(
@@ -438,6 +439,10 @@ class ToolExecutor:
             )
 
         # 8. Result: redact, cap, taint if external, scan for injection, log.
+        # A handler may name untrusted sources it passed on (e.g. a recalled memory written after
+        # reading a web page); they taint the run like any external content.
+        for extra in ectx.tool_context.taint_sources:
+            ectx.taint.add(extra)
         duration = int((time.monotonic() - started) * 1000)
         text = raw if isinstance(raw, str) else json.dumps(raw, default=str, ensure_ascii=False)
         text = redact_text(text)

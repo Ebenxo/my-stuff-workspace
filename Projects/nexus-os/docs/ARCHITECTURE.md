@@ -175,6 +175,8 @@ observe → retrieve context → decide (structured AgentStep) → validate → 
 
 Ranking = weighted blend of semantic relevance, recency, importance and task relationship; lowest-ranked segments are dropped (or summarised) to fit the token budget. Trust labelling is a soft defence; hard defences are structural (SECURITY.md §6–7).
 
+As built (Phase 7, `app/agents/context.py`): the ContextBuilder runs once when a run is created. Candidates in priority order are the caller's blocks (an orchestrated task's upstream outputs and reviews), the project's pinned memories, and memories recalled for the run's title and task. The budget (12,000 tokens by default, estimated at 3.5 characters per token plus 10 %) is filled in that order; a caller's block that does not fit is cut at a sentence boundary, a memory that does not fit is left out. The chosen blocks are stored with the run's request, so a resumed run sees exactly the same context, and a `ContextReport` (given, shortened, left out, why, tokens) is stored with the run and shown on the run page. Files are not pre-loaded: agents read them through tools, so every read is logged and taints the run.
+
 ## 8. Real-time model
 
 All state changes go through `EventBus.emit(event)`, which (1) persists to the `events` table with a per-project hash chain, then (2) fans out in-process. `GET /api/events/stream` is an SSE endpoint that replays from `Last-Event-ID` (event sequence number) and then tails live events, so the UI can reconnect without gaps. The UI uses a fetch-based SSE reader (so it can send the bearer header) and applies events to TanStack Query caches and Zustand stores.

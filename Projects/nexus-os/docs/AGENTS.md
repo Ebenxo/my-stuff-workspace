@@ -25,7 +25,7 @@ An agent can only call tools that are both on its allow-list **and** permitted b
 
 ## Built-in team
 
-Defined in code (`app/agents/builtin.py`), synced to the `agents` table at every startup, ids `agent_builtin_<slug>`. "Read" = `list_directory`, `read_file`, `search_files`. Memory tools (`search_memory`, `remember`) join the allow-lists in Phase 7.
+Defined in code (`app/agents/builtin.py`), synced to the `agents` table at every startup, ids `agent_builtin_<slug>`. "Read" = `list_directory`, `read_file`, `search_files`. Every agent also has `search_memory`; agents that may write project memory (all except the Orchestrator, Planner, Critic and Verifier) also have `remember`. The ContextBuilder gives each run the relevant memories before it starts (see `docs/MEMORY.md`).
 
 | Slug | Name | Tools (allow-list) | Max risk | Limits (steps / tool calls) | Notes |
 |---|---|---|---|---|---|

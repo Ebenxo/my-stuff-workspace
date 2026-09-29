@@ -344,6 +344,169 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/memory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Memory */
+        get: operations["list_memory"];
+        put?: never;
+        /** Create Memory */
+        post: operations["create_memory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memory/compress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Compress Memory */
+        post: operations["compress_memory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memory/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Memory
+         * @description What an agent in this project would recall for ``q``, with the score breakdown. The person sees
+         *     private memories too; browsing does not count as use.
+         */
+        get: operations["search_memory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memory/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Memory Stats */
+        get: operations["memory_stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memory/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Memory */
+        get: operations["get_memory"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Memory
+         * @description Delete (recoverable from the Deleted list) or, with ``purge``, erase permanently.
+         */
+        delete: operations["delete_memory"];
+        options?: never;
+        head?: never;
+        /** Update Memory */
+        patch: operations["update_memory"];
+        trace?: never;
+    };
+    "/api/memory/{item_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm Memory */
+        post: operations["confirm_memory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memory/{item_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss Memory */
+        post: operations["dismiss_memory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memory/{item_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Memory */
+        post: operations["restore_memory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/memory/{item_id}/undo-compression": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Undo Compression */
+        post: operations["undo_compression"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/models": {
         parameters: {
             query?: never;
@@ -881,6 +1044,26 @@ export interface paths {
         put?: never;
         /** Resume Run */
         post: operations["resume_run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Universal Search
+         * @description Search projects, objectives, deliverables and memory at once.
+         */
+        get: operations["universal_search"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1543,6 +1726,27 @@ export interface components {
             /** Ok */
             ok: boolean;
         };
+        /** CompressBody */
+        CompressBody: {
+            /**
+             * Older Than Days
+             * @default 30
+             */
+            older_than_days?: number;
+            /** Project Id */
+            project_id: string;
+        };
+        /** CompressionReport */
+        CompressionReport: {
+            /** Compressed */
+            compressed: number;
+            /** Groups */
+            groups: number;
+            /** Project Id */
+            project_id: string;
+            /** Summaries */
+            summaries: string[];
+        };
         /** ConnectionTestOut */
         ConnectionTestOut: {
             /** Detail */
@@ -1555,6 +1759,50 @@ export interface components {
             models_found?: number | null;
             /** Ok */
             ok: boolean;
+        };
+        /** ContextEntry */
+        ContextEntry: {
+            /** Included */
+            included: boolean;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "upstream" | "memory" | "given";
+            /** Memory Id */
+            memory_id?: string | null;
+            /** Reason */
+            reason: string;
+            /** Score */
+            score: number;
+            /** Source */
+            source: string;
+            /** Tokens */
+            tokens: number;
+            /**
+             * Truncated
+             * @default false
+             */
+            truncated?: boolean;
+        };
+        /**
+         * ContextReport
+         * @description What an agent was given besides its task, and why. Stored with the run and shown in the UI.
+         */
+        ContextReport: {
+            /** Budget Tokens */
+            budget_tokens: number;
+            /** Entries */
+            entries?: components["schemas"]["ContextEntry"][];
+            /**
+             * Memory Query
+             * @default
+             */
+            memory_query?: string;
+            /** Notes */
+            notes?: string[];
+            /** Used Tokens */
+            used_tokens: number;
         };
         /** ConversationCreate */
         ConversationCreate: {
@@ -1692,12 +1940,131 @@ export interface components {
             /** Version */
             version: string;
         };
+        /**
+         * MemoryCreate
+         * @description A memory the person writes themselves.
+         */
+        MemoryCreate: {
+            /** Content */
+            content: string;
+            /**
+             * Pinned
+             * @default false
+             */
+            pinned?: boolean;
+            /** Project Id */
+            project_id?: string | null;
+            /**
+             * Scope
+             * @default project
+             * @enum {string}
+             */
+            scope?: "project" | "global";
+            /** Tags */
+            tags?: string[];
+        };
+        /** MemoryHit */
+        MemoryHit: {
+            item: components["schemas"]["MemoryItemOut"];
+            score: components["schemas"]["ScoreBreakdown"];
+        };
+        /** MemoryItemOut */
+        MemoryItemOut: {
+            /** Access Count */
+            access_count: number;
+            /** Content */
+            content: string;
+            /** Content Hash */
+            content_hash: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Importance */
+            importance: number;
+            /** Last Accessed At */
+            last_accessed_at: string | null;
+            /** Merged Into */
+            merged_into: string | null;
+            /** Project Id */
+            project_id: string | null;
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "conversation" | "project" | "global";
+            source: components["schemas"]["MemorySource"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "pending" | "deleted";
+            /** Summary */
+            summary: string;
+            /** Tags */
+            tags: string[];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** MemoryScope */
         MemoryScope: {
             /** Read */
             read?: ("conversation" | "project" | "global")[];
             /** Write */
             write?: ("conversation" | "project" | "global")[];
+        };
+        /**
+         * MemorySource
+         * @description Where a memory came from. Always shown next to it.
+         */
+        MemorySource: {
+            /** Agent */
+            agent?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "user" | "agent" | "objective" | "summary";
+            /** Objective Id */
+            objective_id?: string | null;
+            /**
+             * Private
+             * @default false
+             */
+            private?: boolean;
+            /** Run Id */
+            run_id?: string | null;
+            /**
+             * Tainted
+             * @default false
+             */
+            tainted?: boolean;
+            /** Task Id */
+            task_id?: string | null;
+        };
+        /** MemoryStats */
+        MemoryStats: {
+            /** Active */
+            active: number;
+            /** Deleted */
+            deleted: number;
+            /** Pending */
+            pending: number;
+        };
+        /** MemoryUpdate */
+        MemoryUpdate: {
+            /** Content */
+            content?: string | null;
+            /** Pinned */
+            pinned?: boolean | null;
+            /** Tags */
+            tags?: string[] | null;
         };
         /** MessageCreate */
         MessageCreate: {
@@ -2201,6 +2568,7 @@ export interface components {
         };
         /** RunDetail */
         RunDetail: {
+            context?: components["schemas"]["ContextReport"] | null;
             run: components["schemas"]["AgentRunOut"];
             /** Steps */
             steps: {
@@ -2214,6 +2582,51 @@ export interface components {
          * @enum {string}
          */
         RunStatus: "RUNNING" | "WAITING_APPROVAL" | "WAITING_INPUT" | "COMPLETED" | "FAILED" | "CANCELLED" | "TIMED_OUT" | "INTERRUPTED";
+        /** ScoreBreakdown */
+        ScoreBreakdown: {
+            /** Importance */
+            importance: number;
+            /** Keyword */
+            keyword: number;
+            /** Recency */
+            recency: number;
+            /** Semantic */
+            semantic: number;
+            /** Task */
+            task: number;
+            /** Total */
+            total: number;
+        };
+        /** SearchHit */
+        SearchHit: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "project" | "objective" | "artifact" | "memory";
+            /** Project Id */
+            project_id: string | null;
+            /** Score */
+            score: number;
+            /** Snippet */
+            snippet: string;
+            /** Title */
+            title: string;
+        };
+        /** SearchResults */
+        SearchResults: {
+            /**
+             * Engine
+             * @enum {string}
+             */
+            engine: "fts5" | "like";
+            /** Hits */
+            hits: components["schemas"]["SearchHit"][];
+            /** Query */
+            query: string;
+        };
         /** SessionGrantOut */
         SessionGrantOut: {
             /**
@@ -3176,6 +3589,396 @@ export interface operations {
                     "application/json": {
                         [key: string]: boolean;
                     };
+                };
+            };
+        };
+    };
+    list_memory: {
+        parameters: {
+            query?: {
+                project_id?: string | null;
+                scope?: ("project" | "global") | null;
+                status_filter?: "active" | "pending" | "deleted";
+                tag?: string | null;
+                source?: ("user" | "agent" | "objective" | "summary") | null;
+                q?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemoryItemOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_memory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemoryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemoryItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    compress_memory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompressBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompressionReport"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_memory: {
+        parameters: {
+            query: {
+                q: string;
+                project_id?: string | null;
+                scope?: "any" | "project" | "global";
+                k?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemoryHit"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    memory_stats: {
+        parameters: {
+            query?: {
+                project_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemoryStats"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_memory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemoryItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_memory: {
+        parameters: {
+            query?: {
+                purge?: boolean;
+            };
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_memory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemoryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemoryItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirm_memory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemoryItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_memory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemoryItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_memory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemoryItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_compression: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemoryItemOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -4434,6 +5237,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentRunOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    universal_search: {
+        parameters: {
+            query: {
+                q: string;
+                project_id?: string | null;
+                kinds?: ("project" | "objective" | "artifact" | "memory")[];
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResults"];
                 };
             };
             /** @description Validation Error */

@@ -6,6 +6,7 @@ import { Link, useParams } from "react-router";
 import { ApprovalCard } from "../features/approvals/ApprovalCard";
 import { RUN_STATUS, RISK, TOOL_STATUS, runDuration, totalTokens } from "../features/agents/format";
 import { StepTimeline } from "../features/agents/StepTimeline";
+import { ContextPanel } from "../features/memory/ContextPanel";
 import {
   isNotFound,
   useAgents,
@@ -235,6 +236,12 @@ export function RunRoute() {
               ) : null}
             </CardContent>
           </Card>
+        </Section>
+      ) : null}
+
+      {detail.data.context ? (
+        <Section title="What it was given">
+          <ContextPanel report={detail.data.context} projectId={r.project_id} />
         </Section>
       ) : null}
 

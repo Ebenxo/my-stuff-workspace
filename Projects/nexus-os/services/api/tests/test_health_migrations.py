@@ -9,6 +9,7 @@ from alembic.migration import MigrationContext
 from sqlalchemy import create_engine, inspect
 
 from app import migrate
+from app.migrate import include_name
 from app.models import Base
 
 
@@ -67,13 +68,16 @@ def test_migrations_upgrade_downgrade_and_match_models(tmp_path: Path) -> None:
         "objectives",
         "tasks",
         "task_dependencies",
+        "memory_items",
+        "memory_embeddings",
+        "search_index",
         "alembic_version",
     }
     assert expected <= tables
-    assert head == "0003"
+    assert head == "0004"
 
     with engine.connect() as conn:
-        ctx = MigrationContext.configure(conn, opts={"compare_type": True})
+        ctx = MigrationContext.configure(conn, opts={"compare_type": True, "include_name": include_name})
         diff = compare_metadata(ctx, Base.metadata)
     engine.dispose()
     assert diff == [], f"models and migrations disagree: {diff}"

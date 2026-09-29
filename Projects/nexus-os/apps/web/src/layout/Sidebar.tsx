@@ -2,16 +2,19 @@ import { Tooltip, cn } from "@nexus/ui";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { NavLink } from "react-router";
 import { usePendingApprovalCount } from "../lib/agentQueries";
+import { useMemoryStats } from "../lib/memoryQueries";
 import { useUi } from "../stores/ui";
 import { Logo } from "./Logo";
 import { NAV_ITEMS } from "./nav";
 
 export function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const pending = usePendingApprovalCount();
+  const suggestions = useMemoryStats().data?.pending ?? 0;
   return (
     <nav aria-label="Primary" className="flex flex-col gap-0.5 px-2">
       {NAV_ITEMS.map(({ to, label, icon: Icon, end, badge }) => {
-        const count = badge === "approvals" ? pending : 0;
+        const count = badge === "approvals" ? pending : badge === "memory" ? suggestions : 0;
+        const noun = badge === "memory" ? "to review" : "waiting";
         const link = (
           <NavLink
             key={to}
@@ -35,13 +38,13 @@ export function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavig
             {collapsed ? (
               <span className="sr-only">
                 {label}
-                {count > 0 ? `, ${count} waiting` : ""}
+                {count > 0 ? `, ${count} ${noun}` : ""}
               </span>
             ) : (
               <>
                 <span>{label}</span>
                 {count > 0 ? (
-                  <span className="ml-auto rounded-full bg-warning/15 px-1.5 text-[11px] font-semibold leading-5 text-warning" aria-label={`${count} waiting`}>
+                  <span className="ml-auto rounded-full bg-warning/15 px-1.5 text-[11px] font-semibold leading-5 text-warning" aria-label={`${count} ${noun}`}>
                     {count}
                   </span>
                 ) : null}

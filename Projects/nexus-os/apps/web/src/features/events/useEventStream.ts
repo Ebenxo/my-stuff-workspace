@@ -18,6 +18,8 @@ const INVALIDATIONS: [RegExp, string[][]][] = [
   [/^APPROVAL_/, [["approvals"], ["approval-grants"], ["run"], ["runs"], ["tool-calls"]]],
   [/^ARTIFACT_/, [["artifacts"], ["artifact"], ["artifact-versions"]]],
   [/^FILE_/, [["files"], ["file"]]],
+  [/^MEMORY_/, [["memory"], ["search"]]],
+  [/^(PROJECT|OBJECTIVE|ARTIFACT)_/, [["search"]]],
 ];
 
 /** A tool can offer text to copy. Nothing is copied until the person clicks: browsers need a user gesture. */

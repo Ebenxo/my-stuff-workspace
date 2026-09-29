@@ -31,6 +31,7 @@ from app.core.security import redact_text
 from app.events.bus import EventBus
 from app.events.types import EventType
 from app.files.fs import FsError, WorkspaceFS
+from app.memory.service import MemoryService
 from app.orchestration.graph import TaskGraph
 from app.orchestration.recovery import Failure, decide
 from app.orchestration.strategy import estimate
@@ -97,7 +98,9 @@ class Orchestrator:
         project_dir_for: DirFor,
         clock: Clock | None = None,
         max_parallel: int = MAX_PARALLEL_TASKS,
+        memory: MemoryService | None = None,
     ) -> None:
+        self._memory = memory
         self._objectives = objectives
         self._tasks = tasks
         self._runner = runner
@@ -978,6 +981,17 @@ class Orchestrator:
                 "summary": str(result["summary"])[:300],
             },
         )
+        if self._memory is not None and status in (ObjectiveStatus.COMPLETED, ObjectiveStatus.PARTIAL):
+            # Suggest remembering the outcome. It waits for the person: nothing is kept silently.
+            await self._memory.suggest_from_objective(
+                project_id=obj.project_id,
+                objective_id=obj.id,
+                objective=obj.text,
+                verdict=str(result["verdict"] or status.value),
+                summary=str(result["summary"]),
+                deliverables=[str(a.get("name")) for a in artifacts.values() if a.get("name")],
+                private=obj.private,
+            )
         return obj
 
     # ======================================================================= pausing and stopping

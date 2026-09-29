@@ -7,6 +7,7 @@ import { Link, useParams } from "react-router";
 import { ApprovalCard } from "../features/approvals/ApprovalCard";
 import { ActivityList } from "../features/events/ActivityList";
 import { isActivityEvent } from "../features/events/describe";
+import { MemorySuggestion } from "../features/memory/MemorySuggestion";
 import { MessageFeed } from "../features/objectives/MessageFeed";
 import { PlanEditorDialog } from "../features/objectives/PlanEditorDialog";
 import { PlanView } from "../features/objectives/PlanView";
@@ -194,6 +195,8 @@ export function ObjectiveRoute() {
           <ResultCard objective={o} />
         </div>
       ) : null}
+
+      {isFinal(o.status) ? <MemorySuggestion objective={o} /> : null}
 
       {planning && !o.plan ? (
         <Card className="mb-8">

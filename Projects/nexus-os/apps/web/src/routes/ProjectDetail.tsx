@@ -13,6 +13,7 @@ import { ArtifactsTab } from "../features/files/ArtifactsTab";
 import { ObjectiveComposer } from "../features/objectives/ObjectiveComposer";
 import { ObjectiveList } from "../features/objectives/ObjectiveList";
 import { FilesTab } from "../features/files/FilesTab";
+import { MemoryBrowser } from "../features/memory/MemoryBrowser";
 import { ProjectForm } from "../features/projects/ProjectForm";
 import { PERMISSION_COPY } from "../features/projects/permissions";
 import { ToolCallList } from "../features/tools/ToolCallList";
@@ -21,7 +22,7 @@ import { errorMessage, useProject, useSetProjectArchived, useSettings, useUpdate
 import { useEvents } from "../stores/events";
 import { Page, PageHeader, Section } from "./Page";
 
-const TABS = ["overview", "objectives", "files", "artifacts", "runs", "tools", "approvals"] as const;
+const TABS = ["overview", "objectives", "files", "artifacts", "memory", "runs", "tools", "approvals"] as const;
 type ProjectTab = (typeof TABS)[number];
 
 export function ProjectDetailRoute() {
@@ -129,6 +130,7 @@ export function ProjectDetailRoute() {
           <TabsTrigger value="objectives">Objectives</TabsTrigger>
           <TabsTrigger value="files">Files</TabsTrigger>
           <TabsTrigger value="artifacts">Deliverables</TabsTrigger>
+          <TabsTrigger value="memory">Memory</TabsTrigger>
           <TabsTrigger value="runs">Runs</TabsTrigger>
           <TabsTrigger value="tools">Tool activity</TabsTrigger>
           <TabsTrigger value="approvals">
@@ -200,6 +202,9 @@ export function ProjectDetailRoute() {
         </TabsContent>
         <TabsContent value="artifacts">
           <ArtifactsTab projectId={projectId} />
+        </TabsContent>
+        <TabsContent value="memory">
+          <MemoryBrowser projectId={projectId} focusId={params.get("memory")} />
         </TabsContent>
         <TabsContent value="runs">
           <Card>

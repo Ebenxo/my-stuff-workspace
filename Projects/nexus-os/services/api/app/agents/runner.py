@@ -25,6 +25,7 @@ from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
+from app.agents.context import ContextBuilder, ContextRequest
 from app.agents.prompt import ContextBlock, PromptBuilder
 from app.agents.results import ResultKind, kind_of
 from app.agents.state import Observation, StepRecord, dump_records, load_records
@@ -62,7 +63,6 @@ ABORT_AFTER_REPEATS = 5
 REPEAT_WINDOW = 10
 TOKEN_WARN_FRACTION = 0.85
 
-ContextProvider = Callable[[AgentDefinition, str, str], Awaitable[list[ContextBlock]]]
 StatusHook = Callable[[RunStatus], Awaitable[None]]
 
 
@@ -82,6 +82,7 @@ class RunRequest:
     approval_ttl_s: float | None = 24 * 3600
     result_kind: str = "task"  # task | plan | review | verification (see app.agents.results)
     title: str | None = None  # a short label for lists and activity when the prompt is machine-built
+    taint: list[str] = field(default_factory=list)  # untrusted sources in the context from the start
 
     def to_json(self) -> dict[str, Any]:
         """What is stored for resumption. Text is redacted first: a pasted key never reaches the database."""
@@ -100,6 +101,7 @@ class RunRequest:
             "approval_ttl_s": self.approval_ttl_s,
             "result_kind": self.result_kind,
             "title": redact_text(self.title) if self.title else None,
+            "taint": self.taint,
         }
 
     @classmethod
@@ -119,6 +121,7 @@ class RunRequest:
             approval_ttl_s=data.get("approval_ttl_s"),
             result_kind=str(data.get("result_kind", "task")),
             title=data.get("title"),
+            taint=list(data.get("taint") or []),
         )
 
 
@@ -250,7 +253,7 @@ class AgentRunner:
         approvals: ApprovalService,
         bus: EventBus,
         builder: PromptBuilder | None = None,
-        context_provider: ContextProvider | None = None,
+        context_builder: ContextBuilder | None = None,
     ) -> None:
         self._gateway = gateway
         self._runs = runs
@@ -262,18 +265,32 @@ class AgentRunner:
         self._approvals = approvals
         self._bus = bus
         self._builder = builder or PromptBuilder()
-        self._context_provider = context_provider
+        self._context_builder = context_builder
         self.shutting_down = False  # set on app shutdown: cancellation then means "park", not "cancel"
 
-    def set_context_provider(self, provider: ContextProvider | None) -> None:
-        self._context_provider = provider
+    def set_context_builder(self, builder: ContextBuilder | None) -> None:
+        self._context_builder = builder
 
     # ---- lifecycle ---------------------------------------------------------------------
     async def create(self, req: RunRequest, *, run_id: str | None = None) -> AgentRunOut:
-        """Persist the run and announce it. Nothing executes yet."""
-        if self._context_provider is not None:
-            extra = await self._context_provider(req.agent, req.project_id, req.prompt)
-            req = replace(req, context=[*req.context, *extra])
+        """Persist the run and announce it. Nothing executes yet.
+
+        The context (what the agent is given besides its task) is decided once, here, and stored with
+        the request, so a resumed run sees exactly what it saw before."""
+        report: dict[str, Any] | None = None
+        if self._context_builder is not None:
+            built = await self._context_builder.build(
+                ContextRequest(
+                    agent=req.agent,
+                    project_id=req.project_id,
+                    query=f"{req.title or ''}\n{req.prompt[:2000]}".strip(),
+                    objective_id=req.objective_id,
+                    given=req.context,
+                    private=req.private,
+                )
+            )
+            req = replace(req, context=built.blocks, taint=list(dict.fromkeys([*req.taint, *built.taint])))
+            report = built.report.model_dump()
         run = await self._runs.create(
             run_id=run_id or new_id("run"),
             agent_id=req.agent.id,
@@ -282,6 +299,7 @@ class AgentRunner:
             task_id=req.task_id,
             model=req.model,
             request=req.to_json(),
+            context_report=report,
         )
         await self._emit(
             EventType.AGENT_STARTED,
@@ -445,6 +463,9 @@ class AgentRunner:
             agent_id=agent.id,
             unattended=req.unattended,
             private=req.private,
+            agent_slug=agent.slug,
+            memory_read=tuple(agent.memory_scope.read),
+            memory_write=tuple(agent.memory_scope.write),
         )
         ectx = ExecContext(
             project_id=req.project_id,
@@ -454,7 +475,7 @@ class AgentRunner:
             agent=agent,
             permission_level=req.permission_level,
             tool_context=tctx,
-            taint=TaintTracker.from_list(state.taint_sources()),
+            taint=TaintTracker.from_list([*req.taint, *state.taint_sources()]),
             unattended=req.unattended,
             on_wait=self._wait_hook(run_id, state, on_status),
             approval_ttl_s=req.approval_ttl_s,

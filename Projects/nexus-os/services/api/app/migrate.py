@@ -13,6 +13,11 @@ from sqlalchemy import create_engine
 MIGRATIONS_DIR = Path(__file__).parent / "migrations"
 
 
+def include_name(name: str | None, type_: str, parent_names: object) -> bool:
+    """Tables the ORM does not model: the FTS5 search index and the shadow tables SQLite makes for it."""
+    return not (type_ == "table" and name is not None and name.startswith("search_index"))
+
+
 def _config(sync_url: str) -> Config:
     cfg = Config()
     cfg.set_main_option("script_location", str(MIGRATIONS_DIR))

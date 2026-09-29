@@ -49,11 +49,11 @@ class ToolDefinition:
 | `parse_json` | SAFE | | Parse/validate a JSON file or string, optional JSON-pointer | size cap |
 | `calculator` | SAFE | | Arithmetic via a whitelist-AST evaluator | no names, no calls except a math whitelist |
 | `datetime` | SAFE | | Current time/zone conversions | |
-| `search_memory` *(Phase 7)* | SAFE | | Semantic + keyword recall from project/global memory | scope-limited by the agent's `memory_scope`; results labelled DATA |
-| `remember` *(Phase 7)* | MODERATE | | Propose a memory item | passes the sensitivity guard; visible in the Memory browser; global scope lands as `pending` |
+| `search_memory` | SAFE | | Semantic + keyword recall from project/global memory, ranked like the context engine | limited by the agent's `memory_scope.read`; private-run memories only in private runs; results are fenced data; recalling a memory written after untrusted content taints the run |
+| `remember` | MODERATE | | Propose a memory item (content, scope, tags, optional importance) | limited by `memory_scope.write`; sensitivity guard refuses secrets and personal identifiers; exact/near duplicates reused or merged (never into a person's own words); global scope lands as `pending`; a tainted run's note is marked and capped at low importance; visible and editable in Memory |
 | `clipboard_write` | MODERATE | | Ask the UI to offer a "copy" action | UI-mediated: a toast with a Copy button; nothing is copied without the person's click; there is intentionally **no** `clipboard_read` |
 
-22 tools are built and registered today (everything above except the two Phase 7 memory tools).
+24 tools are built and registered today (everything above). Every built-in agent has `search_memory`; those allowed to write memory (all but the Orchestrator, Planner, Critic and Verifier) also have `remember`.
 
 **Private runs.** A run started with "Keep on this device" only uses local models (router), and tools that can send data off the machine (`Capability.NET_HTTP`, `NET_SEARCH`, `MCP`: `http_request`, `web_search`, every MCP tool) are neither shown to the model nor executable (`ToolExecutor` refuses them with `private_run`). `run_command` with `network=true` is refused in a private run.
 

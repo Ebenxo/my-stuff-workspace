@@ -239,11 +239,13 @@ class AgentService:
             project_id=project_id, agent_id=agent_id, status=status, limit=limit
         )
 
-    async def run_detail(self, run_id: str) -> tuple[AgentRunOut, list[dict[str, Any]], list[ToolCallOut]]:
+    async def run_detail(
+        self, run_id: str
+    ) -> tuple[AgentRunOut, list[dict[str, Any]], list[ToolCallOut], dict[str, Any] | None]:
         run = await self._runs.get(run_id)
         _, steps = await self._runs.snapshot(run_id)
         calls = await self._tool_calls.list_calls(run_id=run_id, limit=200)
-        return run, steps, list(reversed(calls))
+        return run, steps, list(reversed(calls)), await self._runs.context_report(run_id)
 
     async def wait_for(self, run_id: str, timeout_s: float = 30.0) -> AgentRunOut:
         """Testing and orchestration helper: block until the run's task ends (a parked run keeps waiting)."""

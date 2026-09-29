@@ -61,6 +61,8 @@ class AgentRun(Base):
     result: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     error: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     checkpoint: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    # What the ContextBuilder gave the agent and why (migration 0004); shown on the run page.
+    context_report: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     started_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_default)
     finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
 

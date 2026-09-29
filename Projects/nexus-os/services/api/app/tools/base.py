@@ -65,10 +65,16 @@ class ToolContext:
     artifacts: ArtifactStore
     emit: EmitFn
     search: Any = None  # SearchService
-    memory: Any = None  # MemoryFacade (Phase 7)
+    memory: Any = None  # MemoryService (duck-typed: tools may not import app.memory)
     allowed_domains: list[str] = field(default_factory=list)
     unattended: bool = False
     private: bool = False  # "keep on this device": nothing may leave the machine during this run
+    agent_slug: str | None = None
+    memory_read: tuple[str, ...] = ()  # scopes this agent may recall from
+    memory_write: tuple[str, ...] = ()  # scopes this agent may write to
+    # The run's untrusted sources so far (set by the executor before each call). A handler that passes
+    # on untrusted content from elsewhere appends its source here; the executor then taints the run.
+    taint_sources: list[str] = field(default_factory=list)
 
 
 # Capabilities that send something off this machine. A private run may not use them at all.

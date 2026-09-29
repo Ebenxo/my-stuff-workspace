@@ -52,6 +52,10 @@ On the Command Center press **Try the demo**. It creates a demo project with thr
 
 For a single focused job you can also run one agent directly from **Agents**.
 
+## Memory and search
+
+NEXUS remembers what you (and, with your say-so, its agents) decide is worth keeping: facts, decisions and preferences, per project or across all projects. Before each run the relevant memories are given to the agent as clearly marked background; the run page shows exactly what it was given and why. Everything remembered is visible and editable under **Memory**, suggestions wait for you, and passwords, keys and personal identifiers are refused outright. The search box in the top bar finds projects, objectives, deliverables and memories. Details: [`docs/MEMORY.md`](docs/MEMORY.md).
+
 ## Quality gates
 
 ```bash

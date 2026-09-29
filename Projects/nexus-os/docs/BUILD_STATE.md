@@ -1,10 +1,23 @@
 # NEXUS OS — build state
 
-_Last updated: 2026-09-29 (end of Phases 5–6)_
+_Last updated: 2026-09-29 (end of Phase 7)_
 
 ## Current phase
 
-**Phases 5–6 — planner, orchestrator, task graph, multi-agent review and verification: complete.** Phases 0–6 done. Next: Phase 7, memory and the context engine.
+**Phase 7 — memory and the context engine: complete.** Phases 0–7 done. Next: Phases 8–9, workflows (engine and React Flow editor), the scheduler, and MCP.
+
+### Added in Phase 7 (memory, context, search)
+
+- **Memory** (migration `0004`: `memory_items`, `memory_embeddings`, the `search_index` FTS5 table, and `agent_runs.context_report`). One `MemoryService` owns every write: sensitivity guard (refuses keys, tokens, credentials, card, national-ID and bank numbers; records the category only), exact-duplicate reuse, near-duplicate merge that never rewrites the person's own words, pending status for agent-proposed global memory and objective suggestions, importance bands an agent cannot escape, events for every change. Delete is recoverable; erase is permanent.
+- **Recall**: `.45 semantic + .15 keyword (BM25) + .15 recency + .15 importance + .10 task relation`, with a relevance gate so importance never makes an unrelated item relevant, and a visible score breakdown. Local deterministic hashing embedder (no download, no network); stale vectors are re-embedded at startup.
+- **ContextBuilder**: each run gets its upstream inputs, the project's pinned facts and the most relevant memories within a token budget, cut at sentence boundaries when needed, fenced as data; the decision is stored with the run (a resumed run sees the same context) and reported on the run page.
+- **Taint and privacy carry through memory**: notes written after reading untrusted content are marked, capped and taint whoever recalls them; notes from private runs are only recalled into private runs.
+- **Tools**: `search_memory` (every agent) and `remember` (agents that may write memory), limited by each agent's `memory_scope`.
+- **Suggestions**: a finished objective proposes remembering its outcome; the person keeps, edits or dismisses it on the objective page.
+- **Compression**: old, rarely used, low-importance project notes that belong together fold into one extractive summary (no model call), reversibly.
+- **Universal search**: projects, objectives, text deliverables and memory in one FTS5 index kept current from the event log (LIKE fallback without FTS5; rebuilt when empty); typed FTS syntax is always literal.
+- **APIs**: memory (list with filters, stats, search with score breakdown, create, get, edit/pin, keep, dismiss, delete, restore, erase, compress, undo compression), `GET /api/search`, and `context` on run detail.
+- **UI**: Memory page and a project Memory tab (Remembered / Suggestions / Deleted, filters, "rank as agents would", add/edit dialog, pin, tidy), a Memory nav item with the suggestion count, the objective page's "Remember this for next time?" card, the run page's "What it was given" panel, a top-bar search box and a Search page with highlighted matches, and plain-language activity for memory events.
 
 ### Added in Phases 5–6 (objectives and the multi-agent team)
 
@@ -65,24 +78,43 @@ _Last updated: 2026-09-29 (end of Phases 5–6)_
 - **Agents and objectives have run end to end only against scripted models**: the `ScriptedProvider` in tests and the demo, and a local OpenAI-compatible stand-in server in the Phase 3–4 live check. How well real models plan, follow the step protocol, review and verify is unverified; validation, the repair loop, `INVALID_OUTPUT` handling and deterministic recovery are the safety net.
 - Recovery does not yet switch to a different model or tool, or delegate to another agent, as the design allows; the gateway's own fallback models are the only model switch. Supervisor, debate, map-reduce and swarm strategies are not built.
 - Sandbox limits are verified on Linux only (rlimits, process-group kill, network namespace). On Windows only the timeout, env scrubbing and working folder apply, and that path has not been run.
-- Memory tools (`search_memory`, `remember`) are Phase 7; agent allow-lists will gain them then.
+- The embedder is lexical (feature hashing), not neural: synonyms do not match. A neural embedder can be plugged in behind the `Embedder` protocol; none is wired up. A `VectorStore` interface for external vector databases is not extracted (vectors live in SQLite and similarity is computed in process over up to 2,000 candidates per query).
+- Conversation-scoped memory is defined but unused (no conversation UI drives agents yet). Compression is manual (a button); scheduling it waits for the Phase 8 scheduler. Project files are not in universal search.
+- Memory recall quality with real models is untested; ranking is verified with unit tests and the scripted demo.
 
 ## Testing status
 
 | Area | Result |
 |---|---|
-| Backend (pytest) | 785 passed |
+| Backend (pytest) | 839 passed |
 | Lint / format (ruff), strict types (mypy), import contracts (3) | clean |
-| Frontend (vitest) | 102 passed (shared 9, web 93) |
+| Frontend (vitest) | 115 passed (shared 9, web 106) |
 | ESLint, `tsc` (all packages) | clean |
 | Web production build | ok |
 | Rust sidecar (`cargo test`) | 8 passed |
 | API-type drift (`scripts/gen_openapi.py --check`) | up to date |
 | Live UI check (Playwright, real API + web app, local stand-in model) | run a Writer that saves an artifact; run a File Manager whose delete waits for approval (file verified present before and gone after); answer an agent's question; browse files, deliverables, runs and tool activity; Tools settings. No console errors; no horizontal overflow at 390 px. Screenshots checked by eye |
 | Live objective check (Playwright, real API + web app, scripted demo model) | Try the demo → plan review (2 tasks, approach, criteria) → plan editor opens → Run plan → graph fills in live (research, write, Critic review, revision, second review, verification: 6 nodes, 5 edges) → Verifier PASS with 4/4 criteria → report opens from the result. 15 hand-offs shown; project Objectives tab and Command Center list it. No console errors, no failed requests, no overflow at 390 px; screenshots checked by eye |
+| Live memory check (Playwright, real API + web app, scripted demo model) | Demo objective → "Remember this for next time?" → Remember (nav badge showed the suggestion); project Memory tab: add a pinned memory, a key refused in the dialog with its category, "rank as agents would" lists both with reasons; a second demo objective: all 6 runs were given memory (12 items in total), the run page lists what was given; top-bar search finds the report with highlights. No console errors or failed requests besides the deliberate refusal; no overflow at 390 px on Memory, Search, run and objective pages; screenshots checked by eye |
 | Scripted E2E in `check.py` | Phase 10 |
 
 Run everything: `python scripts/check.py`.
+
+## Architecture decisions made in Phase 7
+
+- Memory refuses sensitive content instead of redacting it: a half-redacted secret is still a leak, and the person can write the non-sensitive part.
+- Context is decided once per run, when it is created, and stored with the request, so resuming a run never changes what the agent knew.
+- Files are not pre-loaded into context: reading through tools keeps every read logged and taint accurate.
+- Privacy and taint are properties of a memory's provenance, enforced at recall time (private only into private runs; tainted taints the recaller).
+- Universal search is fed by an event listener, not by calls sprinkled through services, so anything that emits an event can be indexed; listeners run after the event is committed, so results are current when an action returns.
+- Tool handlers may add taint sources (they append to `ToolContext.taint_sources`; the executor merges them), so a tool that passes on untrusted content taints the run like one that fetches it.
+
+## Bugs found by tests and live checks in Phase 7 (all fixed, with regression tests)
+
+- **Privacy leak in the design**: memories written in a private run could have been recalled into a later cloud run. Caught while wiring the ContextBuilder, before any code shipped; now enforced at recall and merge time, with tests.
+- An all-zero placeholder ("0000 0000 0000 00") passed the Luhn check and was refused as a card number; cards now need a major-network first digit and more than one distinct digit.
+- The first compression threshold (0.45, seed-only linkage) never grouped genuinely related notes; measured similarities (related 0.30–0.36, unrelated ≤ 0.17) set it to 0.28 with any-member linkage.
+- A `search_memory` call that recalled a tainted memory did not taint the run (tools could not report taint); now they can.
 
 ## Architecture decisions made in Phases 5–6
 
@@ -156,4 +188,4 @@ Run everything: `python scripts/check.py`.
 
 ## Next
 
-Phase 7, memory and the context engine: memory records with scopes (user, project, agent) and visible provenance; proposals from finished objectives (sensitive data filtered) that the person can keep, edit or discard; `search_memory` and `remember` tools on the relevant agents' allow-lists; a context builder that ranks and budgets what each agent sees (objective, task, upstream outputs, relevant memory, files) with the same fencing for untrusted text; a Memory page to browse, edit, pin and delete.
+Phases 8–9: workflow definitions (versioned JSON: trigger, agent, tool, condition, approval, loop, sub-workflow, output nodes) with a safe expression evaluator; a workflow engine with run history that parks on approvals (unattended runs never auto-approve high-risk actions); a React Flow editor; a scheduler with cron triggers (and scheduled memory tidying); MCP server management (stdio/HTTP, discovery of tools, resources and prompts, health), with discovered tools registered at HIGH risk by default and routed through the same executor; Settings → Integrations → MCP servers.
