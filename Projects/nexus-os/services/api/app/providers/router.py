@@ -79,6 +79,7 @@ class Candidate:
     info: ModelInfo
     order: int  # provider creation order, for stable tie-breaks
     default: bool  # this is the provider's configured default model
+    demo: bool = False  # the scripted demo provider: only ever used when chosen explicitly
 
 
 RulesProvider = Callable[[], Awaitable[RoutingRules]]
@@ -88,12 +89,18 @@ class ModelRouter:
     def __init__(self, registry: ProviderRegistry, rules: RulesProvider) -> None:
         self._registry = registry
         self._rules = rules
+        # The scripted demo provider replays a fixed script. Real work must never be routed to it, not
+        # even as a fallback, so it answers only a manual override (the demo project sets one). Tests
+        # that drive agents with scripted models turn automatic routing to it on.
+        self.auto_route_demo = False
 
     async def _candidates(self) -> list[Candidate]:
         out: list[Candidate] = []
         for order, (row, models) in enumerate(await self._registry.all_models(enabled_only=True)):
             for m in models:
-                out.append(Candidate(ModelRef(row.id, m.id), m, order, m.id == row.default_model))
+                out.append(
+                    Candidate(ModelRef(row.id, m.id), m, order, m.id == row.default_model, row.kind == "demo")
+                )
         return out
 
     @staticmethod
@@ -167,6 +174,13 @@ class ModelRouter:
         if rr.needs_vision:
             cands = [c for c in cands if c.info.supports_vision is not False] or cands
 
+        auto = cands if self.auto_route_demo else [c for c in cands if not c.demo]
+        if not auto and not rr.manual_override:
+            raise NoRouteError(
+                "No AI provider is ready for real work (the demo provider only runs the demo project). "
+                "Add one in Settings → AI Providers."
+            )
+
         primary: Candidate | None = None
         reason = ""
 
@@ -178,25 +192,25 @@ class ModelRouter:
                 raise NoRouteError(f"The chosen model {rr.manual_override} is not available.")
             reason = "manual override"
         if primary is None and rr.preferred:
-            primary = self._find(cands, rr.preferred)
+            primary = self._find(auto, rr.preferred)
             if primary is not None:
                 reason = "agent preference"
         if primary is None:
             for rule in (await self._rules()).rules:
                 if self._rule_matches(rule, rr):
-                    picked = self._apply_rule(rule, cands)
+                    picked = self._apply_rule(rule, auto)
                     if picked is not None:
                         primary, reason = picked, f"routing rule “{rule.name}”"
                         break
         if primary is None:
             if rr.task_class is TaskClass.LONG_DOCUMENT:
-                known = [c for c in cands if c.info.context_length]
+                known = [c for c in auto if c.info.context_length]
                 if known:
                     primary = self._sorted([max(known, key=lambda c: c.info.context_length or 0)])[0]
                     reason = "largest known context window for a long document"
             if primary is None:
                 tier = DEFAULT_TIER[rr.task_class]
-                primary = self._sorted(self._by_tier(cands, tier))[0]
+                primary = self._sorted(self._by_tier(auto, tier))[0]
                 reason = f"default policy: {rr.task_class.value} → {tier} tier"
         if rr.private:
             reason += " (private: local models only)"
@@ -207,9 +221,12 @@ class ModelRouter:
             if c and c.ref != primary.ref and c.ref not in fallbacks and len(fallbacks) < MAX_FALLBACKS:
                 fallbacks.append(c.ref)
 
+        # Scripted and real models never stand in for each other: a demo never falls back to a real
+        # model (it would spend the person's money on a script), and real work never falls back to a script.
+        pool = [c for c in auto if c.demo == primary.demo]
         for raw in rr.fallbacks:
-            add(self._find(cands, raw))
-        defaults_first = [c for c in self._sorted(cands) if c.default]
+            add(self._find(pool, raw))
+        defaults_first = [c for c in self._sorted(pool) if c.default]
         for c in defaults_first:
             add(c)
         return Route(primary.ref, fallbacks, reason)

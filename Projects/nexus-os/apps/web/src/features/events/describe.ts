@@ -1,4 +1,5 @@
 import type { EventRecord } from "@nexus/schemas";
+import { MESSAGE_LABEL, agentName, messageText } from "../objectives/format";
 
 export type Tone = "neutral" | "accent" | "success" | "warning" | "danger" | "info";
 
@@ -8,6 +9,23 @@ export interface EventView {
 }
 
 const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
+const agent = (v: unknown): string => (typeof v === "string" && v ? agentName(v) : "an agent");
+const capital = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+const taskName = (p: Record<string, unknown>): string => {
+  const title = str(p["title"]);
+  return title ? `“${title}”` : (str(p["key"]) ?? "a task");
+};
+
+function messageView(sender: string, recipient: string, type: string, payload: unknown): EventView {
+  const known = type in MESSAGE_LABEL;
+  const text = known ? messageText({ type: type as keyof typeof MESSAGE_LABEL, payload: (payload ?? {}) as Record<string, unknown> }) : "";
+  const verb = known ? MESSAGE_LABEL[type as keyof typeof MESSAGE_LABEL] : "sent a message";
+  const to = recipient && recipient !== "orchestrator" ? ` ${agentName(recipient)}` : "";
+  return {
+    text: `${capital(agentName(sender))} ${verb}${to}${text ? `: ${text}` : ""}`,
+    tone: type === "QUESTION" ? "warning" : type === "ERROR" ? "danger" : "neutral",
+  };
+}
 
 /**
  * Human summaries for the Activity panel. Only actions, statuses and decisions are shown;
@@ -50,8 +68,65 @@ export function describeEvent(e: EventRecord): EventView {
       return { text: "Agent run interrupted; it can be resumed", tone: "warning" };
     case "AGENT_RESUMED":
       return { text: "Agent run resumed", tone: "accent" };
-    case "AGENT_MESSAGE":
-      return { text: `Agent asks: ${str(p["text"]) ?? "a question"}`, tone: "warning" };
+    case "AGENT_MESSAGE": {
+      // Orchestrated runs record structured hand-offs; a lone run records a question for the person.
+      const sender = str(p["sender"]);
+      if (!sender) return { text: `Agent asks: ${str(p["text"]) ?? "a question"}`, tone: "warning" };
+      const view = messageView(sender, str(p["recipient"]) ?? "", str(p["type"]) ?? "", p["payload"]);
+      return view;
+    }
+    case "OBJECTIVE_CREATED":
+      return { text: `New objective: ${str(p["text"]) ?? ""}`, tone: "accent" };
+    case "OBJECTIVE_STARTED":
+      return { text: p["phase"] === "planning" ? "Planning the objective" : "Working on the objective", tone: "accent" };
+    case "PLAN_CREATED": {
+      const n = Number(p["tasks"] ?? 0);
+      return { text: `Plan ready: ${n} ${n === 1 ? "task" : "tasks"}`, tone: "info" };
+    }
+    case "PLAN_EDITED":
+      return { text: "Plan edited", tone: "neutral" };
+    case "PLAN_APPROVED":
+      return { text: p["mode"] === "safe_only" ? "Plan approved (safe steps only)" : "Plan approved", tone: "success" };
+    case "OBJECTIVE_PAUSED":
+      return { text: `Objective waiting for you${str(p["reason"]) ? `: ${str(p["reason"])}` : ""}`, tone: "warning" };
+    case "OBJECTIVE_RESUMED":
+      return { text: "Objective resumed", tone: "accent" };
+    case "OBJECTIVE_COMPLETED":
+      return {
+        text: p["verdict"] === "PASS" ? "Objective complete and verified" : `Objective finished: ${String(p["verdict"] ?? p["status"] ?? "").toLowerCase()}`,
+        tone: p["verdict"] === "PASS" ? "success" : "warning",
+      };
+    case "OBJECTIVE_FAILED":
+      return { text: `Objective not achieved${str(p["summary"]) || str(p["message"]) ? `: ${str(p["summary"]) ?? str(p["message"])}` : ""}`, tone: "danger" };
+    case "OBJECTIVE_CANCELLED":
+      return { text: "Objective cancelled", tone: "warning" };
+    case "TASK_CREATED":
+      return { text: `Task ${taskName(p)} added for ${agent(p["agent"])}`, tone: "neutral" };
+    case "TASK_STARTED":
+      return { text: `${capital(agent(p["agent"]))} started ${taskName(p)}`, tone: "accent" };
+    case "TASK_COMPLETED":
+      return { text: `${capital(agent(p["agent"]))} finished ${taskName(p)}`, tone: "success" };
+    case "TASK_FAILED":
+      return { text: `Task ${taskName(p)} failed`, tone: "danger" };
+    case "TASK_BLOCKED":
+      return { text: `Task ${taskName(p)} needs you`, tone: "warning" };
+    case "TASK_CANCELLED":
+      return { text: `Task ${taskName(p)} cancelled`, tone: "neutral" };
+    case "TASK_RETRIED":
+      return { text: `${p["action"] === "resume" ? "Resuming" : "Retrying"} ${taskName(p)}`, tone: "info" };
+    case "TASK_STATUS_CHANGED":
+      return { text: `Task ${taskName(p)}: ${String(p["status"] ?? "").toLowerCase().replaceAll("_", " ")}`, tone: "neutral" };
+    case "REVIEW_COMPLETED": {
+      const approve = p["verdict"] === "approve";
+      return { text: `Critic ${approve ? "approved" : "asked for changes to"} ${taskName(p)}`, tone: approve ? "success" : "warning" };
+    }
+    case "VERIFICATION_COMPLETED":
+      return {
+        text: `Verifier: ${String(p["verdict"] ?? "?")}${str(p["summary"]) ? `, ${str(p["summary"])}` : ""}`,
+        tone: p["verdict"] === "PASS" ? "success" : p["verdict"] === "FAIL" ? "danger" : "warning",
+      };
+    case "RECOVERY_DECISION":
+      return { text: `Recovery for ${taskName(p)}: ${str(p["action"]) ?? "?"}${str(p["reason"]) ? `, ${str(p["reason"])}` : ""}`, tone: "info" };
     case "TOOL_CALLED":
       return { text: `Tool: ${str(p["tool"]) ?? "?"} (${(str(p["risk"]) ?? "?").toLowerCase()} risk)`, tone: "neutral" };
     case "TOOL_COMPLETED":

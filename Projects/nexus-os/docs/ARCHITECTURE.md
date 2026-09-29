@@ -114,36 +114,40 @@ There is no other way for an agent to touch the filesystem, network, processes o
 ## 5. Execution lifecycle of an objective
 
 ```
-User submits objective (+ attachments, run mode)
+User submits objective (project, run mode, private?)
   → OBJECTIVE_CREATED                                  status RECEIVED
   → Planner agent run (read-only tools)                status PLANNING
        output: PlanResult (structured, schema-validated)
-  → PlanValidator: DAG acyclic, agents exist, tools permitted per agent,
-       task cap, complexity/strategy estimate          PLAN_CREATED
-  → Tasks + TaskDependency rows created                TASK_CREATED (status WAITING/QUEUED)
-  → run_mode == manual → AWAITING_PLAN_APPROVAL  (Run Plan / Edit Plan / Cancel / Auto Run Safe Steps)
-    run_mode == auto_safe → proceed (tool approvals still apply)
-  → Executor loop                                      status RUNNING
-       ready tasks (all deps COMPLETED) dispatched to the JobQueue, bounded concurrency
-       each task = one AgentRun (loop in §6)
+  → PlanValidator: DAG acyclic, agents exist and may take tasks, keys unique,
+       task cap by complexity; tools outside an agent's allow-list dropped (warning);
+       one repair round with the issues                PLAN_CREATED
+  → StrategyEstimator names the shape + rationale
+  → Tasks + TaskDependency rows created                TASK_CREATED (status WAITING)
+  → run_mode == review_plan → AWAITING_PLAN_APPROVAL  (Run plan / Run safe steps only / Edit plan / Cancel)
+    run_mode == auto → proceed (tool approvals still apply)
+  → Orchestrator loop                                  status RUNNING
+       ready tasks (all deps COMPLETED or SKIPPED) run as supervised asyncio tasks, at most 3 at once
+       each task = one AgentRun (loop in §6), upstream outputs passed as fenced untrusted context
        TaskResult → outputs stored, artifacts versioned
-       review-marked tasks → Critic REVIEW_REQUEST → REVIEW_RESULT
-            blocking issues + revision budget left → "Revise" task inserted (visible in graph)
-       failure → FailureClassifier → RecoveryPlanner → retry | change model | change tool |
-                 delegate | ask human | skip (optional tasks only) | abort
-  → Verifier agent run against completion criteria     PASS | PARTIAL | FAIL
-       FAIL/PARTIAL with replan budget → follow-up tasks; else finalise
-  → Memory proposals (visible, sensitive-data filtered) MEMORY_CREATED
-  → OBJECTIVE_COMPLETED | PARTIAL | FAILED             final report + artifact list
+       review-marked tasks → Critic task → ReviewResult
+            blocking issues + rounds left → "Revise" task, then a new review (visible in graph)
+       failure → recovery.decide → retry | resume | skip (optional) | block (ask the person) | fail
+       nothing can run and a task needs the person → PAUSED (Continue after answering / retrying / skipping)
+  → Verifier agent run against completion criteria     status VERIFYING → PASS | PARTIAL | FAIL
+       PARTIAL/FAIL with replan budget → follow-up tasks (≤ 4), verify again; else finalise
+  → OBJECTIVE_COMPLETED | OBJECTIVE_FAILED             status COMPLETED | PARTIAL | FAILED, result + artifact list
+  (Phase 7) memory proposals from the finished objective
 ```
 
-Task statuses and meaning: `WAITING` dependencies unmet · `QUEUED` ready and in the job queue · `PLANNING` being (re)decomposed · `RUNNING` · `NEEDS_APPROVAL` parked on an approval · `BLOCKED` needs human input or an upstream failure · `COMPLETED` · `FAILED` · `CANCELLED`.
+Task statuses: `WAITING` dependencies unmet · `QUEUED` ready · `RUNNING` · `NEEDS_APPROVAL` its run is parked on an approval · `BLOCKED` needs the person (a question or a recovery decision) · `COMPLETED` · `SKIPPED` optional or skipped by the person · `FAILED` · `CANCELLED`.
 
-Objective statuses: `RECEIVED, PLANNING, AWAITING_PLAN_APPROVAL, RUNNING, PAUSED, COMPLETED, PARTIAL, FAILED, CANCELLED`.
+Objective statuses: `RECEIVED, PLANNING, AWAITING_PLAN_APPROVAL, RUNNING, VERIFYING, PAUSED, COMPLETED, PARTIAL, FAILED, CANCELLED`.
+
+Runs and objectives are supervised asyncio tasks rather than `JobQueue` jobs because they can wait on a person for a day and must not hold a worker slot. On restart, interrupted objectives resume: in-flight tasks are requeued and their runs continue from the last checkpoint.
 
 ### Strategy selection ("cheapest effective")
 
-Before dispatching, the Orchestrator's `StrategyEstimator` scores the validated plan: task count, distinct specialisations required, dependency depth, parallel width, estimated tokens/cost. It picks the cheapest strategy that fits: `single_agent` (one specialist, no review), `pipeline` (sequential handoff), `reviewer` (produce → critique → revise), `parallel` (independent branches). `supervisor`, `debate`, `map_reduce` and `swarm` are defined as enum values and documented but rejected as not-yet-implemented. A trivial objective is never fanned out across many agents.
+Before dispatching, the `StrategyEstimator` reads the validated plan's shape: task count, distinct specialisations, dependency depth, parallel width, reviews, and estimates tokens. It names the cheapest strategy that fits: `single_agent` (one specialist, no review), `pipeline` (sequential handoff), `reviewer` (produce → critique → revise), `parallel` (independent branches). The Planner is asked for the fewest tasks that will reliably work, and the validator caps the count by the complexity the plan declares (trivial 2, small 4, medium 8, large 12), so a trivial objective is never fanned out across many agents. `supervisor`, `debate`, `map_reduce` and `swarm` are not built.
 
 ## 6. The agent loop
 

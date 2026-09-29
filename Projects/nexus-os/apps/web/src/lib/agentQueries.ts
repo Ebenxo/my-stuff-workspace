@@ -291,4 +291,16 @@ export function useModels() {
   return useQuery({ queryKey: ak.models, queryFn: () => unwrap(api.GET("/api/models")), staleTime: 30_000 });
 }
 
+/** The scripted demo model only knows the demo's lines, so it is never offered as a manual choice. */
+export const DEMO_MODEL_ID = "demo:scripted";
+
+export function usePickableModels() {
+  return useQuery({
+    queryKey: ak.models,
+    queryFn: () => unwrap(api.GET("/api/models")),
+    staleTime: 30_000,
+    select: (models) => models.filter((m) => m.id !== DEMO_MODEL_ID),
+  });
+}
+
 export const isNotFound = (e: unknown): boolean => e instanceof ApiError && e.status === 404;

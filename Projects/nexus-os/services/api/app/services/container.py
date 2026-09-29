@@ -33,6 +33,7 @@ from app.schemas.common import PermissionLevel
 from app.schemas.providers import Budgets
 from app.services.agents import AgentService
 from app.services.conversations import ConversationService
+from app.services.demo import DemoService
 from app.services.files import FilesService
 from app.services.health import HealthService, register_core_checks
 from app.services.notifications import NotificationService
@@ -86,6 +87,7 @@ class AppContainer:
     task_store: TaskStore
     orchestrator: Orchestrator
     objective_service: ObjectiveService
+    demo: DemoService
     tool_service: ToolService
     files: FilesService
     tool_contexts: ToolContextFactory
@@ -220,6 +222,9 @@ async def build_container(
         bus=bus,
         clock=clock,
     )
+    demo = DemoService(
+        projects=projects, providers=providers, registry=registry, objectives=objective_service
+    )
     tool_service = ToolService(tool_row_store, tool_call_store, tools, bus)
     files = FilesService(projects, bus)
     started_at = time.monotonic()
@@ -268,6 +273,7 @@ async def build_container(
         task_store=task_store,
         orchestrator=orchestrator,
         objective_service=objective_service,
+        demo=demo,
         tool_service=tool_service,
         files=files,
         tool_contexts=tool_contexts,

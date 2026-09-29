@@ -1,8 +1,8 @@
 import { Button, Dialog, DialogContent, DialogFooter, FieldError, Label, Select, Switch, Textarea, toast } from "@nexus/ui";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { useAgents, useModels, useStartRun } from "../../lib/agentQueries";
-import { errorMessage, useProjects, useProviders } from "../../lib/queries";
+import { useAgents, usePickableModels, useStartRun } from "../../lib/agentQueries";
+import { errorMessage, useHasRealProvider, useProjects } from "../../lib/queries";
 import { normalizeAgent } from "./format";
 
 interface Props {
@@ -26,8 +26,7 @@ export function RunAgentDialog({ open, onOpenChange, agentId, projectId }: Props
 function RunAgentForm({ agentId, projectId, onDone }: { agentId: string | undefined; projectId: string | undefined; onDone: () => void }) {
   const agents = useAgents();
   const projects = useProjects("active");
-  const providers = useProviders();
-  const models = useModels();
+  const models = usePickableModels();
   const start = useStartRun();
   const navigate = useNavigate();
 
@@ -40,7 +39,7 @@ function RunAgentForm({ agentId, projectId, onDone }: { agentId: string | undefi
 
   const selectedAgent = agent || usable[0]?.slug || "";
   const selectedProject = project || projects.data?.[0]?.id || "";
-  const noProvider = providers.data && providers.data.length === 0;
+  const noProvider = useHasRealProvider() === false;
   const canSubmit = !!selectedAgent && !!selectedProject && prompt.trim().length > 0 && !noProvider;
 
   function submit(e: React.FormEvent) {

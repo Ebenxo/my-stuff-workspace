@@ -1,6 +1,6 @@
 import { formatRelativeTime, greeting } from "@nexus/shared";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorState, Skeleton } from "@nexus/ui";
-import { ArrowRight, FolderPlus, Plus, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowRight, FolderPlus, Plus, ShieldAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { RunAgentDialog } from "../features/agents/RunAgentDialog";
@@ -8,9 +8,11 @@ import { RunList } from "../features/agents/RunList";
 import { usePendingApprovalCount } from "../lib/agentQueries";
 import { ActivityList } from "../features/events/ActivityList";
 import { isActivityEvent } from "../features/events/describe";
+import { ObjectiveComposer } from "../features/objectives/ObjectiveComposer";
+import { ObjectiveList } from "../features/objectives/ObjectiveList";
 import { NewProjectDialog } from "../features/projects/NewProjectDialog";
 import { ProjectCard } from "../features/projects/ProjectCard";
-import { errorMessage, useHealth, useProjects, useProviders, useSettings, useUnreadCount } from "../lib/queries";
+import { errorMessage, useHealth, useHasRealProvider, useProjects, useSettings, useUnreadCount } from "../lib/queries";
 import { useEvents } from "../stores/events";
 import { Page, Section } from "./Page";
 
@@ -32,7 +34,7 @@ export function CommandCenterRoute() {
   const settings = useSettings();
   const projects = useProjects("active");
   const unread = useUnreadCount();
-  const providers = useProviders();
+  const hasProvider = useHasRealProvider();
   const health = useHealth();
   const eventCount = useEvents((s) => s.events.length);
   const events = useEvents((s) => s.events);
@@ -55,7 +57,7 @@ export function CommandCenterRoute() {
         <p className="mt-1 text-sm text-fg-muted">What should NEXUS work on?</p>
       </header>
 
-      {providers.data && providers.data.length === 0 ? (
+      {hasProvider === false ? (
         <div role="note" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent/40 bg-accent/10 px-4 py-3">
           <p className="text-[13px] text-fg">
             <strong className="font-medium">Connect an AI provider to get started.</strong>{" "}
@@ -84,26 +86,15 @@ export function CommandCenterRoute() {
         </div>
       ) : null}
 
-      <div className="mb-8 rounded-xl border border-line-strong bg-surface p-3 shadow-sm">
-        <label htmlFor="objective" className="sr-only">
-          Objective
-        </label>
-        <textarea
-          id="objective"
-          disabled
-          rows={2}
-          placeholder="Describe an objective…"
-          className="w-full resize-none bg-transparent px-2 py-1.5 text-[15px] text-fg placeholder:text-fg-subtle focus-visible:outline-none disabled:cursor-not-allowed"
-        />
-        <div className="flex items-center justify-between gap-3 px-2 pt-1">
-          <p className="flex items-center gap-1.5 text-xs text-fg-muted">
-            <Sparkles className="size-3.5" aria-hidden="true" />
-            Multi-step objectives arrive with the planner. Until then, run a specialist agent directly.
-          </p>
-          <Button variant="primary" size="sm" onClick={() => setRunning(true)}>
-            Run an agent
-          </Button>
-        </div>
+      <div className="mb-8">
+        <ObjectiveComposer onNewProject={() => setCreating(true)} />
+        <p className="mt-2 px-1 text-xs text-fg-subtle">
+          For a single, focused job you can also{" "}
+          <button type="button" onClick={() => setRunning(true)} className="text-accent-text hover:underline">
+            run one agent directly
+          </button>
+          .
+        </p>
       </div>
 
       <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -130,6 +121,12 @@ export function CommandCenterRoute() {
           </CardContent>
         </Card>
       </div>
+
+      <Section title="Objectives">
+        <Card>
+          <ObjectiveList limit={6} />
+        </Card>
+      </Section>
 
       <Section
         title="Recent projects"

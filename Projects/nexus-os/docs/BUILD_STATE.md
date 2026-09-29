@@ -1,10 +1,24 @@
 # NEXUS OS — build state
 
-_Last updated: 2026-09-29 (end of Phases 3–4)_
+_Last updated: 2026-09-29 (end of Phases 5–6)_
 
 ## Current phase
 
-**Phases 3–4 — agent runtime, tools, permissions, approvals: complete.** Phases 0–4 done. Next: Phases 5–6, planner, orchestrator, task graph and the multi-agent team.
+**Phases 5–6 — planner, orchestrator, task graph, multi-agent review and verification: complete.** Phases 0–6 done. Next: Phase 7, memory and the context engine.
+
+### Added in Phases 5–6 (objectives and the multi-agent team)
+
+- **Objectives** (migration `0003`: `objectives`, `tasks`, `task_dependencies`). An objective moves `RECEIVED → PLANNING → AWAITING_PLAN_APPROVAL → RUNNING → VERIFYING → COMPLETED | PARTIAL | FAILED`, or `PAUSED` when something needs the person, or `CANCELLED`. Run modes: *review the plan first* (default) or *auto*. Execution modes: *normal* (the project's permission level) or *safe steps only* (the cautious level: anything above SAFE asks).
+- **Planner → validator → tasks.** The Planner (read-only tools) returns a structured `PlanResult`. The validator rejects cycles, unknown/disabled/fixed-role agents, duplicate keys and too many tasks for the stated complexity (hard limit 12), giving the Planner one repair round; it silently corrects soft problems (a tool outside the agent's allow-list) and reports them as warnings shown in the plan. A strategy estimator names the cheapest shape that fits (`single_agent`, `pipeline`, `parallel`, `reviewer`) with a rationale and a token estimate.
+- **Plan review.** The person sees the tasks, dependencies, approach, completion criteria, assumptions and risks, and can edit the plan (tasks, agents, dependencies, review/optional switches, criteria) with the same validation as the Planner's plan, run it, run only the safe steps, or cancel.
+- **Orchestrator.** Ready tasks run in parallel (at most 3) as supervised asyncio tasks through the same `AgentRunner` as single runs. Upstream outputs are passed as fenced, untrusted context. A task parked on an approval shows `NEEDS_APPROVAL`; a question from an agent blocks the task and pauses the objective once nothing else can run.
+- **Critic review loop.** A task marked for review gets a Critic task; blocking issues (blocker/major) create a *Revise* task for the original agent with the issues as input, then a fresh review, up to 2 rounds. Every round is a real node in the graph. If issues remain after the limit, the review is flagged `open_issues` and the Verifier sees it.
+- **Verifier.** Checks each completion criterion against the deliverables themselves (it must read them) and returns PASS / PARTIAL / FAIL with evidence and missing requirements. One follow-up re-plan (at most 4 tasks, covering only what is missing) before an honest PARTIAL or FAIL.
+- **Deterministic recovery** (`orchestration/recovery.py`): per failure category and code, retry, resume from the checkpoint (limits and interruptions, with a fresh per-attempt allowance), skip (optional tasks), block for the person, or fail; every decision is an event with its reason. Retry, skip and answer are available per task in the UI; blocked tasks never deadlock the objective.
+- **Agent messages** (`TASK_REQUEST`, `TASK_RESULT`, `QUESTION`, `ERROR`, `REVIEW_REQUEST`, `REVIEW_RESULT`) are recorded as `AGENT_MESSAGE` events: structured fields and short summaries only, never reasoning.
+- **Demo project** (`POST /api/demo`, "Try the demo" on the Command Center): *Research three AI coding assistants and create a comparison report.* Fictional products in files labelled "DEMO DATA", answered by the scripted demo model chosen by manual override. Everything else is the real system: Planner, validator, orchestrator, Researcher, Writer, Critic (asks for one revision), Verifier, tools, artifacts, events. The demo model is never routed automatically and never offered in model pickers.
+- **APIs:** objectives (create, list, detail with tasks and messages, run, edit plan, cancel, resume), tasks (detail, retry, skip, answer), demo.
+- **UI:** the Command Center objective box (project, *review the plan first*, *keep on this device*, Ctrl/⌘+Enter) and objectives list; the objective page (status and progress, plan review with approach and criteria, plan editor, task graph in React Flow with a list view, task details with answer/retry/skip, approvals for the objective's runs, verified result with criteria and deliverable links, agent hand-offs, activity); an Objectives tab per project; plain-language activity for every objective, task, review, verification and recovery event.
 
 ### Added in Phases 3–4 (agent runtime, tools, permissions)
 
@@ -47,9 +61,9 @@ _Last updated: 2026-09-29 (end of Phases 3–4)_
 - **Tauri glue (`apps/desktop/src-tauri`) is written but has never been compiled** — the build container lacks webkit2gtk/GTK. Syntax-checked with `rustfmt` only.
 - Production packaging of the Python API for the desktop app (PyInstaller/externalBin) is not done.
 - OS keychain path is untested here (the container has no keychain); the file fallback is tested and reported as *degraded*.
-- Multi-step objectives are not built yet (planner and orchestrator arrive in Phase 5). The Command Center runs a single agent directly until then.
 - No live provider calls are possible in this environment (no API keys).
-- **Agents have run end to end only against scripted models**: the `ScriptedProvider` in tests, and in the live UI check a local OpenAI-compatible stand-in server that replays fixed steps. How well real models follow the step protocol is unverified; the structured-output repair loop and `INVALID_OUTPUT` handling are the safety net.
+- **Agents and objectives have run end to end only against scripted models**: the `ScriptedProvider` in tests and the demo, and a local OpenAI-compatible stand-in server in the Phase 3–4 live check. How well real models plan, follow the step protocol, review and verify is unverified; validation, the repair loop, `INVALID_OUTPUT` handling and deterministic recovery are the safety net.
+- Recovery does not yet switch to a different model or tool, or delegate to another agent, as the design allows; the gateway's own fallback models are the only model switch. Supervisor, debate, map-reduce and swarm strategies are not built.
 - Sandbox limits are verified on Linux only (rlimits, process-group kill, network namespace). On Windows only the timeout, env scrubbing and working folder apply, and that path has not been run.
 - Memory tools (`search_memory`, `remember`) are Phase 7; agent allow-lists will gain them then.
 
@@ -57,17 +71,38 @@ _Last updated: 2026-09-29 (end of Phases 3–4)_
 
 | Area | Result |
 |---|---|
-| Backend (pytest) | 714 passed |
+| Backend (pytest) | 785 passed |
 | Lint / format (ruff), strict types (mypy), import contracts (3) | clean |
-| Frontend (vitest) | 83 passed (shared 9, web 74) |
+| Frontend (vitest) | 102 passed (shared 9, web 93) |
 | ESLint, `tsc` (all packages) | clean |
 | Web production build | ok |
 | Rust sidecar (`cargo test`) | 8 passed |
 | API-type drift (`scripts/gen_openapi.py --check`) | up to date |
 | Live UI check (Playwright, real API + web app, local stand-in model) | run a Writer that saves an artifact; run a File Manager whose delete waits for approval (file verified present before and gone after); answer an agent's question; browse files, deliverables, runs and tool activity; Tools settings. No console errors; no horizontal overflow at 390 px. Screenshots checked by eye |
-| Scripted E2E | arrives with the demo objective (Phase 10) |
+| Live objective check (Playwright, real API + web app, scripted demo model) | Try the demo → plan review (2 tasks, approach, criteria) → plan editor opens → Run plan → graph fills in live (research, write, Critic review, revision, second review, verification: 6 nodes, 5 edges) → Verifier PASS with 4/4 criteria → report opens from the result. 15 hand-offs shown; project Objectives tab and Command Center list it. No console errors, no failed requests, no overflow at 390 px; screenshots checked by eye |
+| Scripted E2E in `check.py` | Phase 10 |
 
 Run everything: `python scripts/check.py`.
+
+## Architecture decisions made in Phases 5–6
+
+- The orchestrator is code, not a model: planning, reviewing and verifying are agent runs with typed results (`PlanResult`, `ReviewResult`, `VerificationResult`), but dispatch, recovery, revision limits and replanning are deterministic and unit-tested.
+- A plan from a model is a proposal: it is validated before anything exists, and an edited plan is validated the same way.
+- Objectives, like runs, execute as supervised asyncio tasks, not on the job queue (they wait on people). Startup recovery resumes interrupted objectives and requeues their in-flight tasks; a run is resumed from its checkpoint rather than restarted.
+- A task that hit a limit resumes with a fresh allowance per attempt (steps, tool calls, tokens × attempt); without it, resuming a step-limited run would stop again immediately.
+- Revisions and reviews are real tasks with their own rows, dependencies and runs, so the graph shows exactly what happened and each round can be inspected.
+- The scripted demo model is excluded from automatic routing, and fallbacks stay within the same kind (demo to demo, real to real), so a real objective can never be answered by the demo, and the demo can never spend money on a real provider.
+- Orchestrated runs carry a short title (the task's name, or "Plan: …"); activity and run lists show it instead of the machine-built prompt.
+
+## Bugs found by tests and live checks in Phases 5–6 (all fixed, with regression tests)
+
+- **Resuming a run that stopped at its step limit stopped again at once**; fixed with the per-attempt allowance above.
+- **Scripted demo answers never matched**: the prompt fences untrusted content with a random id, so the script key changed every run; the id is stripped when keying.
+- Provider schema names must match `[A-Za-z0-9_-]{1,64}`; generic step types produced names like `StepWith[PlanResult]`. Now named subclasses, and names are sanitised.
+- Recovery treated a model refusal, a missing model or key, and a bad request as retryable.
+- Restricting the demo model from automatic routing broke fallbacks between scripted models in tests; fallbacks are now limited to the same kind instead of dropping demo candidates.
+- After the demo ran, its scripted provider counted as "a connected provider", hiding the *Connect an AI provider* prompt and enabling objectives that no model could plan. Only real providers count now.
+- Live check: the Activity panel showed the Planner's full internal prompt as the run's description (now the short title); the task graph did not re-fit when reviews and revisions joined it mid-run, or when the details panel closed; task rows were clipped on a 390 px screen (grid columns now shrink).
 
 ## Architecture decisions made in Phases 3–4
 
@@ -121,4 +156,4 @@ Run everything: `python scripts/check.py`.
 
 ## Next
 
-Phases 5–6: `Objective`, `Task`, `TaskDependency` tables (migration `0003`); `PlanResult` from the Planner with a validator (DAG, known agents, tools on allow-lists, approvals flagged); `TaskGraph` (topological order, ready set, cycle detection, downstream cancellation); a strategy estimator that picks the cheapest shape (single agent, pipeline, parallel, reviewer); the orchestrator executing tasks with bounded concurrency through `AgentRunner`, passing upstream outputs as fenced context, with deterministic recovery per failure category; Critic review → revision loop; Verifier with PASS/PARTIAL/FAIL and one replan; agent messages as events; objective APIs (create, plan preview, edit plan, run, auto-run safe steps, cancel, retry task); the Command Center objective box, plan preview and task-graph view; the demo project (clearly labelled, scripted).
+Phase 7, memory and the context engine: memory records with scopes (user, project, agent) and visible provenance; proposals from finished objectives (sensitive data filtered) that the person can keep, edit or discard; `search_memory` and `remember` tools on the relevant agents' allow-lists; a context builder that ranks and budgets what each agent sees (objective, task, upstream outputs, relevant memory, files) with the same fencing for untrusted text; a Memory page to browse, edit, pin and delete.

@@ -7,6 +7,7 @@ import { AgentsRoute } from "./routes/Agents";
 import { ApprovalsRoute } from "./routes/Approvals";
 import { CommandCenterRoute } from "./routes/CommandCenter";
 import { NotFoundRoute } from "./routes/NotFound";
+import { ObjectiveRoute } from "./routes/Objective";
 import { ProjectDetailRoute } from "./routes/ProjectDetail";
 import { ProjectsRoute } from "./routes/Projects";
 import { ProvidersRoute } from "./routes/Providers";
@@ -29,6 +30,7 @@ const router = createBrowserRouter([
       { path: "projects", element: <ProjectsRoute /> },
       { path: "projects/:projectId", element: <ProjectDetailRoute /> },
       { path: "agents", element: <AgentsRoute /> },
+      { path: "objectives/:objectiveId", element: <ObjectiveRoute /> },
       { path: "runs/:runId", element: <RunRoute /> },
       { path: "approvals", element: <ApprovalsRoute /> },
       {

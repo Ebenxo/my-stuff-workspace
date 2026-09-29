@@ -1,6 +1,6 @@
 import { Badge, Button, Dialog, DialogContent, DialogFooter, FieldError, Input, Label, Select, Switch, Textarea, toast } from "@nexus/ui";
 import { useMemo, useState } from "react";
-import { useCreateAgent, useModels, useTools, useUpdateAgent } from "../../lib/agentQueries";
+import { useCreateAgent, usePickableModels, useTools, useUpdateAgent } from "../../lib/agentQueries";
 import { errorMessage } from "../../lib/queries";
 import { EMPTY_FORM, toCreate, toForm, toUpdate, unusableTools, validateForm, type AgentForm, type FormErrors } from "./form";
 import { RISK, RISK_ORDER, type AgentView } from "./format";
@@ -57,7 +57,7 @@ function NumberField({
 function AgentFormBody({ agent, onDone }: { agent: AgentView | undefined; onDone: () => void }) {
   const builtin = agent?.builtin ?? false;
   const tools = useTools();
-  const models = useModels();
+  const models = usePickableModels();
   const create = useCreateAgent();
   const update = useUpdateAgent(agent?.id ?? "");
   const [form, setForm] = useState<AgentForm>(() => (agent ? toForm(agent) : EMPTY_FORM));

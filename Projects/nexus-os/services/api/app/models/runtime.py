@@ -66,8 +66,9 @@ class AgentRun(Base):
 
     @property
     def prompt(self) -> str:
-        """The task in the person's words (already redacted at write time), for run lists."""
-        return str((self.request or {}).get("prompt", ""))[:200]
+        """The task in the person's words, or the orchestrator's title for it (redacted at write time)."""
+        req = self.request or {}
+        return str(req.get("title") or req.get("prompt", ""))[:200]
 
 
 class Tool(Base):

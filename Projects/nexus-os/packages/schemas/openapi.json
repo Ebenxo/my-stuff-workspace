@@ -4746,6 +4746,28 @@
         ]
       }
     },
+    "/api/demo": {
+      "post": {
+        "description": "Start the built-in demo (fictional data, scripted model). Its plan waits for review first.",
+        "operationId": "start_demo",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectiveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Start Demo",
+        "tags": [
+          "objectives"
+        ]
+      }
+    },
     "/api/events": {
       "get": {
         "operationId": "list_events",

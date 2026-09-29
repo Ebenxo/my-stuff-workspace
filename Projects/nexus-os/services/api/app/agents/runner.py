@@ -81,6 +81,7 @@ class RunRequest:
     task_class: TaskClass = TaskClass.GENERAL
     approval_ttl_s: float | None = 24 * 3600
     result_kind: str = "task"  # task | plan | review | verification (see app.agents.results)
+    title: str | None = None  # a short label for lists and activity when the prompt is machine-built
 
     def to_json(self) -> dict[str, Any]:
         """What is stored for resumption. Text is redacted first: a pasted key never reaches the database."""
@@ -98,6 +99,7 @@ class RunRequest:
             "task_class": self.task_class.value,
             "approval_ttl_s": self.approval_ttl_s,
             "result_kind": self.result_kind,
+            "title": redact_text(self.title) if self.title else None,
         }
 
     @classmethod
@@ -116,6 +118,7 @@ class RunRequest:
             task_class=TaskClass(data.get("task_class", "general")),
             approval_ttl_s=data.get("approval_ttl_s"),
             result_kind=str(data.get("result_kind", "task")),
+            title=data.get("title"),
         )
 
 
@@ -287,7 +290,7 @@ class AgentRunner:
             {
                 "agent": req.agent.slug,
                 "name": req.agent.name,
-                "prompt": redact_text(req.prompt)[:300],
+                "prompt": redact_text(req.title or req.prompt)[:300],
                 "permission_level": req.permission_level.value,
                 "private": req.private,
             },

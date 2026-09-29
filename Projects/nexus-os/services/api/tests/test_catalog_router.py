@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
@@ -78,10 +79,11 @@ def test_cost_is_unknown_not_zero_without_a_price() -> None:
 
 
 class FakeRegistry:
-    def __init__(self, providers: list[tuple[str, str | None, list[ModelInfo]]]) -> None:
-        # (provider_id, default_model, models)
+    def __init__(self, providers: list[tuple[Any, ...]]) -> None:
+        # (provider_id, default_model, models[, kind])
         self._data = [
-            (SimpleNamespace(id=pid, default_model=default), models) for pid, default, models in providers
+            (SimpleNamespace(id=p[0], default_model=p[1], kind=p[3] if len(p) > 3 else "openai"), p[2])
+            for p in providers
         ]
 
     async def all_models(self, *, enabled_only: bool = True):  # type: ignore[no-untyped-def]
@@ -275,3 +277,35 @@ async def test_vision_requirement_prefers_capable_models() -> None:
     ]
     route = await router(providers).route(RouteRequest(needs_vision=True))
     assert route.primary.model == "seeing-sonnet"
+
+
+DEMO = ("demo", "demo:scripted", [m("demo", "demo:scripted", tier="balanced", local=True)], "demo")
+
+
+async def test_the_demo_provider_never_answers_real_work_automatically() -> None:
+    r = router([DEMO, CLOUD])
+    route = await r.route(RouteRequest(task_class=TaskClass.GENERAL))
+    assert route.primary.provider_id == "cloud"
+    assert all(f.provider_id != "demo" for f in route.fallbacks)  # not even as a fallback
+    private = router([DEMO, LOCAL])
+    assert (await private.route(RouteRequest(private=True))).primary.provider_id == "local"
+
+
+async def test_with_only_the_demo_provider_real_work_has_no_route() -> None:
+    with pytest.raises(NoRouteError, match="demo provider only runs the demo project"):
+        await router([DEMO]).route(RouteRequest())
+
+
+async def test_the_demo_is_used_when_chosen_and_never_falls_back_to_a_real_model() -> None:
+    route = await router([DEMO, CLOUD]).route(RouteRequest(manual_override="demo:demo:scripted"))
+    assert (
+        str(route.primary) == "demo:demo:scripted"
+        and route.fallbacks == []
+        and route.reason == "manual override"
+    )
+
+
+async def test_tests_can_opt_in_to_routing_to_scripted_models() -> None:
+    r = router([DEMO])
+    r.auto_route_demo = True
+    assert (await r.route(RouteRequest())).primary.provider_id == "demo"

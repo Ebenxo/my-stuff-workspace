@@ -197,7 +197,13 @@ class Orchestrator:
         for _ in range(2):  # one repair round
             outcome = await self._runner.run(
                 self._request(
-                    ctx, planner, attempt_prompt, task_id=None, kind="plan", task_class=TaskClass.PLANNING
+                    ctx,
+                    planner,
+                    attempt_prompt,
+                    task_id=None,
+                    kind="plan",
+                    task_class=TaskClass.PLANNING,
+                    title=f"Plan: {ctx.objective.text[:150]}",
                 )
             )
             if outcome.status is not RunStatus.COMPLETED or not isinstance(outcome.result, PlanResult):
@@ -436,6 +442,7 @@ class Orchestrator:
             kind=kind,
             task_class=task_class_for(agent),
             context=await self._context_for(ctx, task),
+            title=task.title,
         )
         run = await self._runner.create(req)
         await self._tasks.update(task.id, run_id=run.id, resume=False)
@@ -451,6 +458,7 @@ class Orchestrator:
         kind: str,
         task_class: TaskClass,
         context: list[ContextBlock] | None = None,
+        title: str | None = None,
     ) -> RunRequest:
         return RunRequest(
             agent=agent,
@@ -464,6 +472,7 @@ class Orchestrator:
             permission_level=ctx.level,
             task_class=task_class,
             result_kind=kind,
+            title=title,
         )
 
     # ---- settling a finished run ------------------------------------------------------------

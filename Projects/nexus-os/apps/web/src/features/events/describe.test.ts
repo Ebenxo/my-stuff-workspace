@@ -23,9 +23,28 @@ describe("describeEvent", () => {
   });
 
   it("falls back to a readable label and infers tone", () => {
-    expect(describeEvent({ ...base, type: "TASK_COMPLETED" })).toEqual({ text: "Task completed", tone: "success" });
+    expect(describeEvent({ ...base, type: "EXPORT_COMPLETED" })).toEqual({ text: "Export completed", tone: "success" });
     expect(describeEvent({ ...base, type: "APPROVAL_REQUIRED" }).tone).toBe("warning");
     expect(describeEvent({ ...base, type: "TOOL_DENIED" }).tone).toBe("danger");
+  });
+
+  it("describes objectives, tasks and hand-offs in plain words", () => {
+    const d = (type: string, payload: Record<string, unknown>) => describeEvent({ ...base, type, payload });
+    expect(d("PLAN_CREATED", { tasks: 4 })).toEqual({ text: "Plan ready: 4 tasks", tone: "info" });
+    expect(d("TASK_STARTED", { key: "t1", title: "Research", agent: "researcher" }).text).toBe("Researcher started “Research”");
+    expect(d("TASK_BLOCKED", { key: "t2" })).toEqual({ text: "Task t2 needs you", tone: "warning" });
+    expect(d("REVIEW_COMPLETED", { title: "Draft", verdict: "revise" })).toEqual({ text: "Critic asked for changes to “Draft”", tone: "warning" });
+    expect(d("VERIFICATION_COMPLETED", { verdict: "PASS", summary: "All met" })).toEqual({ text: "Verifier: PASS, All met", tone: "success" });
+    expect(d("OBJECTIVE_COMPLETED", { verdict: "PASS" }).text).toBe("Objective complete and verified");
+    expect(d("AGENT_MESSAGE", { sender: "orchestrator", recipient: "writer", type: "TASK_REQUEST", payload: { title: "Write it" } }).text).toBe(
+      "NEXUS assigned writer: Write it",
+    );
+    expect(d("AGENT_MESSAGE", { sender: "writer", recipient: "user", type: "QUESTION", payload: { question: "Which tone?" } })).toEqual({
+      text: "Writer asked you: Which tone?",
+      tone: "warning",
+    });
+    // a question from a lone run keeps its original wording
+    expect(d("AGENT_MESSAGE", { kind: "question", text: "Which file?" }).text).toBe("Agent asks: Which file?");
   });
 
   it("classifies error events", () => {

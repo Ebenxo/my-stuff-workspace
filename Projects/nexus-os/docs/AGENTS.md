@@ -115,47 +115,45 @@ class AgentMessage(BaseModel):
     timestamp: datetime
 ```
 
-Messages are persisted as events (`AGENT_MESSAGE`), so the Activity panel can render the collaboration ("Compass → Nexus: PLAN, 6 tasks").
+Messages are persisted as events (`AGENT_MESSAGE`) and returned with the objective, so the UI can render the collaboration ("NEXUS assigned writer: Write the comparison report", "Critic reviewed: Verdict: revise (1 to fix)"). Payloads carry structured fields and short summaries (title, summary, question, verdict, counts), never reasoning. Built in Phase 5: `TASK_REQUEST`, `TASK_RESULT`, `QUESTION`, `ERROR`, `REVIEW_REQUEST`, `REVIEW_RESULT`.
 
 ## Task graph
 
-`TaskNode` = the `tasks` row: `id, title, description, assigned_agent, status, dependencies, inputs, outputs, attempts, max_attempts, started_at, completed_at, error, approval_required`. Statuses: `QUEUED, PLANNING, WAITING, RUNNING, BLOCKED, NEEDS_APPROVAL, FAILED, COMPLETED, CANCELLED`. `TaskGraph` (in `orchestration/graph.py`) is a pure in-memory structure with topological ordering, ready-set computation, cycle detection, and downstream-cancel propagation, used by both the validator and the executor.
+`TaskNode` = the `tasks` row (plus `task_dependencies`): `id, key, title, description, kind (work | review | revise | verify), assigned_agent, status, depends_on, inputs, outputs, attempts, max_attempts, approval_required, optional, review, round, parent_task_id, run_id, error, started_at, completed_at`. Statuses: `WAITING, QUEUED, RUNNING, NEEDS_APPROVAL, BLOCKED, COMPLETED, SKIPPED, FAILED, CANCELLED`. `TaskGraph` (in `orchestration/graph.py`) is pure: topological ordering, ready set, cycle detection and downstream cancellation, used by the validator, the orchestrator and (mirrored in TypeScript) the plan editor. A `SKIPPED` dependency counts as settled; the dependent is told the input is missing.
 
 ## Review loop
 
 ```
 work task ──(review=true)──► Critic REVIEW_REQUEST ──► REVIEW_RESULT
-      ▲                                                   │ blocker/major issues and revisions < limit
+      ▲                                                   │ blocker/major issues and rounds < 2
       └────────────── "Revise: …" task (original agent) ◄─┘
 ```
 
-A revision is a real task in the graph, depending on the review task, assigned to the original agent, carrying the issues as input. Revision limit default: 2 per task. When it is exhausted with blocking issues open, the task completes as `partial` and the Verifier sees the open issues.
+A review and a revision are real tasks in the graph (`t2-review1`, `t2-rev1`, `t2-review2`, …) with their own runs. The revision depends on the review, goes to the original agent with the issues and the previous output as input, and is reviewed again while rounds remain. Tasks that depended on the original are rewired to the latest revision. When the limit (2) is reached with blocking issues open, the last review is marked `open_issues` and the Verifier sees it.
 
 ## Verification and replanning
 
-After all tasks settle, the Verifier receives the completion criteria, task summaries, and artifact references (never trusting agents' self-reports: it must read the artifacts). `PASS` → finalise. `PARTIAL`/`FAIL` with `missing_requirements` and replan budget (default 1) → Orchestrator asks the Planner for follow-up tasks covering only the missing requirements. Otherwise the objective ends `PARTIAL` or `FAILED` with an honest report.
+After all tasks settle, the Verifier receives the completion criteria, task summaries and artifact references, and must read the deliverables itself (never trusting agents' self-reports). It returns a `VerificationResult`: `PASS | PARTIAL | FAIL`, each criterion with `met` and evidence, and `missing_requirements`. `PASS` completes the objective. `PARTIAL`/`FAIL` with missing requirements and replan budget left (1) → the Planner is asked for at most 4 follow-up tasks covering only what is missing, validated like any plan, then verified again. Otherwise the objective ends `PARTIAL` or `FAILED` with the Verifier's honest report.
 
 ## Failure handling
 
-Categories: `MODEL_FAILURE, TOOL_FAILURE, PERMISSION_DENIED, INVALID_OUTPUT, TIMEOUT, DEPENDENCY_FAILURE, CONTEXT_FAILURE, UNKNOWN`.
+Categories: `MODEL_FAILURE, TOOL_FAILURE, PERMISSION_DENIED, INVALID_OUTPUT, TIMEOUT, DEPENDENCY_FAILURE, CONTEXT_FAILURE, UNKNOWN`. Within a run, the gateway already retries model calls with backoff and tries fallback models, and structured output gets bounded repair. When a run still fails, `orchestration/recovery.py` decides (pure, unit-tested per row):
 
-| Category | Default recovery (in order) |
+| Failure | Decision |
 |---|---|
-| `MODEL_FAILURE` | retry with backoff → next fallback model → request human help |
-| `INVALID_OUTPUT` | repair prompt (bounded) → different model → retry task → request human help |
-| `TOOL_FAILURE` | retry if transient → alternative tool from the agent's allow-list (declared per tool, e.g. `web_search` → `http_request`) → delegate to a more capable agent → skip if `optional` → request human help |
-| `PERMISSION_DENIED` | never retried automatically; the agent is told and may choose an approved alternative once; otherwise task `BLOCKED` and the human is asked |
-| `TIMEOUT` | resume from checkpoint once → split/delegate → request human help |
-| `DEPENDENCY_FAILURE` | mark `BLOCKED`; if the upstream is `optional`-skipped, unblock with a missing-input note; else cancel downstream |
-| `CONTEXT_FAILURE` | rebuild with a smaller budget / drop lowest-ranked segments → retry |
-| `UNKNOWN` | one retry → request human help |
+| `PERMISSION_DENIED` | never retried: skip if optional, else block for the person |
+| the agent reports it cannot do the task | skip if optional, else block |
+| step, tool-call, token or working-time limit; interrupted | resume from the checkpoint with a fresh allowance while attempts remain; then skip/block |
+| loop detected | retry fresh while attempts remain; then skip/block |
+| model failure or invalid output that no retry can fix (budget stop, no route, refusal, bad key or model, bad request) | skip/block at once |
+| other model failure, invalid output, tool failure, unknown | retry while attempts remain (default 2); then skip/block |
 
-Recovery decisions are deterministic code (`orchestration/recovery.py`), unit-tested per row, and each decision is recorded as an event with the reason.
+A blocked task shows the reason and offers **Retry** and **Skip** (or an answer box for a question); the objective pauses only when nothing else can run. Each decision is recorded as a `RECOVERY_DECISION` event with its reason. Not built yet: switching model or tool, or delegating to another agent, as a recovery step.
 
 ## Strategies
 
-Implemented: `single_agent`, `pipeline`, `reviewer`, `parallel`. Defined but explicitly unsupported (raise `NotImplementedError` with a clear message if selected by a plan): `supervisor`, `debate`, `map_reduce`, `swarm`. `StrategyEstimator` chooses the cheapest that satisfies the plan's shape and the user's cost limits; the rationale is stored on the objective and shown in the plan preview.
+Implemented: `single_agent`, `pipeline`, `reviewer`, `parallel`, chosen by `orchestration/strategy.py` from the validated plan's shape (task count, distinct agents, dependency depth, width, reviews) with a rationale and a token estimate, shown in the plan preview. Not built: `supervisor`, `debate`, `map_reduce`, `swarm`.
 
 ## Human-in-the-loop triggers
 
-An agent step of type `ask_human` (ambiguous requirement, conflicting information, architectural decision), an approval request (dangerous, destructive or external action), or a recovery decision that needs the user, all park the task (`BLOCKED` or `NEEDS_APPROVAL`) and create a notification. The user answers from the approvals/questions panel; the answer is delivered to the parked run as a trusted user message.
+An agent step of type `ask_human` (ambiguous requirement, conflicting information, architectural decision), an approval request (dangerous, destructive or external action), or a recovery decision that needs the user, all park the task (`BLOCKED` or `NEEDS_APPROVAL`) and create a notification. The user answers on the objective page (or approves from the approvals panel); the answer is delivered to the parked run as a trusted user message and the run continues from its checkpoint.

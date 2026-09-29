@@ -103,6 +103,17 @@ async def test_objective_is_planned_delegated_reviewed_revised_and_verified(oe: 
     assert [(a["name"], a["version"]) for a in obj.result["artifacts"]] == [("report.md", 2)]
     assert obj.strategy is not None and obj.strategy["name"] == "reviewer"
 
+    # runs are listed by a short title, not by the machine-built prompt the agent receives
+    started = [e.payload["prompt"] for e in await oe.events(obj.id, "AGENT_STARTED")]
+    assert (
+        started[0].startswith("Plan: ")
+        and "Collect facts" in started
+        and "Review: Write the report" in started
+    )
+    assert not any("# Objective" in p for p in started)
+    t1_run = await oe.c.run_store.get(tasks["t1"].run_id or "")
+    assert t1_run.prompt == "Collect facts"
+
     # everything is observable
     types = await oe.event_types(obj.id)
     for t in (

@@ -39,6 +39,7 @@ async def env(app: FastAPI):  # type: ignore[no-untyped-def]
         sleeps.append(s)
 
     c.registry._demo_factory = lambda pid: scripted.setdefault(pid, ScriptedProvider(pid))
+    c.router.auto_route_demo = True
     gateway = LLMGateway(c.registry, c.router, c.usage, c.bus, sleep=fake_sleep, jitter=lambda: 0.0)
 
     async def add(name: str = "Demo") -> tuple[str, ScriptedProvider]:

@@ -10,6 +10,8 @@ import { ApprovalsPanel } from "../features/approvals/ApprovalsPanel";
 import { ActivityList } from "../features/events/ActivityList";
 import { isActivityEvent } from "../features/events/describe";
 import { ArtifactsTab } from "../features/files/ArtifactsTab";
+import { ObjectiveComposer } from "../features/objectives/ObjectiveComposer";
+import { ObjectiveList } from "../features/objectives/ObjectiveList";
 import { FilesTab } from "../features/files/FilesTab";
 import { ProjectForm } from "../features/projects/ProjectForm";
 import { PERMISSION_COPY } from "../features/projects/permissions";
@@ -19,7 +21,7 @@ import { errorMessage, useProject, useSetProjectArchived, useSettings, useUpdate
 import { useEvents } from "../stores/events";
 import { Page, PageHeader, Section } from "./Page";
 
-const TABS = ["overview", "files", "artifacts", "runs", "tools", "approvals"] as const;
+const TABS = ["overview", "objectives", "files", "artifacts", "runs", "tools", "approvals"] as const;
 type ProjectTab = (typeof TABS)[number];
 
 export function ProjectDetailRoute() {
@@ -124,6 +126,7 @@ export function ProjectDetailRoute() {
       >
         <TabsList className="mb-5 overflow-x-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="objectives">Objectives</TabsTrigger>
           <TabsTrigger value="files">Files</TabsTrigger>
           <TabsTrigger value="artifacts">Deliverables</TabsTrigger>
           <TabsTrigger value="runs">Runs</TabsTrigger>
@@ -182,6 +185,16 @@ export function ProjectDetailRoute() {
       </Section>
         </TabsContent>
 
+        <TabsContent value="objectives">
+          {archived ? null : (
+            <div className="mb-4">
+              <ObjectiveComposer projectId={projectId} />
+            </div>
+          )}
+          <Card>
+            <ObjectiveList projectId={projectId} limit={50} empty="Give this project an objective and NEXUS will plan it, assign agents, and check the result." />
+          </Card>
+        </TabsContent>
         <TabsContent value="files">
           <FilesTab projectId={projectId} />
         </TabsContent>

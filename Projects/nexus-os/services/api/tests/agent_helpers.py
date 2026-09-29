@@ -126,6 +126,7 @@ async def make_ae(app: FastAPI, name: str = "Agent Tests") -> AE:
 
     c.registry._demo_factory = lambda pid: scripted.setdefault(pid, ScriptedProvider(pid))  # type: ignore[attr-defined]
     c.gateway._sleep = fake_sleep  # type: ignore[attr-defined]
+    c.router.auto_route_demo = True  # these tests drive agents with scripted models
     provider_row = await c.providers.create(
         ProviderCreate(kind="demo", name="Demo", default_model="demo:scripted")
     )

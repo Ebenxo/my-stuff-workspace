@@ -40,13 +40,17 @@ python scripts/dev.py          # API on http://127.0.0.1:8765, web on http://loc
 
 `scripts/dev.py` stores data in `data/dev/` (gitignored), creates a per-launch API token, and hands it to the Vite dev proxy so it never ships in the browser bundle. Works on Windows, macOS and Linux. Only one API can use a data folder at a time; a second copy needs its own folder and port, e.g. `NEXUS_PORT=8766 python scripts/dev.py --api-only --home data/dev2`.
 
-## Try an agent
+## Try the demo
+
+On the Command Center press **Try the demo**. It creates a demo project with three notes about fictional products (every file is labelled *DEMO DATA*) and the objective *Research three AI coding assistants and create a comparison report*. The agents' answers come from a scripted demo model, so it works without a provider and nothing leaves your machine; everything else (planning, validation, the task graph, tools, reviews, verification, deliverables, events) is the real system. Review the plan, press **Run plan**, and watch the Researcher, Writer, Critic and Verifier work.
+
+## Give NEXUS an objective
 
 1. Settings → AI providers: connect a provider (a local model through Ollama or LM Studio keeps everything on your machine).
 2. Projects → New project, then put a file or two into its **Files** tab.
-3. Agents → pick one → **Run**, and describe the task. The run page shows each step live. Anything risky (deleting, running commands, sending data out) waits on an approval card until you decide, and results land in the project's **Deliverables** with version history.
+3. On the Command Center, describe what you want done and press **Start**. The Planner proposes tasks for the team; you can edit the plan, run it, or run only the safe steps. Anything risky (deleting, running commands, sending data out) waits on an approval card until you decide. The Verifier checks the result against the plan's completion criteria, and deliverables land in the project's **Deliverables** with version history.
 
-Multi-step objectives with a planner and a team of agents arrive in the next phase; see [`docs/BUILD_STATE.md`](docs/BUILD_STATE.md).
+For a single focused job you can also run one agent directly from **Agents**.
 
 ## Quality gates
 

@@ -13,6 +13,7 @@ const INVALIDATIONS: [RegExp, string[][]][] = [
   [/^SETTINGS_/, [["settings"], ["tools"]]],
   [/^SYSTEM_/, [["health"]]],
   [/^AGENT_/, [["runs"], ["run"], ["agents"]]],
+  [/^(OBJECTIVE|PLAN|TASK|REVIEW|VERIFICATION|RECOVERY)_|^AGENT_MESSAGE$/, [["objectives"], ["objective"]]],
   [/^(TOOL_|POLICY_|SECURITY_)/, [["tool-calls"], ["run"]]],
   [/^APPROVAL_/, [["approvals"], ["approval-grants"], ["run"], ["runs"], ["tool-calls"]]],
   [/^ARTIFACT_/, [["artifacts"], ["artifact"], ["artifact-versions"]]],

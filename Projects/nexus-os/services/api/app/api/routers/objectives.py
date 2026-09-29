@@ -78,3 +78,9 @@ async def skip_task(task_id: str, c: Container) -> TaskOut:
 @router.post("/tasks/{task_id}/answer", response_model=TaskOut, status_code=status.HTTP_202_ACCEPTED)
 async def answer_task(task_id: str, body: TaskAnswer, c: Container) -> TaskOut:
     return await c.objective_service.answer_task(task_id, body.text)
+
+
+@router.post("/demo", response_model=ObjectiveOut, status_code=status.HTTP_202_ACCEPTED)
+async def start_demo(c: Container) -> ObjectiveOut:
+    """Start the built-in demo (fictional data, scripted model). Its plan waits for review first."""
+    return await c.demo.start()

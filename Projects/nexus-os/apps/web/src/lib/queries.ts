@@ -137,6 +137,15 @@ export function useProviders() {
   return useQuery({ queryKey: qk.providers, queryFn: () => unwrap(api.GET("/api/providers")) });
 }
 
+/**
+ * Whether a model is connected that can do real work: the scripted demo provider only knows the
+ * demo's lines. `undefined` while loading, so callers do not flash a prompt.
+ */
+export function useHasRealProvider(): boolean | undefined {
+  const providers = useProviders();
+  return providers.data ? providers.data.some((p) => p.kind !== "demo") : undefined;
+}
+
 export function useCreateProvider() {
   const qc = useQueryClient();
   return useMutation({

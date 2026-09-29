@@ -47,3 +47,13 @@ export type ArtifactVersion = S["ArtifactVersionOut"];
 export type ArtifactContent = S["ArtifactContent"];
 export type FileEntry = S["FileEntryOut"];
 export type FileContent = S["FileContentOut"];
+
+export type Objective = S["ObjectiveOut"];
+export type ObjectiveCreate = S["ObjectiveCreate"];
+export type ObjectiveDetail = S["ObjectiveDetail"];
+export type ObjectiveStatus = S["ObjectiveStatus"];
+export type TaskNode = S["TaskOut"];
+export type TaskStatus = S["TaskStatus"];
+export type PlanTask = S["PlanTask"];
+export type PlanEdit = S["PlanEdit"];
+export type AgentMessage = S["AgentMessage"];
