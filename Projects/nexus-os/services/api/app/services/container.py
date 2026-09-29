@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 import httpx
 
+from app.agents.runner import AgentRunner
 from app.core.clock import Clock, SystemClock
 from app.core.secrets import SecretStore, build_secret_store
 from app.core.settings import Settings
@@ -27,12 +28,15 @@ from app.repositories.runtime_store import (
     ToolRowStore,
 )
 from app.schemas.providers import Budgets
+from app.services.agents import AgentService
 from app.services.conversations import ConversationService
+from app.services.files import FilesService
 from app.services.health import HealthService, register_core_checks
 from app.services.notifications import NotificationService
 from app.services.projects import ProjectService
 from app.services.providers import ProviderService
 from app.services.settings import SettingsService
+from app.services.tools import ToolService
 from app.tasks.queue import InProcessJobQueue, JobQueue
 from app.tools.builtin import builtin_tools
 from app.tools.context import ToolContextFactory
@@ -72,6 +76,10 @@ class AppContainer:
     artifacts: ArtifactStore
     tools: ToolRegistry
     executor: ToolExecutor
+    runner: AgentRunner
+    agent_service: AgentService
+    tool_service: ToolService
+    files: FilesService
     tool_contexts: ToolContextFactory
     sandbox: SandboxManager
     safe_http: SafeHttpClient
@@ -79,6 +87,7 @@ class AppContainer:
     started_at: float
 
     async def close(self) -> None:
+        await self.agent_service.shutdown()
         await self.queue.shutdown()
         await self.http.aclose()
         await self.bus.close()
@@ -145,6 +154,31 @@ async def build_container(
     )
     executor = ToolExecutor(tools, approvals, tool_call_store, bus, tool_row_store, clock)
     approvals.set_validator(executor.validate_arguments)
+    runner = AgentRunner(
+        gateway=gateway,
+        runs=run_store,
+        agents=agent_store,
+        executor=executor,
+        tools=tools,
+        tool_rows=tool_row_store,
+        tool_contexts=tool_contexts,
+        approvals=approvals,
+        bus=bus,
+    )
+    agent_service = AgentService(
+        agents=agent_store,
+        runs=run_store,
+        tool_calls=tool_call_store,
+        runner=runner,
+        approvals=approvals,
+        projects=projects,
+        settings=settings_service,
+        notifications=notifications,
+        bus=bus,
+        clock=clock,
+    )
+    tool_service = ToolService(tool_row_store, tool_call_store, tools, bus)
+    files = FilesService(projects, bus)
     started_at = time.monotonic()
     register_core_checks(
         health,
@@ -185,6 +219,10 @@ async def build_container(
         artifacts=artifacts,
         tools=tools,
         executor=executor,
+        runner=runner,
+        agent_service=agent_service,
+        tool_service=tool_service,
+        files=files,
         tool_contexts=tool_contexts,
         sandbox=sandbox,
         safe_http=safe_http,

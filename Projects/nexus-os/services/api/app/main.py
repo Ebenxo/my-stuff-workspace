@@ -16,7 +16,20 @@ from app import __version__, migrate
 from app.api.errors import install_error_handlers
 from app.api.middleware import SecurityMiddleware
 from app.api.ratelimit import RateLimiter
-from app.api.routers import events, health, notifications, projects, providers, settings, usage
+from app.api.routers import (
+    agents,
+    approvals,
+    artifacts,
+    events,
+    files,
+    health,
+    notifications,
+    projects,
+    providers,
+    settings,
+    tools,
+    usage,
+)
 from app.core.clock import Clock
 from app.core.logging import configure_logging
 from app.core.secrets import SecretStore
@@ -49,6 +62,8 @@ def create_app(
         app.state.container = container
         await container.settings_service.get()  # ensure the settings row exists
         await container.tool_row_store.sync(container.tools.mirror_rows())
+        await container.agent_service.sync_builtins()
+        await container.agent_service.recover()
         await container.bus.emit(EventType.SYSTEM_STARTED, payload={"version": __version__})
         log.info("NEXUS API %s ready on %s:%s (home=%s)", __version__, cfg.host, cfg.port, cfg.home)
         try:
@@ -67,7 +82,20 @@ def create_app(
         separate_input_output_schemas=False,
     )
     install_error_handlers(app)
-    for module in (health, settings, projects, notifications, events, providers, usage):
+    for module in (
+        health,
+        settings,
+        projects,
+        notifications,
+        events,
+        providers,
+        usage,
+        agents,
+        approvals,
+        tools,
+        artifacts,
+        files,
+    ):
         app.include_router(module.router)
 
     # Middleware order: the last one added is outermost. CORS must wrap the security layer so

@@ -288,32 +288,45 @@ class ToolExecutor:
         # 6. Approval: park until a human decides.
         approval_id: str | None = None
         if decision.verdict is Verdict.REQUIRE_APPROVAL:
-            # Status first, then the approval: anyone who can see the approval sees a coherent tool call.
-            await self._calls.update(call_id, status=ToolCallStatus.AWAITING_APPROVAL)
-            approval = await self._approvals.request(
-                project_id=ectx.project_id,
-                run_id=ectx.run_id,
-                task_id=ectx.task_id,
-                agent_id=ectx.agent.id,
-                tool_name=tool_name,
-                arguments=arguments,
-                reason=summary or f"{ectx.agent.name} wants to run {tool_name}",
-                risk=effective,
-                impact=impact,
-                session_grantable=decision.session_grantable,
-                tainted=ectx.taint.tainted,
-                taint_sources=ectx.taint.sources,
-                tool_call_id=call_id,
-            )
-            approval_id = approval.id
-            await self._calls.update(call_id, approval_id=approval.id)
-            if ectx.on_wait:
-                await ectx.on_wait(approval)
             try:
-                decided = await self._approvals.wait(approval.id, ttl_s=ectx.approval_ttl_s)
-            finally:
+                # Status first, then the approval: anyone who can see the approval sees a coherent tool call.
+                await self._calls.update(call_id, status=ToolCallStatus.AWAITING_APPROVAL)
+                approval = await self._approvals.request(
+                    project_id=ectx.project_id,
+                    run_id=ectx.run_id,
+                    task_id=ectx.task_id,
+                    agent_id=ectx.agent.id,
+                    tool_name=tool_name,
+                    arguments=arguments,
+                    reason=summary or f"{ectx.agent.name} wants to run {tool_name}",
+                    risk=effective,
+                    impact=impact,
+                    session_grantable=decision.session_grantable,
+                    tainted=ectx.taint.tainted,
+                    taint_sources=ectx.taint.sources,
+                    tool_call_id=call_id,
+                )
+                approval_id = approval.id
+                await self._calls.update(call_id, approval_id=approval.id)
                 if ectx.on_wait:
-                    await ectx.on_wait(None)
+                    await ectx.on_wait(approval)
+                try:
+                    decided = await self._approvals.wait(approval.id, ttl_s=ectx.approval_ttl_s)
+                finally:
+                    if ectx.on_wait:
+                        await ectx.on_wait(None)
+            except asyncio.CancelledError:
+                # Cancelled at any point while asking: the call must not be left "awaiting approval".
+                await self._calls.update(
+                    call_id,
+                    status=ToolCallStatus.FAILED,
+                    error={
+                        "code": "cancelled",
+                        "message": "The run was cancelled while waiting for approval.",
+                    },
+                    finished_at=self._clock.now(),
+                )
+                raise
             if decided.status not in (ApprovalStatus.APPROVED_ONCE, ApprovalStatus.APPROVED_SESSION):
                 why = {
                     "DENIED": "The user denied this action",

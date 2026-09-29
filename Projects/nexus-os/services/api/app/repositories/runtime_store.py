@@ -257,9 +257,25 @@ class RunStore:
                 )
             )
 
-    async def set_status(self, run_id: str, status: RunStatus) -> None:
+    async def set_status(
+        self, run_id: str, status: RunStatus, *, result: dict[str, Any] | None = None
+    ) -> None:
+        """Change status. ``result`` is only written when given (e.g. the question of a run that waits)."""
+        values: dict[str, Any] = {"status": status.value}
+        if result is not None:
+            values["result"] = result
         async with self._db.session() as s:
-            await s.execute(update(AgentRun).where(AgentRun.id == run_id).values(status=status.value))
+            await s.execute(update(AgentRun).where(AgentRun.id == run_id).values(**values))
+
+    async def reopen(self, run_id: str) -> AgentRunOut:
+        """A run that was waiting for a person continues (same attempt)."""
+        async with self._db.session() as s:
+            row = await s.get(AgentRun, run_id)
+            if row is None:
+                raise NotFoundError(f"Run {run_id} not found")
+            row.status, row.result = RunStatus.RUNNING.value, None
+            await s.flush()
+            return AgentRunOut.model_validate(row)
 
     async def finish(
         self,
@@ -288,8 +304,9 @@ class RunStore:
             row = await s.get(AgentRun, run_id)
             if row is None:
                 raise NotFoundError(f"Run {run_id} not found")
-            row.status, row.finished_at, row.error, row.attempt = (
+            row.status, row.finished_at, row.error, row.result, row.attempt = (
                 RunStatus.RUNNING.value,
+                None,
                 None,
                 None,
                 row.attempt + 1,
@@ -383,6 +400,27 @@ class ToolCallStore:
             if row is None:
                 raise NotFoundError(f"Tool call {call_id} not found")
             return ToolCallOut.model_validate(row)
+
+    async def close_open(self, run_ids: Sequence[str], code: str, message: str) -> int:
+        """Tool calls still in flight for runs that no longer exist as processes (e.g. after a restart)."""
+        if not run_ids:
+            return 0
+        open_states = [
+            ToolCallStatus.PROPOSED.value,
+            ToolCallStatus.AWAITING_APPROVAL.value,
+            ToolCallStatus.RUNNING.value,
+        ]
+        async with self._db.session() as s:
+            result = await s.execute(
+                update(ToolCall)
+                .where(ToolCall.run_id.in_(list(run_ids)), ToolCall.status.in_(open_states))
+                .values(
+                    status=ToolCallStatus.FAILED.value,
+                    error={"code": code, "message": message},
+                    finished_at=self._clock.now(),
+                )
+            )
+            return int(result.rowcount or 0)  # type: ignore[attr-defined]
 
     async def list_calls(
         self,
