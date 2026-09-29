@@ -158,6 +158,8 @@ class ToolOut(BaseModel):
     capabilities: list[str]
     enabled: bool
     input_schema: dict[str, Any]
+    note: str | None = None  # why an MCP tool was switched off (changed or suspicious definition)
+    available: bool = True  # registered right now (an MCP tool is not while its server is stopped)
 
 
 class ToolToggle(StrictModel):

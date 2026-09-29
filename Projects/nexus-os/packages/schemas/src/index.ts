@@ -91,3 +91,15 @@ export type Schedule = S["ScheduleOut"];
 export type ScheduleCreate = S["ScheduleCreate"];
 export type ScheduleUpdate = S["ScheduleUpdate"];
 export type CronPreview = S["CronPreview"];
+
+export type McpServer = S["MCPServerOut"];
+export type McpServerCreate = S["MCPServerCreate"];
+export type McpServerUpdate = S["MCPServerUpdate"];
+export type McpServerDetail = S["MCPServerDetail"];
+export type McpTool = S["MCPToolOut"];
+export type McpResource = S["MCPResourceOut"];
+export type McpPrompt = S["MCPPromptOut"];
+export type McpStatus = S["MCPServerOut"]["status"];
+export type McpTransport = S["MCPServerOut"]["transport"];
+export type ResourceContent = S["ResourceContent"];
+export type PromptMessage = S["PromptMessage"];

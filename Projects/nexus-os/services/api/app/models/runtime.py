@@ -86,6 +86,9 @@ class Tool(Base):
     capabilities: Mapped[list[Any]] = mapped_column(JSON, default=list)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_default, onupdate=utc_default)
+    # MCP tools (migration 0006): a hash of the definition as last seen, and why a tool was switched off
+    fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class ToolCall(Base):

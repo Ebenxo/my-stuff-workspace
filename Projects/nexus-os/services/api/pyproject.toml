@@ -78,7 +78,7 @@ layers = [
   "app.scheduler",
   "app.workflows",
   "app.orchestration",
-  "app.agents",
+  "app.agents | app.mcp",
   "app.tools | app.memory",
   "app.permissions | app.providers | app.files | app.tasks",
   "app.events",
@@ -92,7 +92,7 @@ layers = [
 name = "Runtime modules never import the web framework"
 type = "forbidden"
 source_modules = [
-  "app.orchestration", "app.agents", "app.tools", "app.memory", "app.permissions",
+  "app.orchestration", "app.agents", "app.mcp", "app.tools", "app.memory", "app.permissions",
   "app.providers", "app.workflows", "app.scheduler", "app.events", "app.repositories",
 ]
 forbidden_modules = ["fastapi", "starlette"]

@@ -14,6 +14,7 @@ from app.core.secrets import SecretStore, build_secret_store
 from app.core.settings import Settings
 from app.events.bus import EventBus
 from app.files.artifacts import ArtifactStore
+from app.mcp.manager import MCPServerManager
 from app.memory.embedder import HashingEmbedder
 from app.memory.service import MemoryService
 from app.models.database import Database
@@ -23,6 +24,7 @@ from app.providers.gateway import LLMGateway
 from app.providers.registry import ProviderRegistry, new_http_client
 from app.providers.router import ModelRouter
 from app.providers.usage import UsageService
+from app.repositories.integration_store import IntegrationStore
 from app.repositories.memory_store import MemoryStore
 from app.repositories.orchestration_store import ObjectiveStore, TaskStore
 from app.repositories.runtime_store import (
@@ -43,6 +45,7 @@ from app.services.conversations import ConversationService
 from app.services.demo import DemoService
 from app.services.files import FilesService
 from app.services.health import HealthService, register_core_checks
+from app.services.mcp import MCPService
 from app.services.notifications import NotificationService
 from app.services.objectives import ObjectiveService
 from app.services.projects import ProjectService
@@ -114,6 +117,9 @@ class AppContainer:
     workflow_engine: WorkflowEngine
     workflows: WorkflowService
     scheduler: Scheduler
+    integration_store: IntegrationStore
+    mcp_manager: MCPServerManager
+    mcp: MCPService
     started_at: float
 
     async def close(self) -> None:
@@ -121,6 +127,7 @@ class AppContainer:
         await self.workflows.shutdown()  # first: workflows and objectives own agent runs of their own
         await self.objective_service.shutdown()
         await self.agent_service.shutdown()
+        await self.mcp.shutdown()  # after the runs that might still call its tools
         await self.queue.shutdown()
         await self.http.aclose()
         await self.bus.close()
@@ -295,6 +302,10 @@ async def build_container(
     scheduler = Scheduler(
         schedules=schedule_store, runs=workflow_run_store, workflows=workflows, bus=bus, clock=clock
     )
+    integration_store = IntegrationStore(db, clock)
+    mcp_manager = MCPServerManager(tools, tool_row_store, bus, clock)
+    mcp = MCPService(integration_store, mcp_manager, tool_row_store, secret_store, bus, settings.home, clock)
+    health.register("mcp", mcp.health_check)
     started_at = time.monotonic()
     register_core_checks(
         health,
@@ -358,5 +369,8 @@ async def build_container(
         workflow_engine=workflow_engine,
         workflows=workflows,
         scheduler=scheduler,
+        integration_store=integration_store,
+        mcp_manager=mcp_manager,
+        mcp=mcp,
         started_at=started_at,
     )

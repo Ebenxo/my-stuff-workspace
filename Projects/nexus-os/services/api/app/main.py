@@ -23,6 +23,7 @@ from app.api.routers import (
     events,
     files,
     health,
+    mcp,
     memory,
     notifications,
     objectives,
@@ -73,6 +74,8 @@ def create_app(
                 await container.settings_service.get()  # ensure the settings row exists
                 await container.tool_row_store.sync(container.tools.mirror_rows())
                 await container.agent_service.sync_builtins()
+                # MCP servers first (briefly awaited) so resumed runs find their tools registered.
+                await container.mcp.start_enabled()
                 await container.agent_service.recover()
                 await container.objective_service.recover()  # after runs are marked interrupted
                 await container.memory.reembed_stale()  # new items, or a changed embedder
@@ -119,6 +122,7 @@ def create_app(
         memory,
         search,
         workflows,
+        mcp,
     ):
         app.include_router(module.router)
 

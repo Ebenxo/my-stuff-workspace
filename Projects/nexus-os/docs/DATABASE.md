@@ -65,11 +65,14 @@ Engine: SQLite (WAL, `foreign_keys=ON`) via SQLAlchemy 2.0 async (`aiosqlite`). 
 
 (The Phase 0 design split nodes and edges into `workflow_nodes`/`workflow_edges`; one versioned JSON graph proved simpler and atomic.)
 
-### Integrations — migration `0006_integrations`
+### Integrations — migration `0006` (built)
 
 | Table | Columns | Notes |
 |---|---|---|
-| `integrations` | `id`, `kind` (`mcp`/`github`/`gmail`/…), `name`, `config` JSON (command, args, env *names* only), `status`, `enabled`, `trust_level` (`untrusted`/`reviewed`), `last_health` JSON, `secret_ref`, timestamps | MCP servers are `kind='mcp'`; env values that are secrets live in the secret store |
+| `integrations` | `id`, `kind` (`mcp` today), `name` (unique per kind), `config` JSON, `enabled`, `last_error`, `last_health` JSON, timestamps | An MCP server's `config` holds the transport (`stdio`/`http`), command, arguments, working folder, plain environment variables and headers, the *names* of its secret variables and headers, its risk level and time limit. Secret values live only in the secret store under `mcp:<id>:env:<name>` / `mcp:<id>:header:<name>`. Whether a server is running is live state, not stored; `last_error` keeps the reason it last failed to start. |
+| `tools` (new columns) | `fingerprint`, `note` | For MCP tools: a SHA-256 of the definition as last seen, and why a tool was switched off (changed or suspicious definition). Rows persist while a server is stopped so the person's on/off choices survive; they are removed with the server. |
+
+The plan had `status`, `trust_level` and `secret_ref` columns. As built, status is live state from the running manager, "trust" became the per-server risk level in `config`, and secrets are named per variable instead of one reference.
 
 ## Why migrations are split by phase
 

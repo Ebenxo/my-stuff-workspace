@@ -75,6 +75,16 @@ This is the structural answer to prompt injection: even a fully hijacked model c
 
 **Workflows add no new path to action.** Agent steps run through the agent runner and tool steps through the tool executor, so the rules above apply unchanged; a tool step acts as a synthetic per-workflow agent whose allow-list is exactly that one tool. Values passed between steps reach agents as fenced data, and a value that came from untrusted content taints the agent step that receives it. Workflow expressions are interpreted by an allow-list over Python's `ast` (no attribute access, no `_` names, no imports, calls only to a fixed set of pure functions, size and depth caps), so a template an agent wrote cannot run code. An interrupted tool step is never replayed after a restart (it may already have acted); it is marked failed for a person to retry.
 
+**MCP servers are outside parties** (adversary (b)), whoever wrote them:
+
+- *Only what the person adds.* Servers are never discovered automatically. A stdio server gets a scrubbed environment (PATH, HOME, locale, temp, proxy and CA settings, and what Windows needs to start programs) plus the variables configured for it; nothing of NEXUS's own (no API keys, no `NEXUS_*`). It runs with the person's own permissions: NEXUS does **not** sandbox MCP servers (see §13), it stops their whole process group when they stop.
+- *Secrets are write-only.* Secret environment values and headers go to the secret store (`mcp:<id>:env:<name>`, `mcp:<id>:header:<name>`); the database, API responses, events and logs only name them. Plain values that look like credentials, credential-named variables or headers (`*_TOKEN`, `Authorization`, …), arguments carrying a key and tokens in a server address are refused. Secret headers go only over https, or to this computer. Redirects are never followed, so headers cannot be replayed elsewhere.
+- *Tools are proposals like any other.* Discovered tools register as `mcp__<server>__<tool>` at the server's risk level (HIGH by default; the person may choose MODERATE or VERY_HIGH, never SAFE) and run only through the ToolExecutor: allow-lists, the agent's ceiling, policy, approvals (the card says which server and tool will receive the arguments), unattended rules and logging apply unchanged. Arguments are checked against the server's schema before anyone is asked. `Capability.MCP` keeps every MCP tool out of private runs, even a server on this computer.
+- *Results are untrusted.* They are fenced, scanned for injection and taint the run (`mcp:<server>/<tool>`); images and binary content are described, not passed on.
+- *Descriptions are the server's words* (tool poisoning). Tool names, descriptions and argument schemas are cleaned (invisible and bidirectional-override characters removed, lengths capped), introduced to the model as the server's information rather than instructions, and scanned: a tool whose description reads like instructions to an AI is registered **switched off**, with the reason shown and a `SECURITY_FLAG` event.
+- *No silent changes* (rug pulls). Each tool definition is fingerprinted; if a server changes a tool the person already had, the tool is switched off until they turn it on again. Server annotations (read-only, destructive) are shown as the server's claims, never used as permissions.
+- *Minimal client.* NEXUS declares no client capabilities: requests from a server to sample a model, list roots or ask the person are refused. Messages over 4 MB end the connection; every request has a time limit and is cancelled on the server when abandoned.
+
 ## 8. Network safety (SSRF and safe URLs)
 
 `SafeHttpClient` is the only egress path for tools: allows `http`/`https` only; resolves DNS itself and rejects loopback, private, link-local, multicast, reserved and cloud-metadata ranges (IPv4 and IPv6, including IPv4-mapped forms and decimal/octal/hex host encodings); pins the connection to the validated IP; re-validates every redirect hop (cap 3); enforces response size, time and content-type limits; strips credentials from URLs; optional per-project domain allow-list. Ollama/LM Studio on `localhost` are reached by the *provider* layer, which is a separate, user-configured, non-agent path.
@@ -93,11 +103,12 @@ Append-only `events` table, hash-chained per project (`hash = SHA-256(prev_hash 
 
 ## 12. Supply chain and dependencies
 
-Lockfiles committed (`uv.lock`, `pnpm-lock.yaml`); minimal Python dependency set. Dependency vulnerability audits (`pip-audit`, `pnpm audit`) are **not yet automated** in `scripts/check.py` (they need network access to advisory databases); they are scheduled for Phase 10. MCP servers are launched only from user-added configuration, never auto-discovered, with a scrubbed environment plus explicitly allowed variable names.
+Lockfiles committed (`uv.lock`, `pnpm-lock.yaml`); minimal Python dependency set. Dependency vulnerability audits (`pip-audit`, `pnpm audit`) are **not yet automated** in `scripts/check.py` (they need network access to advisory databases); they are scheduled for Phase 10. MCP servers are launched only from user-added configuration, never auto-discovered, with a scrubbed environment plus the variables configured for them (§7). The MCP client is written in-house (JSON-RPC over stdio and streamable HTTP) rather than adding the MCP SDK and its dependency tree.
 
 ## 13. Known limitations (stated, not hidden)
 
 - Subprocess sandboxing is not a hard isolation boundary; on Windows fewer limits are enforceable.
+- MCP servers are not sandboxed: a stdio server is a program the person chose to run, with their permissions. NEXUS controls what reaches it (arguments after approval, configured variables) and what comes back, not what it does.
 - Prompt-injection defences reduce, but cannot eliminate, model manipulation; the guarantee we make is that manipulation cannot bypass policy or approval.
 - The local hash chain does not defend against a privileged local attacker.
 - Dependency audits are manual until Phase 10 (see §12).

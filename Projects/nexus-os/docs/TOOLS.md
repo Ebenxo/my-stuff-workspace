@@ -74,6 +74,22 @@ Interface: `run(spec: SandboxSpec) -> SandboxResult` with pluggable backends.
 - Built-ins are mirrored to the `tools` table at startup so the UI can list them and users can disable individual tools.
 - MCP-discovered tools register as `mcp__<server>__<tool>`, default `risk_level=HIGH`, `returns_untrusted=True`; tool annotations from the server (e.g. read-only hints) are treated as *hints shown to the user*, not as permission.
 
+## MCP tools (built in Phase 9)
+
+Add a server under **Settings → Integrations**: a program on this computer (stdio: command, arguments, working folder, environment variables, secret variables) or a web address (streamable HTTP: headers, secret headers). NEXUS starts it, asks what it offers, and registers each tool:
+
+| Property | Value |
+|---|---|
+| Name | `mcp__<server>__<tool>` (characters outside `[A-Za-z0-9_-]` become `_`; clashes get `_2`, `_3`) |
+| Risk | The server's risk level: HIGH by default; MODERATE or VERY_HIGH if the person chooses; never SAFE |
+| Capability | `mcp`: never shown to or run in a private run |
+| Arguments | The server's JSON Schema, checked by NEXUS before policy (type, required, enum, bounds, lengths, items, additionalProperties, anyOf/oneOf/allOf; `pattern` is left to the server) |
+| Result | Text content joined; structured content as JSON when there is no text; images, audio and binary resources described, not included; an `isError` result is a tool failure (`mcp_tool_error`) the agent can read |
+| Approval card | "Sends these arguments to the MCP server “x”, which runs its tool “y”", plus the server's own hints |
+| Time limit | The server's per-call limit (default 60 s); an abandoned call is cancelled on the server |
+
+Agents use MCP tools only when they are on the agent's allow-list (tick them in the agent's tools, or use a pattern such as `mcp__github__*`). A tool whose description looks like instructions to an AI, or whose definition changed since it was last seen, is switched off until the person turns it on in Tools & approvals or on the server's card. Stopping a server withdraws its tools (a call is refused as an unknown tool); the person's on/off choices are kept for next time. Resources and prompts are listed on the server's card, and a resource can be opened there; agents do not read resources or use server prompts yet.
+
 ## Tool results
 
 Results are size-capped, redacted for known secret patterns, stored on the `ToolCall`, emitted as `TOOL_COMPLETED`, and returned to the agent wrapped in an **untrusted** fence. A tool with `returns_untrusted=True` also adds its source (URL, file path, MCP server) to the run's **taint set**, which the policy engine and the approval card use (see SECURITY.md §6).

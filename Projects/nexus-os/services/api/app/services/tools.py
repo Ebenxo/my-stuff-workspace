@@ -20,10 +20,14 @@ class ToolService:
         self._bus = bus
 
     async def list_tools(self) -> list[ToolOut]:
-        return await self._rows.list_tools()
+        return [
+            t.model_copy(update={"available": self._registry.get(t.name) is not None})
+            for t in await self._rows.list_tools()
+        ]
 
     async def set_enabled(self, name: str, enabled: bool) -> ToolOut:
-        if self._registry.get(name) is None:
+        # An MCP tool can be switched while its server is stopped (the choice is kept for next time).
+        if not any(t.name == name for t in await self._rows.list_tools()):
             raise NotFoundError(f"Tool {name} not found")
         await self._rows.set_enabled(name, enabled)
         await self._bus.emit(
@@ -31,7 +35,7 @@ class ToolService:
             actor="user",
             payload={"changed": [f"tool:{name}"], "enabled": enabled},
         )
-        return next(t for t in await self._rows.list_tools() if t.name == name)
+        return next(t for t in await self.list_tools() if t.name == name)
 
     async def list_calls(
         self,

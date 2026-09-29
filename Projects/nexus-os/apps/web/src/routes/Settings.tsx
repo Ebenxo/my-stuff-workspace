@@ -5,6 +5,7 @@ import { ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { NavLink, Outlet } from "react-router";
 import { PERMISSION_COPY } from "../features/projects/permissions";
+import { McpSettings } from "../features/mcp/McpSettings";
 import { ToolsSettings } from "../features/tools/ToolsSettings";
 import { errorMessage, useHealth, useProjects, useSettings, useUpdateSettings, useVerifyEvents } from "../lib/queries";
 import { Page, PageHeader } from "./Page";
@@ -13,6 +14,7 @@ const SETTINGS_NAV = [
   { to: "/settings", label: "General", end: true },
   { to: "/settings/providers", label: "AI providers", end: false },
   { to: "/settings/tools", label: "Tools & approvals", end: false },
+  { to: "/settings/integrations", label: "Integrations", end: false },
   { to: "/settings/usage", label: "Usage & budgets", end: false },
   { to: "/settings/health", label: "System health", end: false },
 ];
@@ -49,6 +51,10 @@ export function SettingsLayout() {
 
 export function ToolsRoute() {
   return <ToolsSettings />;
+}
+
+export function IntegrationsRoute() {
+  return <McpSettings />;
 }
 
 export function GeneralSettingsRoute() {

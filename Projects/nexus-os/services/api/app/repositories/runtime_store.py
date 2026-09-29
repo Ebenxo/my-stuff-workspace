@@ -595,6 +595,50 @@ class ToolRowStore:
                 if name not in names and cur.source == "builtin":
                     await s.delete(cur)
 
+    async def sync_source(self, source: str, rows: Sequence[dict[str, Any]]) -> list[tuple[str, str]]:
+        """Mirror one source's tools (an MCP server's). Each row carries a ``fingerprint`` of its definition
+        and, optionally, a ``flag`` (why it looks unsafe). A new tool starts on unless flagged; a tool whose
+        definition changed since it was last seen is switched off until the person turns it on again.
+        Tools the source no longer offers are removed. Returns (name, reason) for each tool switched off."""
+        switched_off: list[tuple[str, str]] = []
+        async with self._db.session() as s:
+            existing = {
+                t.name: t
+                for t in (await s.execute(select(Tool).where(Tool.source == source))).scalars().all()
+            }
+            names = set()
+            for r in rows:
+                data = {k: v for k, v in r.items() if k != "flag"}
+                flag: str | None = r.get("flag")
+                names.add(data["name"])
+                cur = existing.get(data["name"])
+                if cur is None:
+                    s.add(Tool(updated_at=self._clock.now(), enabled=flag is None, note=flag, **data))
+                    if flag:
+                        switched_off.append((data["name"], flag))
+                    continue
+                changed = cur.fingerprint is not None and cur.fingerprint != data.get("fingerprint")
+                for k, v in data.items():
+                    setattr(cur, k, v)
+                cur.updated_at = self._clock.now()
+                if changed:
+                    reason = (
+                        flag
+                        or "The server changed this tool's description or arguments since you last saw it."
+                    )
+                    if cur.enabled:
+                        switched_off.append((cur.name, reason))
+                    cur.enabled, cur.note = False, reason
+            for name, cur in existing.items():
+                if name not in names:
+                    await s.delete(cur)
+        return switched_off
+
+    async def delete_source(self, source: str) -> None:
+        async with self._db.session() as s:
+            for cur in (await s.execute(select(Tool).where(Tool.source == source))).scalars().all():
+                await s.delete(cur)
+
     async def list_tools(self) -> list[ToolOut]:
         async with self._db.session() as s:
             rows = (await s.execute(select(Tool).order_by(Tool.source, Tool.name))).scalars().all()
@@ -608,6 +652,7 @@ class ToolRowStore:
                     capabilities=list(r.capabilities),
                     enabled=r.enabled,
                     input_schema=r.input_schema,
+                    note=r.note,
                 )
                 for r in rows
             ]
@@ -617,8 +662,11 @@ class ToolRowStore:
             return set((await s.execute(select(Tool.name).where(Tool.enabled.is_(False)))).scalars())
 
     async def set_enabled(self, name: str, enabled: bool) -> None:
+        values: dict[str, Any] = {"enabled": enabled}
+        if enabled:
+            values["note"] = None  # the person has looked at it
         async with self._db.session() as s:
-            result = await s.execute(update(Tool).where(Tool.name == name).values(enabled=enabled))
+            result = await s.execute(update(Tool).where(Tool.name == name).values(**values))
             if result.rowcount == 0:  # type: ignore[attr-defined]
                 raise NotFoundError(f"Tool {name} not found")
 

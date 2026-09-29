@@ -1,10 +1,20 @@
 # NEXUS OS — build state
 
-_Last updated: 2026-09-29 (end of Phase 8)_
+_Last updated: 2026-09-29 (end of Phase 9)_
 
 ## Current phase
 
-**Phase 8 — workflows and the scheduler: complete.** Phases 0–8 done. Next: Phase 9, MCP servers (Settings → Integrations).
+**Phase 9 — MCP servers: complete.** Phases 0–9 done. Next: Phase 10, command palette, onboarding, polish, scripted end-to-end tests and dependency audits in `check.py`, desktop polish.
+
+### Added in Phase 9 (MCP)
+
+- **In-house MCP client** (`app/mcp/`, no new dependency): JSON-RPC 2.0, protocol 2025-06-18 (also accepts 2025-03-26 and 2024-11-05). **stdio**: the server runs as a child process in its own process group with a scrubbed environment plus its configured variables; newline-delimited JSON; stray stdout lines and stderr kept (redacted) as the server's log; the process group is stopped with the server. **Streamable HTTP**: POST per message, JSON or event-stream answers, session id and protocol-version headers, session ended with DELETE, no redirects, loopback never proxied. Every request has a time limit and is cancelled on the server when abandoned; messages over 4 MB end the connection; paginated listing (at most 20 pages, 500 items). NEXUS declares no client capabilities, so a server's sampling/roots/elicitation requests are refused; `ping` is answered.
+- **Servers as configuration** (migration `0006`: `integrations`, plus `tools.fingerprint` and `tools.note`): name (becomes the tool prefix, fixed), transport, command/arguments/working folder/variables or address/headers, **secret variables and headers stored write-only in the secret store**, risk level (MODERATE, HIGH default, VERY_HIGH), per-call time limit, on/off. Credentials in plain values, credential-named variables or headers, keys in arguments, tokens in addresses, and secret headers over plain http to another machine are refused with a reason.
+- **Tools join the registry** as `mcp__<server>__<tool>` at the server's risk level with `Capability.MCP` (never in private runs) and untrusted results (fenced, scanned, tainting the run as `mcp:<server>/<tool>`). They run only through the ToolExecutor: allow-lists, agent ceilings, policy, approvals (the card names the server and tool), unattended rules and logging are unchanged. Arguments are checked against the server's JSON Schema first. Results: text joined, structured content as JSON, images/audio/binary described, `isError` as a readable failure.
+- **Defences against hostile servers**: descriptions and schemas cleaned (invisible and bidi characters removed, lengths capped) and introduced to the model as the server's words; a tool whose description reads like instructions to an AI is registered switched off with the reason (`SECURITY_FLAG`); definitions are fingerprinted, and a changed tool is switched off until the person turns it on again; annotations are shown as the server's claims only.
+- **Lifecycle**: enabled servers start with NEXUS (awaited up to 5 s so resumed runs find their tools; slower ones keep starting in the background); start, stop, check (ping with round-trip time), `list_changed` refreshes, a server that exits is reported (`MCP_SERVER_FAILED`) and its tools withdrawn, never restarted silently; the last error is kept; a missing secret is named. System Health has an "MCP servers" check.
+- **APIs**: `/api/mcp/servers` (list, create, detail with tools/resources/prompts, edit, delete, start, stop, check, log, read a resource, get a prompt); `/api/tools` now reports `available` and `note`, and a stopped server's tools can still be switched on or off.
+- **UI**: Settings → Integrations: server cards (status, risk, launch line, counts, errors, last check, start/stop/check/edit/remove), an add/edit dialog (program or web address, arguments one per line, variables and headers, secret values that are never shown again, risk level with what it means, time limit), details with tools (on/off, arguments, the server's hints, why a tool was switched off), resources (open and preview), prompts and the server's log. Tools & approvals lists MCP tools per server with "Server not running" and review notes. Plain-language activity for every MCP event; live refresh on MCP events.
 
 ### Added in Phase 8 (workflows, scheduler)
 
@@ -97,15 +107,16 @@ _Last updated: 2026-09-29 (end of Phase 8)_
 - **Workflow agent steps have run only with scripted models**; tool, approval, condition, loop, delay, sub-workflow and schedule paths are exercised with real tools in tests and live.
 - **Schedules fire only while NEXUS is running** (a missed run fires once on the next start). There is no OS-level background service.
 - Workflows have no webhook, file-watch or event triggers yet (manual, schedule and sub-workflow only). The canvas has no undo; saved versions are the history. Workflows cannot be exported or imported.
+- **MCP has been verified against the in-repo fixture server only** (stdio and streamable HTTP, over real processes and sockets). No third-party MCP server (npx/uvx packages) was run: this environment does not install them. The older HTTP+SSE transport is not supported. MCP servers are not sandboxed. Agents cannot read MCP resources or use server prompts yet (the person can browse them); no OAuth flow for remote servers (tokens go in secret headers). A stdio command on Windows that is a `.cmd` shim (such as `npx`) is untested there.
 - Memory recall quality with real models is untested; ranking is verified with unit tests and the scripted demo.
 
 ## Testing status
 
 | Area | Result |
 |---|---|
-| Backend (pytest) | 912 passed |
+| Backend (pytest) | 954 passed |
 | Lint / format (ruff), strict types (mypy), import contracts (3) | clean |
-| Frontend (vitest) | 126 passed (shared 9, web 117) |
+| Frontend (vitest) | 135 passed (shared 9, web 126) |
 | ESLint, `tsc` (all packages) | clean |
 | Web production build | ok |
 | Rust sidecar (`cargo test`) | 8 passed |
@@ -114,9 +125,25 @@ _Last updated: 2026-09-29 (end of Phase 8)_
 | Live objective check (Playwright, real API + web app, scripted demo model) | Try the demo → plan review (2 tasks, approach, criteria) → plan editor opens → Run plan → graph fills in live (research, write, Critic review, revision, second review, verification: 6 nodes, 5 edges) → Verifier PASS with 4/4 criteria → report opens from the result. 15 hand-offs shown; project Objectives tab and Command Center list it. No console errors, no failed requests, no overflow at 390 px; screenshots checked by eye |
 | Live memory check (Playwright, real API + web app, scripted demo model) | Demo objective → "Remember this for next time?" → Remember (nav badge showed the suggestion); project Memory tab: add a pinned memory, a key refused in the dialog with its category, "rank as agents would" lists both with reasons; a second demo objective: all 6 runs were given memory (12 items in total), the run page lists what was given; top-bar search finds the report with highlights. No console errors or failed requests besides the deliberate refusal; no overflow at 390 px on Memory, Search, run and objective pages; screenshots checked by eye |
 | Live workflow check (Playwright, real API + web app) | Create a workflow; build Start → Approval → Tool (`write_file`) → Output by clicking, add a Delay and connect it by dragging handle to handle (4 connections); validation says *Ready to run*; save as v2; run with an input: the run waits on the approval and the file does not exist (404), approve → Completed and the file holds the rendered text; a bad cron is explained in words; a weekday schedule is created and previewed. No console errors besides the deliberate bad-cron 422s; no overflow at 390 px on the list, editor and run pages; screenshots checked by eye |
+| Live MCP check (Playwright, real API + web app, fixture MCP server, local stand-in model) | Settings → Integrations: add the fixture as a program with a secret variable → Running, 11 tools · 2 resources · 1 prompt; tools, a resource preview and the server's log shown; the secret appears in no page, API response or event; Tools & approvals lists the 11 tools under the server. An agent allowed `mcp__fixture__*` proposed `mcp__fixture__echo`: the run waited on a HIGH approval whose card named the server and tool; approved → completed, result `echo: hello from an agent`, run tainted `mcp:fixture/echo`. Stop → 11 tools marked "Server not running" and still listed on the card; start → running; check → answered in 0.4 ms; a server with a wrong command explains it could not find the program. Stopping NEXUS stopped the server process too. No console errors or failed requests; no overflow at 390 px; screenshots checked by eye |
 | Scripted E2E in `check.py` | Phase 10 |
 
 Run everything: `python scripts/check.py`.
+
+## Architecture decisions made in Phase 9
+
+- The MCP client is written in-house (about 1,500 lines with comments: argument checking, protocol, two transports, client, manager) instead of adding the official SDK: NEXUS needs a small, auditable subset (no sampling, roots or elicitation), the SDK would bring a large dependency tree into a security-sensitive path, and adding software needs the owner's say-so. The fixture server exercises it over real processes and sockets.
+- MCP tools are ordinary `ToolDefinition`s, so there is one execution path. Their arguments use a per-tool pydantic model whose JSON schema is the server's own and whose validation is a small JSON Schema checker (no `jsonschema` dependency; `pattern` deliberately not evaluated).
+- Risk is chosen per server, not per tool (HIGH by default, never SAFE); the person refines further by switching individual tools off and choosing which agents get them.
+- A tool the person has not seen before is on by default (agents still need it on their allow-list), but a *changed* or *instruction-like* definition is off until reviewed: that is where a hostile server would act.
+- Runtime state (running, tool lists) lives in memory; only configuration, the last error and the last health check are stored. Tool rows persist while a server is stopped so on/off choices survive restarts.
+- Stopping a server from the UI also turns it off for the next start; starting turns it on. There is one switch, not two.
+
+## Bugs found by tests and live checks in Phase 9 (all fixed, with regression tests)
+
+- **A crashed server's failure event was lost**: the stdio reader reported the exit, the manager closed the client, and closing cancelled the reader task that was still writing the event. The report now runs in its own task.
+- An edit through `model_copy` skipped validation, so a risk level from the API was stored as a plain string (a serializer warning in the tests showed it); updates are now validated as a whole.
+- Live-check script issues only (a wrong provider kind in setup, counting badges before the page had loaded); the product behaved correctly once the checks were fixed.
 
 ## Architecture decisions made in Phase 8
 
@@ -224,4 +251,4 @@ Run everything: `python scripts/check.py`.
 
 ## Next
 
-Phase 9: MCP server management (stdio and streamable HTTP, discovery of tools, resources and prompts, health), with discovered tools registered at HIGH risk by default, treated as untrusted, unavailable to private runs, and routed through the same executor; secrets for server environment and headers kept in the secret store; Settings → Integrations → MCP servers.
+Phase 10: command palette and keyboard shortcuts, onboarding (first run: workspace, permission level, first provider, the demo), UI polish across pages, a scripted end-to-end run in `scripts/check.py`, dependency audits (`pip-audit`, `pnpm audit`) in `check.py`, desktop polish, and a final pass over the 20-point MVP definition of done.

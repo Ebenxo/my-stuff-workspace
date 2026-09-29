@@ -187,7 +187,10 @@ export function useToggleTool() {
   return useMutation({
     mutationFn: ({ name, enabled }: { name: string; enabled: boolean }) =>
       unwrap(api.PATCH("/api/tools/{name}", { params: { path: { name } }, body: { enabled } })),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ak.tools }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ak.tools });
+      void qc.invalidateQueries({ queryKey: ["mcp"] }); // MCP tools are also listed with their server
+    },
   });
 }
 

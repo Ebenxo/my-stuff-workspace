@@ -60,6 +60,10 @@ NEXUS remembers what you (and, with your say-so, its agents) decide is worth kee
 
 For work you repeat, build a **workflow** under **Workflows** (or a project's Workflows tab): a chain of steps drawn top to bottom — an agent task, a tool, a yes/no condition, an approval that waits for you, computed values, a delay, a loop over a list, another workflow — with inputs you fill in when it runs. Select a step and click a step type to add the next one; `{{ inputs.topic }}`-style templates pass values along. The editor checks the workflow as you build it and every save is a version. Give it a **schedule** (cron, with presets and a plain-words preview) and it runs while NEXUS is open; scheduled runs never approve anything risky on their own — they wait for you under *Needs you*.
 
+## Connect other tools (MCP)
+
+Settings → **Integrations** connects [Model Context Protocol](https://modelcontextprotocol.io) servers: a program on this computer (for example one started with `npx` or `uvx`) or a server's web address. Tokens go under *secret values*: they are kept in the secret store and never shown again. A server's tools appear under Tools & approvals as `mcp__<server>__<tool>`, at high risk unless you choose otherwise; an agent can use them once you add them to its tools, and every call goes through the same checks and approvals as any other risky action. Their results count as outside content, they are never available to runs kept on this device, and a tool whose description changes or reads like instructions to an AI is switched off until you look at it. Servers run with your own permissions, so only add ones you trust. Details: [`docs/TOOLS.md`](docs/TOOLS.md) and [`docs/SECURITY.md`](docs/SECURITY.md).
+
 ## Quality gates
 
 ```bash

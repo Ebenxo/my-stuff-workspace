@@ -14,7 +14,7 @@ import { ProjectsRoute } from "./routes/Projects";
 import { ProvidersRoute } from "./routes/Providers";
 import { RunRoute } from "./routes/Run";
 import { SearchRoute } from "./routes/Search";
-import { GeneralSettingsRoute, HealthRoute, SettingsLayout, ToolsRoute } from "./routes/Settings";
+import { GeneralSettingsRoute, HealthRoute, IntegrationsRoute, SettingsLayout, ToolsRoute } from "./routes/Settings";
 import { UsageRoute } from "./routes/Usage";
 import { WorkflowEditorRoute } from "./routes/WorkflowEditor";
 import { WorkflowRunRoute } from "./routes/WorkflowRun";
@@ -50,6 +50,7 @@ const router = createBrowserRouter([
           { index: true, element: <GeneralSettingsRoute /> },
           { path: "providers", element: <ProvidersRoute /> },
           { path: "tools", element: <ToolsRoute /> },
+          { path: "integrations", element: <IntegrationsRoute /> },
           { path: "usage", element: <UsageRoute /> },
           { path: "health", element: <HealthRoute /> },
         ],

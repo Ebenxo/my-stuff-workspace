@@ -344,6 +344,145 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mcp/servers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Servers */
+        get: operations["list_servers"];
+        put?: never;
+        /** Create Server */
+        post: operations["create_server"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mcp/servers/{server_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Server */
+        get: operations["get_server"];
+        put?: never;
+        post?: never;
+        /** Delete Server */
+        delete: operations["delete_server"];
+        options?: never;
+        head?: never;
+        /** Update Server */
+        patch: operations["update_server"];
+        trace?: never;
+    };
+    "/api/mcp/servers/{server_id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check Server */
+        post: operations["check_server"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mcp/servers/{server_id}/log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Server Log */
+        get: operations["server_log"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mcp/servers/{server_id}/prompts/get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get Prompt */
+        post: operations["get_prompt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mcp/servers/{server_id}/resources/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Read Resource */
+        post: operations["read_resource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mcp/servers/{server_id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Server */
+        post: operations["start_server"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mcp/servers/{server_id}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop Server */
+        post: operations["stop_server"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/memory": {
         parameters: {
             query?: never;
@@ -2210,6 +2349,15 @@ export interface components {
             /** Content */
             content: string;
         };
+        /** GetPrompt */
+        GetPrompt: {
+            /** Arguments */
+            arguments?: {
+                [key: string]: string;
+            };
+            /** Name */
+            name: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2247,6 +2395,284 @@ export interface components {
             status: "ok" | "degraded" | "down" | "unavailable";
             /** Version */
             version: string;
+        };
+        /** MCPHealth */
+        MCPHealth: {
+            /**
+             * Checked At
+             * Format: date-time
+             */
+            checked_at: string;
+            /** Latency Ms */
+            latency_ms?: number | null;
+            /**
+             * Message
+             * @default
+             */
+            message?: string;
+            /** Ok */
+            ok: boolean;
+        };
+        /** MCPLog */
+        MCPLog: {
+            /** Lines */
+            lines: string[];
+        };
+        /** MCPPromptArgument */
+        MCPPromptArgument: {
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+            /** Name */
+            name: string;
+            /**
+             * Required
+             * @default false
+             */
+            required?: boolean;
+        };
+        /** MCPPromptOut */
+        MCPPromptOut: {
+            /** Arguments */
+            arguments?: components["schemas"]["MCPPromptArgument"][];
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+            /** Name */
+            name: string;
+        };
+        /** MCPResourceOut */
+        MCPResourceOut: {
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+            /** Mime Type */
+            mime_type?: string | null;
+            /** Name */
+            name: string;
+            /** Uri */
+            uri: string;
+        };
+        /** MCPServerCreate */
+        MCPServerCreate: {
+            /** Args */
+            args?: string[];
+            /**
+             * Command
+             * @default
+             */
+            command?: string;
+            /** Cwd */
+            cwd?: string | null;
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled?: boolean;
+            /** Env */
+            env?: {
+                [key: string]: string;
+            };
+            /** Headers */
+            headers?: {
+                [key: string]: string;
+            };
+            /** Name */
+            name: string;
+            /** @default HIGH */
+            risk_level?: components["schemas"]["RiskLevel"];
+            /** Secret Env */
+            secret_env?: {
+                [key: string]: string;
+            };
+            /** Secret Headers */
+            secret_headers?: {
+                [key: string]: string;
+            };
+            /**
+             * Timeout S
+             * @default 60
+             */
+            timeout_s?: number;
+            /**
+             * Transport
+             * @enum {string}
+             */
+            transport: "stdio" | "http";
+            /**
+             * Url
+             * @default
+             */
+            url?: string;
+        };
+        /** MCPServerDetail */
+        MCPServerDetail: {
+            /**
+             * Instructions
+             * @default
+             */
+            instructions?: string;
+            /** Prompts */
+            prompts?: components["schemas"]["MCPPromptOut"][];
+            /** Resources */
+            resources?: components["schemas"]["MCPResourceOut"][];
+            server: components["schemas"]["MCPServerOut"];
+            /** Skipped */
+            skipped?: string[];
+            /** Tools */
+            tools?: components["schemas"]["MCPToolOut"][];
+        };
+        /** MCPServerOut */
+        MCPServerOut: {
+            /** Args */
+            args: string[];
+            /** Command */
+            command: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Cwd */
+            cwd: string | null;
+            /** Description */
+            description: string;
+            /** Enabled */
+            enabled: boolean;
+            /** Env */
+            env: {
+                [key: string]: string;
+            };
+            /** Error */
+            error?: string | null;
+            /** Headers */
+            headers: {
+                [key: string]: string;
+            };
+            /** Id */
+            id: string;
+            last_health?: components["schemas"]["MCPHealth"] | null;
+            /** Name */
+            name: string;
+            /**
+             * Prompts
+             * @default 0
+             */
+            prompts?: number;
+            /** Protocol Version */
+            protocol_version?: string | null;
+            /**
+             * Resources
+             * @default 0
+             */
+            resources?: number;
+            risk_level: components["schemas"]["RiskLevel"];
+            /** Secret Env */
+            secret_env: string[];
+            /** Secret Headers */
+            secret_headers: string[];
+            /** Server Name */
+            server_name?: string | null;
+            /** Server Version */
+            server_version?: string | null;
+            /** Started At */
+            started_at?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "stopped" | "starting" | "running" | "error";
+            /** Timeout S */
+            timeout_s: number;
+            /**
+             * Tools
+             * @default 0
+             */
+            tools?: number;
+            /**
+             * Transport
+             * @enum {string}
+             */
+            transport: "stdio" | "http";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Url */
+            url: string;
+        };
+        /** MCPServerUpdate */
+        MCPServerUpdate: {
+            /** Args */
+            args?: string[] | null;
+            /** Command */
+            command?: string | null;
+            /** Cwd */
+            cwd?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Env */
+            env?: {
+                [key: string]: string;
+            } | null;
+            /** Headers */
+            headers?: {
+                [key: string]: string;
+            } | null;
+            risk_level?: components["schemas"]["RiskLevel"] | null;
+            /** Secret Env */
+            secret_env?: {
+                [key: string]: string | null;
+            } | null;
+            /** Secret Headers */
+            secret_headers?: {
+                [key: string]: string | null;
+            } | null;
+            /** Timeout S */
+            timeout_s?: number | null;
+            /** Url */
+            url?: string | null;
+        };
+        /** MCPToolOut */
+        MCPToolOut: {
+            /** Description */
+            description: string;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled?: boolean;
+            /** Hints */
+            hints?: string[];
+            /** Input Schema */
+            input_schema: {
+                [key: string]: unknown;
+            };
+            /** Name */
+            name: string;
+            /** Note */
+            note?: string | null;
+            /** Original Name */
+            original_name: string;
+            /**
+             * Title
+             * @default
+             */
+            title?: string;
         };
         /**
          * MemoryCreate
@@ -2755,6 +3181,13 @@ export interface components {
             name?: string | null;
             settings?: components["schemas"]["ProjectSettings"] | null;
         };
+        /** PromptMessage */
+        PromptMessage: {
+            /** Role */
+            role: string;
+            /** Text */
+            text: string;
+        };
         /** ProviderCreate */
         ProviderCreate: {
             /** Api Key */
@@ -2860,6 +3293,27 @@ export interface components {
             /** Name */
             name?: string | null;
             options?: components["schemas"]["ProviderOptions"] | null;
+        };
+        /** ReadResource */
+        ReadResource: {
+            /** Uri */
+            uri: string;
+        };
+        /** ResourceContent */
+        ResourceContent: {
+            /** Mime Type */
+            mime_type?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Text */
+            text?: string | null;
+            /**
+             * Truncated
+             * @default false
+             */
+            truncated?: boolean;
+            /** Uri */
+            uri: string;
         };
         /**
          * RiskLevel
@@ -3206,6 +3660,11 @@ export interface components {
         ToolCallStatus: "PROPOSED" | "DENIED" | "AWAITING_APPROVAL" | "RUNNING" | "SUCCEEDED" | "FAILED";
         /** ToolOut */
         ToolOut: {
+            /**
+             * Available
+             * @default true
+             */
+            available?: boolean;
             /** Capabilities */
             capabilities: string[];
             /** Description */
@@ -3218,6 +3677,8 @@ export interface components {
             };
             /** Name */
             name: string;
+            /** Note */
+            note?: string | null;
             /** Requires Approval */
             requires_approval: boolean;
             risk_level: components["schemas"]["RiskLevel"];
@@ -4247,6 +4708,348 @@ export interface operations {
                     "application/json": {
                         [key: string]: boolean;
                     };
+                };
+            };
+        };
+    };
+    list_servers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServerOut"][];
+                };
+            };
+        };
+    };
+    create_server: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MCPServerCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServerOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_server: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServerDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_server: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_server: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MCPServerUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServerOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_server: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServerOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    server_log: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPLog"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_prompt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GetPrompt"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromptMessage"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_resource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadResource"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceContent"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_server: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServerOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stop_server: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                server_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MCPServerOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

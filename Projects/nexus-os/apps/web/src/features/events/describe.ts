@@ -9,6 +9,7 @@ export interface EventView {
 }
 
 const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
+const num = (v: unknown): string => (typeof v === "number" ? String(v) : "?");
 const agent = (v: unknown): string => (typeof v === "string" && v ? agentName(v) : "an agent");
 const capital = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
 const taskName = (p: Record<string, unknown>): string => {
@@ -138,7 +139,23 @@ export function describeEvent(e: EventRecord): EventView {
     case "POLICY_DENIED":
       return { text: `Blocked by policy: ${str(p["tool"]) ?? "an action"}`, tone: "danger" };
     case "SECURITY_FLAG":
+      if (Array.isArray(p["findings"]) && p["findings"].includes("mcp_tool_definition"))
+        return { text: `MCP tool ${str(p["tool"]) ?? ""} switched off until you review it`, tone: "warning" };
       return { text: `Instruction-like text found in ${str(p["source"]) ?? "outside content"}; treated as data`, tone: "warning" };
+    case "MCP_SERVER_ADDED":
+      return { text: `MCP server added: ${str(p["name"]) ?? ""}`, tone: "info" };
+    case "MCP_SERVER_UPDATED":
+      return { text: `MCP server ${str(p["name"]) ?? ""} settings changed`, tone: "info" };
+    case "MCP_SERVER_REMOVED":
+      return { text: `MCP server removed: ${str(p["name"]) ?? ""}`, tone: "warning" };
+    case "MCP_SERVER_STARTED":
+      return { text: `MCP server ${str(p["name"]) ?? ""} connected (${num(p["tools"])} tools)`, tone: "success" };
+    case "MCP_SERVER_STOPPED":
+      return { text: `MCP server ${str(p["name"]) ?? ""} stopped`, tone: "neutral" };
+    case "MCP_SERVER_FAILED":
+      return { text: `MCP server ${str(p["name"]) ?? ""} is not working: ${str(p["message"]) ?? "unknown problem"}`, tone: "danger" };
+    case "MCP_TOOLS_CHANGED":
+      return { text: `MCP server ${str(p["name"]) ?? ""} changed its tools (${num(p["tools"])} now)`, tone: "info" };
     case "APPROVAL_REQUIRED":
       return { text: `Approval needed: ${str(p["tool"]) ?? "an action"}`, tone: "warning" };
     case "APPROVAL_GRANTED":

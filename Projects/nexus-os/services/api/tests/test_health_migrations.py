@@ -75,10 +75,11 @@ def test_migrations_upgrade_downgrade_and_match_models(tmp_path: Path) -> None:
         "workflow_versions",
         "workflow_runs",
         "schedules",
+        "integrations",
         "alembic_version",
     }
     assert expected <= tables
-    assert head == "0005"
+    assert head == "0006"
 
     with engine.connect() as conn:
         ctx = MigrationContext.configure(conn, opts={"compare_type": True, "include_name": include_name})

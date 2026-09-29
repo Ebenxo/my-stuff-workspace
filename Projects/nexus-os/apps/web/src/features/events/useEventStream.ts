@@ -20,6 +20,7 @@ const INVALIDATIONS: [RegExp, string[][]][] = [
   [/^FILE_/, [["files"], ["file"]]],
   [/^MEMORY_/, [["memory"], ["search"]]],
   [/^(WORKFLOW|SCHEDULE)_/, [["workflows"], ["workflow"], ["workflow-runs"], ["workflow-run"], ["schedules"]]],
+  [/^MCP_|^SECURITY_FLAG$/, [["mcp"], ["tools"], ["health"]]],
   [/^(PROJECT|OBJECTIVE|ARTIFACT)_/, [["search"]]],
 ];
 
