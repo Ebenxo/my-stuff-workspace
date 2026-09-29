@@ -131,6 +131,16 @@ class ProjectService:
         )
         return out
 
+    async def monthly_budgets(self) -> dict[str, float]:
+        """Per-project monthly USD limits set in each project's own settings."""
+        out: dict[str, float] = {}
+        async with self._db.session() as session:
+            for row in await ProjectRepository(session).list_all():
+                limit = ProjectSettings.model_validate(row.settings or {}).monthly_budget_usd
+                if limit is not None:
+                    out[row.id] = limit
+        return out
+
     async def set_status(self, project_id: str, status: str) -> ProjectOut:
         async with self._db.session() as session:
             row = await ProjectRepository(session).get(project_id)

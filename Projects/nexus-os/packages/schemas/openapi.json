@@ -1,6 +1,101 @@
 {
   "components": {
     "schemas": {
+      "Budgets": {
+        "additionalProperties": false,
+        "description": "Limits are optional. Cost limits count only calls whose price is known; token limits count all.",
+        "properties": {
+          "daily_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Tokens"
+          },
+          "daily_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Usd"
+          },
+          "expensive_call_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 0.5,
+            "title": "Expensive Call Usd"
+          },
+          "hard_stop": {
+            "default": true,
+            "title": "Hard Stop",
+            "type": "boolean"
+          },
+          "monthly_tokens": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Tokens"
+          },
+          "monthly_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Usd"
+          },
+          "per_agent_monthly_usd": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Per Agent Monthly Usd",
+            "type": "object"
+          },
+          "per_project_monthly_usd": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Per Project Monthly Usd",
+            "type": "object"
+          },
+          "warn_at_fraction": {
+            "default": 0.8,
+            "exclusiveMinimum": 0.0,
+            "maximum": 1.0,
+            "title": "Warn At Fraction",
+            "type": "number"
+          }
+        },
+        "title": "Budgets",
+        "type": "object"
+      },
       "ChainVerification": {
         "properties": {
           "chains_checked": {
@@ -44,6 +139,51 @@
           "events_checked"
         ],
         "title": "ChainVerification",
+        "type": "object"
+      },
+      "ConnectionTestOut": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "latency_ms": {
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "models_found": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Models Found"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "latency_ms",
+          "detail"
+        ],
+        "title": "ConnectionTestOut",
         "type": "object"
       },
       "ConversationCreate": {
@@ -359,6 +499,193 @@
         "title": "MessageOut",
         "type": "object"
       },
+      "ModelOut": {
+        "properties": {
+          "context_length": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Length"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "input_cost_per_mtok": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Cost Per Mtok"
+          },
+          "local": {
+            "title": "Local",
+            "type": "boolean"
+          },
+          "output_cost_per_mtok": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Cost Per Mtok"
+          },
+          "provider_id": {
+            "title": "Provider Id",
+            "type": "string"
+          },
+          "provider_name": {
+            "title": "Provider Name",
+            "type": "string"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fast",
+                  "balanced",
+                  "strong"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          }
+        },
+        "required": [
+          "ref",
+          "provider_id",
+          "provider_name",
+          "id",
+          "display_name",
+          "context_length",
+          "tier",
+          "local",
+          "input_cost_per_mtok",
+          "output_cost_per_mtok"
+        ],
+        "title": "ModelOut",
+        "type": "object"
+      },
+      "ModelOverride": {
+        "additionalProperties": false,
+        "properties": {
+          "context_length": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Context Length"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelPrice"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "supports_reasoning": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supports Reasoning"
+          },
+          "supports_vision": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supports Vision"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fast",
+                  "balanced",
+                  "strong"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          }
+        },
+        "title": "ModelOverride",
+        "type": "object"
+      },
+      "ModelPrice": {
+        "additionalProperties": false,
+        "description": "USD per million tokens. Set by the user; unknown prices stay unset (never guessed).",
+        "properties": {
+          "input": {
+            "minimum": 0.0,
+            "title": "Input",
+            "type": "number"
+          },
+          "output": {
+            "minimum": 0.0,
+            "title": "Output",
+            "type": "number"
+          }
+        },
+        "required": [
+          "input",
+          "output"
+        ],
+        "title": "ModelPrice",
+        "type": "object"
+      },
       "NotificationOut": {
         "properties": {
           "body": {
@@ -624,6 +951,667 @@
         "title": "ProjectUpdate",
         "type": "object"
       },
+      "ProviderCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "api_key": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "default_model": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Model"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "anthropic",
+              "openai",
+              "gemini",
+              "ollama",
+              "lmstudio",
+              "openai_compatible",
+              "demo"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "options": {
+            "$ref": "#/components/schemas/ProviderOptions"
+          }
+        },
+        "required": [
+          "kind",
+          "name"
+        ],
+        "title": "ProviderCreate",
+        "type": "object"
+      },
+      "ProviderKindInfo": {
+        "properties": {
+          "default_base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Base Url"
+          },
+          "help": {
+            "title": "Help",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "anthropic",
+              "openai",
+              "gemini",
+              "ollama",
+              "lmstudio",
+              "openai_compatible",
+              "demo"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "local": {
+            "title": "Local",
+            "type": "boolean"
+          },
+          "needs_key": {
+            "title": "Needs Key",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kind",
+          "label",
+          "default_base_url",
+          "needs_key",
+          "local",
+          "help"
+        ],
+        "title": "ProviderKindInfo",
+        "type": "object"
+      },
+      "ProviderOptions": {
+        "additionalProperties": false,
+        "properties": {
+          "models": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ModelOverride"
+            },
+            "title": "Models",
+            "type": "object"
+          },
+          "structured_mode": {
+            "default": "json_schema",
+            "enum": [
+              "json_schema",
+              "json_object",
+              "prompt"
+            ],
+            "title": "Structured Mode",
+            "type": "string"
+          }
+        },
+        "title": "ProviderOptions",
+        "type": "object"
+      },
+      "ProviderOut": {
+        "description": "Never contains the key. ``has_key``/``key_hint`` let the UI show that one is stored.",
+        "properties": {
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "default_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Model"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "has_key": {
+            "title": "Has Key",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_local": {
+            "title": "Is Local",
+            "type": "boolean"
+          },
+          "key_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Hint"
+          },
+          "kind": {
+            "enum": [
+              "anthropic",
+              "openai",
+              "gemini",
+              "ollama",
+              "lmstudio",
+              "openai_compatible",
+              "demo"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_test_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Test At"
+          },
+          "last_test_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Test Error"
+          },
+          "last_test_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Test Ok"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "options": {
+            "$ref": "#/components/schemas/ProviderOptions"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "base_url",
+          "default_model",
+          "enabled",
+          "options",
+          "has_key",
+          "key_hint",
+          "is_local",
+          "last_test_at",
+          "last_test_ok",
+          "last_test_error",
+          "created_at"
+        ],
+        "title": "ProviderOut",
+        "type": "object"
+      },
+      "ProviderUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "api_key": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Api Key"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "default_model": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Model"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProviderOptions"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ProviderUpdate",
+        "type": "object"
+      },
+      "RoutePreview": {
+        "properties": {
+          "fallbacks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fallbacks",
+            "type": "array"
+          },
+          "primary": {
+            "title": "Primary",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "primary",
+          "fallbacks",
+          "reason"
+        ],
+        "title": "RoutePreview",
+        "type": "object"
+      },
+      "RoutePreviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "fallback_models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fallback Models",
+            "type": "array"
+          },
+          "input_tokens": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "preferred_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Model"
+          },
+          "private": {
+            "default": false,
+            "title": "Private",
+            "type": "boolean"
+          },
+          "task_class": {
+            "default": "general",
+            "enum": [
+              "formatting",
+              "coding",
+              "planning",
+              "long_document",
+              "general"
+            ],
+            "title": "Task Class",
+            "type": "string"
+          }
+        },
+        "title": "RoutePreviewRequest",
+        "type": "object"
+      },
+      "RoutingPrefer": {
+        "additionalProperties": false,
+        "properties": {
+          "local": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "provider_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Id"
+          },
+          "tier": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fast",
+                  "balanced",
+                  "strong"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tier"
+          }
+        },
+        "title": "RoutingPrefer",
+        "type": "object"
+      },
+      "RoutingRule": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "prefer": {
+            "$ref": "#/components/schemas/RoutingPrefer"
+          },
+          "when": {
+            "$ref": "#/components/schemas/RoutingWhen"
+          }
+        },
+        "required": [
+          "name",
+          "prefer"
+        ],
+        "title": "RoutingRule",
+        "type": "object"
+      },
+      "RoutingRules": {
+        "additionalProperties": false,
+        "properties": {
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/RoutingRule"
+            },
+            "maxItems": 50,
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "title": "RoutingRules",
+        "type": "object"
+      },
+      "RoutingWhen": {
+        "additionalProperties": false,
+        "properties": {
+          "min_input_tokens": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Input Tokens"
+          },
+          "private": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Private"
+          },
+          "task_class": {
+            "anyOf": [
+              {
+                "enum": [
+                  "formatting",
+                  "coding",
+                  "planning",
+                  "long_document",
+                  "general"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Class"
+          }
+        },
+        "title": "RoutingWhen",
+        "type": "object"
+      },
+      "UsageGroup": {
+        "properties": {
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          },
+          "unknown_cost_calls": {
+            "title": "Unknown Cost Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "calls",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd",
+          "unknown_cost_calls"
+        ],
+        "title": "UsageGroup",
+        "type": "object"
+      },
+      "UsageSummary": {
+        "properties": {
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "group_by": {
+            "title": "Group By",
+            "type": "string"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/UsageGroup"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "total_calls": {
+            "title": "Total Calls",
+            "type": "integer"
+          },
+          "total_cost_usd": {
+            "title": "Total Cost Usd",
+            "type": "number"
+          },
+          "total_tokens": {
+            "title": "Total Tokens",
+            "type": "integer"
+          },
+          "unknown_cost_calls": {
+            "title": "Unknown Cost Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "days",
+          "group_by",
+          "groups",
+          "total_calls",
+          "total_tokens",
+          "total_cost_usd",
+          "unknown_cost_calls"
+        ],
+        "title": "UsageSummary",
+        "type": "object"
+      },
       "UserSettingsOut": {
         "properties": {
           "default_permission_level": {
@@ -775,6 +1763,66 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/budgets": {
+      "get": {
+        "operationId": "get_budgets",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Budgets"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Budgets",
+        "tags": [
+          "usage"
+        ]
+      },
+      "put": {
+        "operationId": "put_budgets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Budgets"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Budgets"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Budgets",
+        "tags": [
+          "usage"
+        ]
+      }
+    },
     "/api/conversations/{conversation_id}/messages": {
       "get": {
         "operationId": "list_messages",
@@ -1284,6 +2332,31 @@
         "summary": "Ping",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/api/models": {
+      "get": {
+        "operationId": "all_models",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModelOut"
+                  },
+                  "title": "Response All Models",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "All Models",
+        "tags": [
+          "providers"
         ]
       }
     },
@@ -1804,6 +2877,420 @@
         ]
       }
     },
+    "/api/providers": {
+      "get": {
+        "operationId": "list_providers",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderOut"
+                  },
+                  "title": "Response List Providers",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Providers",
+        "tags": [
+          "providers"
+        ]
+      },
+      "post": {
+        "operationId": "create_provider",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Provider",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/providers/kinds": {
+      "get": {
+        "operationId": "provider_kinds",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderKindInfo"
+                  },
+                  "title": "Response Provider Kinds",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Provider Kinds",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/providers/{provider_id}": {
+      "delete": {
+        "operationId": "delete_provider",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "title": "Provider Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Provider",
+        "tags": [
+          "providers"
+        ]
+      },
+      "get": {
+        "operationId": "get_provider",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "title": "Provider Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Provider",
+        "tags": [
+          "providers"
+        ]
+      },
+      "patch": {
+        "operationId": "update_provider",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "title": "Provider Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProviderUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Provider",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/providers/{provider_id}/models": {
+      "get": {
+        "operationId": "provider_models",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "title": "Provider Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModelOut"
+                  },
+                  "title": "Response Provider Models",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Provider Models",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/providers/{provider_id}/test": {
+      "post": {
+        "operationId": "test_provider",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider_id",
+            "required": true,
+            "schema": {
+              "title": "Provider Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionTestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Test Provider",
+        "tags": [
+          "providers"
+        ]
+      }
+    },
+    "/api/routing/preview": {
+      "post": {
+        "description": "What would the router pick for this kind of task? Never calls a model.",
+        "operationId": "preview_route",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutePreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutePreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Route",
+        "tags": [
+          "usage"
+        ]
+      }
+    },
+    "/api/routing/rules": {
+      "get": {
+        "operationId": "get_rules",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutingRules"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Rules",
+        "tags": [
+          "usage"
+        ]
+      },
+      "put": {
+        "operationId": "put_rules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutingRules"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutingRules"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Rules",
+        "tags": [
+          "usage"
+        ]
+      }
+    },
     "/api/settings": {
       "get": {
         "operationId": "get_settings",
@@ -1861,6 +3348,67 @@
         "summary": "Update Settings",
         "tags": [
           "settings"
+        ]
+      }
+    },
+    "/api/usage/summary": {
+      "get": {
+        "operationId": "usage_summary",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "title": "Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "model",
+              "enum": [
+                "model",
+                "provider",
+                "agent",
+                "project",
+                "day",
+                "purpose"
+              ],
+              "title": "Group By",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Usage Summary",
+        "tags": [
+          "usage"
         ]
       }
     }

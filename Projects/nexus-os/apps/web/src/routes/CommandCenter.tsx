@@ -6,7 +6,7 @@ import { Link } from "react-router";
 import { ActivityList } from "../features/events/ActivityList";
 import { NewProjectDialog } from "../features/projects/NewProjectDialog";
 import { ProjectCard } from "../features/projects/ProjectCard";
-import { errorMessage, useHealth, useProjects, useSettings, useUnreadCount } from "../lib/queries";
+import { errorMessage, useHealth, useProjects, useProviders, useSettings, useUnreadCount } from "../lib/queries";
 import { useEvents } from "../stores/events";
 import { Page, Section } from "./Page";
 
@@ -28,6 +28,7 @@ export function CommandCenterRoute() {
   const settings = useSettings();
   const projects = useProjects("active");
   const unread = useUnreadCount();
+  const providers = useProviders();
   const health = useHealth();
   const eventCount = useEvents((s) => s.events.length);
   const events = useEvents((s) => s.events);
@@ -47,6 +48,18 @@ export function CommandCenterRoute() {
         </h2>
         <p className="mt-1 text-sm text-fg-muted">What should NEXUS work on?</p>
       </header>
+
+      {providers.data && providers.data.length === 0 ? (
+        <div role="note" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent/40 bg-accent/10 px-4 py-3">
+          <p className="text-[13px] text-fg">
+            <strong className="font-medium">Connect an AI provider to get started.</strong>{" "}
+            <span className="text-fg-muted">NEXUS needs a model to plan and work. A local model keeps everything on this machine.</span>
+          </p>
+          <Button asChild variant="primary" size="sm">
+            <Link to="/settings/providers">Connect a provider</Link>
+          </Button>
+        </div>
+      ) : null}
 
       <div className="mb-8 rounded-xl border border-line-strong bg-surface p-3 shadow-sm">
         <label htmlFor="objective" className="sr-only">

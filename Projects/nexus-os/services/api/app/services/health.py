@@ -14,6 +14,7 @@ from app.core.settings import Settings
 from app.events.bus import EventBus
 from app.files.workspace import WorkspaceManager
 from app.models.database import Database
+from app.providers.registry import ProviderRegistry
 from app.schemas.health import HealthCheckResult, HealthReport, HealthStatus
 from app.tasks.queue import JobQueue
 
@@ -59,6 +60,7 @@ def register_core_checks(
     secrets: SecretStore,
     workspace_root: Callable[[], Awaitable[WorkspaceManager]],
     started_at: float,
+    registry: ProviderRegistry,
 ) -> None:
     async def backend() -> HealthCheckResult:
         return HealthCheckResult(
@@ -151,6 +153,32 @@ def register_core_checks(
             data={"kind": secrets.kind},
         )
 
+    async def providers_check() -> HealthCheckResult:
+        rows = await registry.configs(enabled_only=True)
+        if not rows:
+            return HealthCheckResult(
+                name="providers",
+                label="AI providers",
+                status="unavailable",
+                detail="No AI provider configured. Add one in Settings → AI Providers.",
+                data={"enabled": 0},
+            )
+        failing = [r.name for r in rows if r.last_test_ok is False]
+        untested = [r.name for r in rows if r.last_test_ok is None]
+        status: HealthStatus = "degraded" if failing else "ok"
+        detail = f"{len(rows)} enabled"
+        if failing:
+            detail += f"; last test failed for {', '.join(failing)}"
+        elif untested:
+            detail += f"; not yet tested: {', '.join(untested)}"
+        return HealthCheckResult(
+            name="providers",
+            label="AI providers",
+            status=status,
+            detail=detail,
+            data={"enabled": len(rows), "failing": len(failing), "untested": len(untested)},
+        )
+
     for name, fn in (
         ("backend", backend),
         ("database", database),
@@ -158,5 +186,6 @@ def register_core_checks(
         ("queue", queue_check),
         ("disk", disk),
         ("secrets", secret_store),
+        ("providers", providers_check),
     ):
         health.register(name, fn)

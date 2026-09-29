@@ -7,7 +7,9 @@ import { CommandCenterRoute } from "./routes/CommandCenter";
 import { NotFoundRoute } from "./routes/NotFound";
 import { ProjectDetailRoute } from "./routes/ProjectDetail";
 import { ProjectsRoute } from "./routes/Projects";
+import { ProvidersRoute } from "./routes/Providers";
 import { GeneralSettingsRoute, HealthRoute, SettingsLayout } from "./routes/Settings";
+import { UsageRoute } from "./routes/Usage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +30,8 @@ const router = createBrowserRouter([
         element: <SettingsLayout />,
         children: [
           { index: true, element: <GeneralSettingsRoute /> },
+          { path: "providers", element: <ProvidersRoute /> },
+          { path: "usage", element: <UsageRoute /> },
           { path: "health", element: <HealthRoute /> },
         ],
       },

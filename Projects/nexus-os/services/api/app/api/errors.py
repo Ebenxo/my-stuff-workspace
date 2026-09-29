@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.errors import NexusError
+from app.providers.errors import BudgetExceededError, NoRouteError, ProviderError
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +26,15 @@ def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(NexusError)
     async def _nexus(_: Request, exc: NexusError) -> JSONResponse:
         return _envelope(exc.status_code, exc.code, exc.message, exc.details)
+
+    @app.exception_handler(ProviderError)
+    async def _provider(_: Request, exc: ProviderError) -> JSONResponse:
+        # Messages are already redacted by the adapters; they explain what to fix.
+        if isinstance(exc, NoRouteError):
+            return _envelope(409, exc.code, exc.message)
+        if isinstance(exc, BudgetExceededError):
+            return _envelope(429, exc.code, exc.message)
+        return _envelope(502, exc.code, exc.message)
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_: Request, exc: RequestValidationError) -> JSONResponse:

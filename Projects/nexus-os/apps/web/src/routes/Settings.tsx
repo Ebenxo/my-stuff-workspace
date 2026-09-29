@@ -10,6 +10,8 @@ import { Page, PageHeader } from "./Page";
 
 const SETTINGS_NAV = [
   { to: "/settings", label: "General", end: true },
+  { to: "/settings/providers", label: "AI providers", end: false },
+  { to: "/settings/usage", label: "Usage & budgets", end: false },
   { to: "/settings/health", label: "System health", end: false },
 ];
 

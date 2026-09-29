@@ -1,5 +1,8 @@
 import { ApiError, unwrap } from "@nexus/shared";
 import type {
+  Budgets,
+  ProviderCreate,
+  ProviderUpdate,
   ProjectCreate,
   ProjectUpdate,
   UserSettingsUpdate,
@@ -11,6 +14,7 @@ export const qk = {
   projects: (status?: string) => ["projects", status ?? "all"] as const,
   project: (id: string) => ["project", id] as const,
   health: ["health"] as const,
+  providers: ["providers"] as const,
   settings: ["settings"] as const,
   notifications: ["notifications"] as const,
   unread: ["notifications", "unread"] as const,
@@ -118,6 +122,93 @@ export function useMarkNotificationsRead() {
 
 export function useVerifyEvents() {
   return useMutation({ mutationFn: () => unwrap(api.GET("/api/events/verify", { params: { query: {} } })) });
+}
+
+export function useProviderKinds() {
+  return useQuery({
+    queryKey: ["provider-kinds"],
+    queryFn: () => unwrap(api.GET("/api/providers/kinds")),
+    staleTime: Infinity,
+  });
+}
+
+export function useProviders() {
+  return useQuery({ queryKey: qk.providers, queryFn: () => unwrap(api.GET("/api/providers")) });
+}
+
+export function useCreateProvider() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ProviderCreate) => unwrap(api.POST("/api/providers", { body })),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: qk.providers });
+      void qc.invalidateQueries({ queryKey: qk.health });
+    },
+  });
+}
+
+export function useUpdateProvider(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ProviderUpdate) =>
+      unwrap(api.PATCH("/api/providers/{provider_id}", { params: { path: { provider_id: id } }, body })),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: qk.providers });
+      void qc.invalidateQueries({ queryKey: qk.health });
+    },
+  });
+}
+
+export function useDeleteProvider() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      await unwrap(api.DELETE("/api/providers/{provider_id}", { params: { path: { provider_id: id } } }));
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: qk.providers });
+      void qc.invalidateQueries({ queryKey: qk.health });
+    },
+  });
+}
+
+export function useTestProvider() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => unwrap(api.POST("/api/providers/{provider_id}/test", { params: { path: { provider_id: id } } })),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: qk.providers });
+      void qc.invalidateQueries({ queryKey: qk.health });
+      void qc.invalidateQueries({ queryKey: ["provider-models"] });
+    },
+  });
+}
+
+export function useProviderModels(id: string | undefined) {
+  return useQuery({
+    queryKey: ["provider-models", id],
+    enabled: !!id,
+    queryFn: () => unwrap(api.GET("/api/providers/{provider_id}/models", { params: { path: { provider_id: id! }, query: {} } })),
+  });
+}
+
+export function useUsageSummary(days: number, groupBy: "model" | "provider" | "agent" | "project" | "day" | "purpose") {
+  return useQuery({
+    queryKey: ["usage", days, groupBy],
+    queryFn: () => unwrap(api.GET("/api/usage/summary", { params: { query: { days, group_by: groupBy } } })),
+  });
+}
+
+export function useBudgets() {
+  return useQuery({ queryKey: ["budgets"], queryFn: () => unwrap(api.GET("/api/budgets")) });
+}
+
+export function useUpdateBudgets() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Budgets) => unwrap(api.PUT("/api/budgets", { body })),
+    onSuccess: (data) => qc.setQueryData(["budgets"], data),
+  });
 }
 
 export function errorMessage(error: unknown): string {

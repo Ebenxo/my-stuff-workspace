@@ -152,7 +152,7 @@ export function ProjectDetailRoute() {
             onCancel={() => setEditing(false)}
             onSubmit={(v) =>
               update.mutate(
-                { name: v.name, description: v.description, settings: { ...p.settings, permission_level: v.permission_level } },
+                { name: v.name, description: v.description, settings: { ...p.settings, permission_level: v.permission_level, monthly_budget_usd: v.monthly_budget_usd } },
                 {
                   onSuccess: () => {
                     toast.success("Project updated");

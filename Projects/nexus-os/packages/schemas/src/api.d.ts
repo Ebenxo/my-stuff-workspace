@@ -4,6 +4,24 @@
  */
 
 export interface paths {
+    "/api/budgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Budgets */
+        get: operations["get_budgets"];
+        /** Put Budgets */
+        put: operations["put_budgets"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/conversations/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -108,6 +126,23 @@ export interface paths {
          * @description Unauthenticated liveness probe. Deliberately reveals nothing else.
          */
         get: operations["ping"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All Models */
+        get: operations["all_models"];
         put?: never;
         post?: never;
         delete?: never;
@@ -272,6 +307,132 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Providers */
+        get: operations["list_providers"];
+        put?: never;
+        /** Create Provider */
+        post: operations["create_provider"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/providers/kinds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Provider Kinds */
+        get: operations["provider_kinds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/providers/{provider_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Provider */
+        get: operations["get_provider"];
+        put?: never;
+        post?: never;
+        /** Delete Provider */
+        delete: operations["delete_provider"];
+        options?: never;
+        head?: never;
+        /** Update Provider */
+        patch: operations["update_provider"];
+        trace?: never;
+    };
+    "/api/providers/{provider_id}/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Provider Models */
+        get: operations["provider_models"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/providers/{provider_id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Test Provider */
+        post: operations["test_provider"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/routing/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Route
+         * @description What would the router pick for this kind of task? Never calls a model.
+         */
+        post: operations["preview_route"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/routing/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rules */
+        get: operations["get_rules"];
+        /** Put Rules */
+        put: operations["put_rules"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -290,10 +451,64 @@ export interface paths {
         patch: operations["update_settings"];
         trace?: never;
     };
+    "/api/usage/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Usage Summary */
+        get: operations["usage_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * Budgets
+         * @description Limits are optional. Cost limits count only calls whose price is known; token limits count all.
+         */
+        Budgets: {
+            /** Daily Tokens */
+            daily_tokens?: number | null;
+            /** Daily Usd */
+            daily_usd?: number | null;
+            /**
+             * Expensive Call Usd
+             * @default 0.5
+             */
+            expensive_call_usd?: number | null;
+            /**
+             * Hard Stop
+             * @default true
+             */
+            hard_stop?: boolean;
+            /** Monthly Tokens */
+            monthly_tokens?: number | null;
+            /** Monthly Usd */
+            monthly_usd?: number | null;
+            /** Per Agent Monthly Usd */
+            per_agent_monthly_usd?: {
+                [key: string]: number;
+            };
+            /** Per Project Monthly Usd */
+            per_project_monthly_usd?: {
+                [key: string]: number;
+            };
+            /**
+             * Warn At Fraction
+             * @default 0.8
+             */
+            warn_at_fraction?: number;
+        };
         /** ChainVerification */
         ChainVerification: {
             /** Chains Checked */
@@ -304,6 +519,19 @@ export interface components {
             events_checked: number;
             /** First Bad Seq */
             first_bad_seq?: number | null;
+            /** Ok */
+            ok: boolean;
+        };
+        /** ConnectionTestOut */
+        ConnectionTestOut: {
+            /** Detail */
+            detail: string;
+            /** Error Code */
+            error_code?: string | null;
+            /** Latency Ms */
+            latency_ms: number;
+            /** Models Found */
+            models_found?: number | null;
             /** Ok */
             ok: boolean;
         };
@@ -445,6 +673,51 @@ export interface components {
              */
             role: "user" | "assistant" | "agent" | "system";
         };
+        /** ModelOut */
+        ModelOut: {
+            /** Context Length */
+            context_length: number | null;
+            /** Display Name */
+            display_name: string | null;
+            /** Id */
+            id: string;
+            /** Input Cost Per Mtok */
+            input_cost_per_mtok: number | null;
+            /** Local */
+            local: boolean;
+            /** Output Cost Per Mtok */
+            output_cost_per_mtok: number | null;
+            /** Provider Id */
+            provider_id: string;
+            /** Provider Name */
+            provider_name: string;
+            /** Ref */
+            ref: string;
+            /** Tier */
+            tier: ("fast" | "balanced" | "strong") | null;
+        };
+        /** ModelOverride */
+        ModelOverride: {
+            /** Context Length */
+            context_length?: number | null;
+            price?: components["schemas"]["ModelPrice"] | null;
+            /** Supports Reasoning */
+            supports_reasoning?: boolean | null;
+            /** Supports Vision */
+            supports_vision?: boolean | null;
+            /** Tier */
+            tier?: ("fast" | "balanced" | "strong") | null;
+        };
+        /**
+         * ModelPrice
+         * @description USD per million tokens. Set by the user; unknown prices stay unset (never guessed).
+         */
+        ModelPrice: {
+            /** Input */
+            input: number;
+            /** Output */
+            output: number;
+        };
         /** NotificationOut */
         NotificationOut: {
             /** Body */
@@ -541,6 +814,208 @@ export interface components {
             name?: string | null;
             settings?: components["schemas"]["ProjectSettings"] | null;
         };
+        /** ProviderCreate */
+        ProviderCreate: {
+            /** Api Key */
+            api_key?: string | null;
+            /** Base Url */
+            base_url?: string | null;
+            /** Default Model */
+            default_model?: string | null;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled?: boolean;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "anthropic" | "openai" | "gemini" | "ollama" | "lmstudio" | "openai_compatible" | "demo";
+            /** Name */
+            name: string;
+            options?: components["schemas"]["ProviderOptions"];
+        };
+        /** ProviderKindInfo */
+        ProviderKindInfo: {
+            /** Default Base Url */
+            default_base_url: string | null;
+            /** Help */
+            help: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "anthropic" | "openai" | "gemini" | "ollama" | "lmstudio" | "openai_compatible" | "demo";
+            /** Label */
+            label: string;
+            /** Local */
+            local: boolean;
+            /** Needs Key */
+            needs_key: boolean;
+        };
+        /** ProviderOptions */
+        ProviderOptions: {
+            /** Models */
+            models?: {
+                [key: string]: components["schemas"]["ModelOverride"];
+            };
+            /**
+             * Structured Mode
+             * @default json_schema
+             * @enum {string}
+             */
+            structured_mode?: "json_schema" | "json_object" | "prompt";
+        };
+        /**
+         * ProviderOut
+         * @description Never contains the key. ``has_key``/``key_hint`` let the UI show that one is stored.
+         */
+        ProviderOut: {
+            /** Base Url */
+            base_url: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Default Model */
+            default_model: string | null;
+            /** Enabled */
+            enabled: boolean;
+            /** Has Key */
+            has_key: boolean;
+            /** Id */
+            id: string;
+            /** Is Local */
+            is_local: boolean;
+            /** Key Hint */
+            key_hint: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "anthropic" | "openai" | "gemini" | "ollama" | "lmstudio" | "openai_compatible" | "demo";
+            /** Last Test At */
+            last_test_at: string | null;
+            /** Last Test Error */
+            last_test_error: string | null;
+            /** Last Test Ok */
+            last_test_ok: boolean | null;
+            /** Name */
+            name: string;
+            options: components["schemas"]["ProviderOptions"];
+        };
+        /** ProviderUpdate */
+        ProviderUpdate: {
+            /** Api Key */
+            api_key?: string | null;
+            /** Base Url */
+            base_url?: string | null;
+            /** Default Model */
+            default_model?: string | null;
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Name */
+            name?: string | null;
+            options?: components["schemas"]["ProviderOptions"] | null;
+        };
+        /** RoutePreview */
+        RoutePreview: {
+            /** Fallbacks */
+            fallbacks: string[];
+            /** Primary */
+            primary: string;
+            /** Reason */
+            reason: string;
+        };
+        /** RoutePreviewRequest */
+        RoutePreviewRequest: {
+            /** Fallback Models */
+            fallback_models?: string[];
+            /**
+             * Input Tokens
+             * @default 0
+             */
+            input_tokens?: number;
+            /** Preferred Model */
+            preferred_model?: string | null;
+            /**
+             * Private
+             * @default false
+             */
+            private?: boolean;
+            /**
+             * Task Class
+             * @default general
+             * @enum {string}
+             */
+            task_class?: "formatting" | "coding" | "planning" | "long_document" | "general";
+        };
+        /** RoutingPrefer */
+        RoutingPrefer: {
+            /** Local */
+            local?: boolean | null;
+            /** Model */
+            model?: string | null;
+            /** Provider Id */
+            provider_id?: string | null;
+            /** Tier */
+            tier?: ("fast" | "balanced" | "strong") | null;
+        };
+        /** RoutingRule */
+        RoutingRule: {
+            /** Name */
+            name: string;
+            prefer: components["schemas"]["RoutingPrefer"];
+            when?: components["schemas"]["RoutingWhen"];
+        };
+        /** RoutingRules */
+        RoutingRules: {
+            /** Rules */
+            rules?: components["schemas"]["RoutingRule"][];
+        };
+        /** RoutingWhen */
+        RoutingWhen: {
+            /** Min Input Tokens */
+            min_input_tokens?: number | null;
+            /** Private */
+            private?: boolean | null;
+            /** Task Class */
+            task_class?: ("formatting" | "coding" | "planning" | "long_document" | "general") | null;
+        };
+        /** UsageGroup */
+        UsageGroup: {
+            /** Calls */
+            calls: number;
+            /** Cost Usd */
+            cost_usd: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Key */
+            key: string;
+            /** Output Tokens */
+            output_tokens: number;
+            /** Unknown Cost Calls */
+            unknown_cost_calls: number;
+        };
+        /** UsageSummary */
+        UsageSummary: {
+            /** Days */
+            days: number;
+            /** Group By */
+            group_by: string;
+            /** Groups */
+            groups: components["schemas"]["UsageGroup"][];
+            /** Total Calls */
+            total_calls: number;
+            /** Total Cost Usd */
+            total_cost_usd: number;
+            /** Total Tokens */
+            total_tokens: number;
+            /** Unknown Cost Calls */
+            unknown_cost_calls: number;
+        };
         /** UserSettingsOut */
         UserSettingsOut: {
             default_permission_level: components["schemas"]["PermissionLevel"];
@@ -596,6 +1071,59 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    get_budgets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Budgets"];
+                };
+            };
+        };
+    };
+    put_budgets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Budgets"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Budgets"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_messages: {
         parameters: {
             query?: {
@@ -811,6 +1339,26 @@ export interface operations {
                     "application/json": {
                         [key: string]: boolean;
                     };
+                };
+            };
+        };
+    };
+    all_models: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelOut"][];
                 };
             };
         };
@@ -1180,6 +1728,324 @@ export interface operations {
             };
         };
     };
+    list_providers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderOut"][];
+                };
+            };
+        };
+    };
+    create_provider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    provider_kinds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderKindInfo"][];
+                };
+            };
+        };
+    };
+    get_provider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_provider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_provider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    provider_models: {
+        parameters: {
+            query?: {
+                refresh?: boolean;
+            };
+            header?: never;
+            path: {
+                provider_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_provider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectionTestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_route: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutePreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutePreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingRules"];
+                };
+            };
+        };
+    };
+    put_rules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoutingRules"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingRules"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_settings: {
         parameters: {
             query?: never;
@@ -1220,6 +2086,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    usage_summary: {
+        parameters: {
+            query?: {
+                days?: number;
+                group_by?: "model" | "provider" | "agent" | "project" | "day" | "purpose";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageSummary"];
                 };
             };
             /** @description Validation Error */

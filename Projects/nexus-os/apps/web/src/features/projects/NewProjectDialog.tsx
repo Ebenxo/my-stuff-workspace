@@ -25,7 +25,7 @@ export function NewProjectDialog({ open, onOpenChange }: { open: boolean; onOpen
               {
                 name: v.name,
                 description: v.description,
-                settings: { permission_level: v.permission_level },
+                settings: { permission_level: v.permission_level, monthly_budget_usd: v.monthly_budget_usd },
               },
               {
                 onSuccess: (project) => {

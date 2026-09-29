@@ -21,3 +21,12 @@ Shared log between Claude Code and Codex (neither shares chat history). Read `do
 **Not verified:** Tauri glue never compiled (no webkit here); keychain path; production API packaging.
 **Decisions:** see `docs/BUILD_STATE.md` ("Architecture decisions", "Bugs found").
 **Next:** Phase 2, providers.
+
+## 2026-09-29 — Phase 2 (AI providers) — Claude Code
+
+**Built:** provider abstraction + Anthropic/OpenAI-compatible/Ollama/Gemini adapters, structured output with repair, model catalog + router (privacy-safe), gateway (retry/backoff/fallback), usage + budgets, provider CRUD with write-only keys, Settings → AI providers and Usage & budgets pages.
+**Verified:** `python scripts/check.py` green (220 pytest, 39 vitest, 8 cargo). Real-socket tests (chunked SSE, auth, redirect key-replay, proxy bypass). Full stack driven with Playwright against a local fake LM Studio and the real Anthropic endpoint (401 for a fake key, as expected); key absent from DOM/localStorage; no overflow at 390px.
+**Bugs found by the live check:** LM Studio default URL fell through to OpenAI's; see `docs/BUILD_STATE.md`.
+**Not verified:** successful live generation on any cloud provider (no valid keys); Gemini native schema per model.
+**Owner action (optional):** to verify live, add a real key in Settings → AI providers and press Test connection.
+**Next:** Phases 3–4, agent runtime + tools + permissions.

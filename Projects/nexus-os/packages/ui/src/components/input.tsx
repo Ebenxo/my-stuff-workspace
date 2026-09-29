@@ -24,3 +24,12 @@ export function FieldError({ children }: { children?: React.ReactNode }) {
     </p>
   ) : null;
 }
+
+/** Native <select>: accessible and keyboard-perfect by default, styled to match inputs. */
+export function Select({ className, children, ...props }: ComponentProps<"select">) {
+  return (
+    <select className={cn(field, "h-9 pr-8", className)} {...props}>
+      {children}
+    </select>
+  );
+}

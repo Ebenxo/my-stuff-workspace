@@ -7,6 +7,7 @@ export * from "./components/feedback";
 export * from "./components/input";
 export * from "./components/popover";
 export * from "./components/spinner";
+export * from "./components/switch";
 export * from "./components/tabs";
 export * from "./components/toaster";
 export * from "./components/tooltip";

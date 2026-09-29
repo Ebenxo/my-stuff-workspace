@@ -16,6 +16,7 @@ from app.repositories.projects import ProjectRepository
 from app.repositories.settings import UserSettingsRepository
 from app.schemas.common import PermissionLevel
 from app.schemas.projects import UserSettingsOut, UserSettingsUpdate
+from app.schemas.providers import Budgets, RoutingRules
 
 log = logging.getLogger(__name__)
 
@@ -93,3 +94,29 @@ class SettingsService:
         except OSError as exc:
             raise InvalidRequestError(f"The workspace folder is not writable: {exc.strerror}") from exc
         return path.resolve()
+
+    async def get_budgets(self) -> Budgets:
+        async with self._db.session() as session:
+            row = await UserSettingsRepository(session).get_or_create()
+            return Budgets.model_validate(row.budgets or {})
+
+    async def set_budgets(self, budgets: Budgets) -> Budgets:
+        async with self._db.session() as session:
+            row = await UserSettingsRepository(session).get_or_create()
+            row.budgets = budgets.model_dump(mode="json")
+            row.updated_at = self._clock.now()
+        await self._bus.emit(EventType.SETTINGS_UPDATED, actor="user", payload={"changed": ["budgets"]})
+        return budgets
+
+    async def get_routing_rules(self) -> RoutingRules:
+        async with self._db.session() as session:
+            row = await UserSettingsRepository(session).get_or_create()
+            return RoutingRules(rules=row.routing_rules or [])
+
+    async def set_routing_rules(self, rules: RoutingRules) -> RoutingRules:
+        async with self._db.session() as session:
+            row = await UserSettingsRepository(session).get_or_create()
+            row.routing_rules = [r.model_dump(mode="json") for r in rules.rules]
+            row.updated_at = self._clock.now()
+        await self._bus.emit(EventType.SETTINGS_UPDATED, actor="user", payload={"changed": ["routing_rules"]})
+        return rules

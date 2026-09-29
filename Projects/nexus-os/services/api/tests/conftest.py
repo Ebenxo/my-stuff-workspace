@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import socket
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from pathlib import Path
 
 import httpx
@@ -32,9 +32,40 @@ def settings(tmp_path: Path) -> Settings:
     )
 
 
+class Upstream:
+    """Mock internet for provider calls: route by hostname, record every request."""
+
+    def __init__(self) -> None:
+        self.handlers: dict[str, Callable[[httpx.Request], httpx.Response]] = {}
+        self.requests: list[httpx.Request] = []
+
+    def on(self, host: str, handler: Callable[[httpx.Request], httpx.Response]) -> None:
+        self.handlers[host] = handler
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        handler = self.handlers.get(request.url.host)
+        if handler is None:
+            return httpx.Response(502, json={"error": {"message": f"no mock for {request.url.host}"}})
+        return handler(request)
+
+
 @pytest.fixture
-async def app(settings: Settings) -> AsyncIterator[FastAPI]:
-    application = create_app(settings, secrets=MemorySecretStore())
+def upstream() -> Upstream:
+    return Upstream()
+
+
+@pytest.fixture
+def secret_store() -> MemorySecretStore:
+    return MemorySecretStore()
+
+
+@pytest.fixture
+async def app(
+    settings: Settings, upstream: Upstream, secret_store: MemorySecretStore
+) -> AsyncIterator[FastAPI]:
+    http = httpx.AsyncClient(transport=httpx.MockTransport(upstream), follow_redirects=False)
+    application = create_app(settings, secrets=secret_store, http=http)
     async with application.router.lifespan_context(application):
         yield application
 

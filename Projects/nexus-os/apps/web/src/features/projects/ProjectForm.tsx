@@ -7,6 +7,7 @@ export interface ProjectFormValues {
   name: string;
   description: string;
   permission_level: PermissionLevel | null;
+  monthly_budget_usd: number | null;
 }
 
 export function ProjectForm({
@@ -27,14 +28,17 @@ export function ProjectForm({
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [level, setLevel] = useState<PermissionLevel | "">(initial?.settings.permission_level ?? "");
+  const [budget, setBudget] = useState(initial?.settings.monthly_budget_usd?.toString() ?? "");
   const [touched, setTouched] = useState(false);
   const nameError = touched && name.trim() === "" ? "Give the project a name." : undefined;
+  const budgetValue = budget.trim() === "" ? null : Number(budget);
+  const budgetError = budgetValue !== null && (!Number.isFinite(budgetValue) || budgetValue < 0) ? "Enter zero or more." : undefined;
 
   function submit(e: FormEvent) {
     e.preventDefault();
     setTouched(true);
-    if (name.trim() === "") return;
-    onSubmit({ name: name.trim(), description: description.trim(), permission_level: level || null });
+    if (name.trim() === "" || budgetError) return;
+    onSubmit({ name: name.trim(), description: description.trim(), permission_level: level || null, monthly_budget_usd: budgetValue });
   }
 
   return (
@@ -85,6 +89,22 @@ export function ProjectForm({
           <p className="mt-1.5 text-xs text-fg-muted">
             {level ? PERMISSION_COPY[level].help : "This project follows the default in Settings."}
           </p>
+        </div>
+        <div>
+          <Label htmlFor="project-budget">Monthly budget in USD (optional)</Label>
+          <Input
+            id="project-budget"
+            type="number"
+            min={0}
+            step="any"
+            inputMode="decimal"
+            value={budget}
+            onChange={(e) => setBudget(e.target.value)}
+            placeholder="No limit"
+            aria-invalid={budgetError ? true : undefined}
+          />
+          <FieldError>{budgetError}</FieldError>
+          <p className="mt-1.5 text-xs text-fg-muted">Counts only model calls whose price is known.</p>
         </div>
         <FieldError>{error}</FieldError>
       </div>

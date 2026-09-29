@@ -41,8 +41,8 @@ SCAN_SUFFIXES = {
 def _files() -> list[Path]:
     found = []
     for path in PROJECT_ROOT.rglob("*"):
-        if not path.is_file() or path.name in SKIP_NAMES:
-            continue
+        if not path.is_file() or path.name in SKIP_NAMES or ".test." in path.name:
+            continue  # test files intentionally contain fake credentials
         rel_parts = path.relative_to(PROJECT_ROOT).parts
         if any(part in SKIP_DIRS for part in rel_parts[:-1]):
             continue
