@@ -3,12 +3,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createBrowserRouter } from "react-router";
 import { AppShell } from "./layout/AppShell";
 import { retryPolicy } from "./lib/queries";
+import { AgentsRoute } from "./routes/Agents";
+import { ApprovalsRoute } from "./routes/Approvals";
 import { CommandCenterRoute } from "./routes/CommandCenter";
 import { NotFoundRoute } from "./routes/NotFound";
 import { ProjectDetailRoute } from "./routes/ProjectDetail";
 import { ProjectsRoute } from "./routes/Projects";
 import { ProvidersRoute } from "./routes/Providers";
-import { GeneralSettingsRoute, HealthRoute, SettingsLayout } from "./routes/Settings";
+import { RunRoute } from "./routes/Run";
+import { GeneralSettingsRoute, HealthRoute, SettingsLayout, ToolsRoute } from "./routes/Settings";
 import { UsageRoute } from "./routes/Usage";
 
 const queryClient = new QueryClient({
@@ -25,12 +28,16 @@ const router = createBrowserRouter([
       { index: true, element: <CommandCenterRoute /> },
       { path: "projects", element: <ProjectsRoute /> },
       { path: "projects/:projectId", element: <ProjectDetailRoute /> },
+      { path: "agents", element: <AgentsRoute /> },
+      { path: "runs/:runId", element: <RunRoute /> },
+      { path: "approvals", element: <ApprovalsRoute /> },
       {
         path: "settings",
         element: <SettingsLayout />,
         children: [
           { index: true, element: <GeneralSettingsRoute /> },
           { path: "providers", element: <ProvidersRoute /> },
+          { path: "tools", element: <ToolsRoute /> },
           { path: "usage", element: <UsageRoute /> },
           { path: "health", element: <HealthRoute /> },
         ],

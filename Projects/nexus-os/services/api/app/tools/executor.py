@@ -188,6 +188,19 @@ class ToolExecutor:
             )
         tool = registry_tool
 
+        # 2b. A private run ("keep on this device") never uses anything that sends data off the machine.
+        if ectx.tool_context.private and tool.reaches_outside:
+            return await self._deny(
+                ectx,
+                tool_name,
+                arguments,
+                summary,
+                tool.risk_level,
+                f"This run is private (kept on this device), so {tool_name} is not available: it would send "
+                "data off this machine. Work with the project's files instead, or ask the user.",
+                code="private_run",
+            )
+
         # 3. Validate arguments (errors never echo the offending values).
         try:
             args = tool.input_schema.model_validate(arguments)

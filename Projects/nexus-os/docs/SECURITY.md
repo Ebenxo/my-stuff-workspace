@@ -16,6 +16,8 @@ Out of scope: a fully compromised host OS, a malicious user.
 - Rate limiting: token bucket per client and per route class (stricter for approval, run and provider-test endpoints).
 - Request bodies are size-limited and validated by Pydantic; unknown fields are rejected on write models.
 - Errors never echo secrets, stack traces or file contents to clients; details go to the audit log.
+- No redirects: trailing-slash redirects are disabled (`redirect_slashes=False`), because a redirect names the API's own origin and a browser behind a proxy would follow it without its token. A wrong path is a 404.
+- One API per data folder: startup takes an exclusive OS lock on `NEXUS_HOME/nexus.lock` before touching the database, because startup recovery (interrupting open runs, cancelling their approvals) is only correct when no other instance is running. A second instance fails with a clear message and changes nothing.
 
 ## 3. Secrets
 
@@ -42,7 +44,7 @@ Risk levels: `SAFE`, `MODERATE`, `HIGH`, `VERY_HIGH`. Default permission levels 
 | `balanced` (default) | auto | auto | **ask** | **ask** |
 | `permissive` | auto | auto | auto unless the tool is `always_requires_approval` or the run is **tainted** | **ask** |
 
-Hard rules that no level or grant overrides: `VERY_HIGH` always asks and is never session-grantable; `delete_file`, non-GET `http_request`, `run_command(shell=true)` and any external send always ask; unattended (scheduled) runs never auto-approve anything above what the project explicitly allows for unattended use and otherwise park; `DENY` verdicts from `assess_risk` are final; edited approval arguments are re-evaluated and can never lower risk.
+Hard rules that no level or grant overrides: `VERY_HIGH` always asks and is never session-grantable; `delete_file`, non-GET `http_request`, every `run_command` and any external send always ask; an agent can never exceed its own `max_risk` (a proposal above it is denied outright, nobody is asked); a **private** run cannot use any tool that reaches off the machine (web, search, MCP, networked commands); unattended (scheduled) runs never auto-approve anything above what the project explicitly allows for unattended use and otherwise park; `DENY` verdicts from `assess_risk` are final; edited approval arguments are re-evaluated and can never lower risk.
 
 Approval card fields: agent, tool, arguments (redacted), reason (the agent's one-line summary), effective risk, **possible impact** (tool-specific text such as "Will move `report.md` to project trash"), taint sources if any, and buttons **Approve Once / Approve For Session / Deny / Edit Action**. Decisions are audited events with the decider.
 
@@ -83,11 +85,12 @@ Append-only `events` table, hash-chained per project (`hash = SHA-256(prev_hash 
 
 ## 12. Supply chain and dependencies
 
-Lockfiles committed (`uv.lock`, `pnpm-lock.yaml`); minimal Python dependency set; `pip-audit`/`pnpm audit` run in `scripts/check`; MCP servers are launched only from user-added configuration, never auto-discovered, with a scrubbed environment plus explicitly allowed variable names.
+Lockfiles committed (`uv.lock`, `pnpm-lock.yaml`); minimal Python dependency set. Dependency vulnerability audits (`pip-audit`, `pnpm audit`) are **not yet automated** in `scripts/check.py` (they need network access to advisory databases); they are scheduled for Phase 10. MCP servers are launched only from user-added configuration, never auto-discovered, with a scrubbed environment plus explicitly allowed variable names.
 
 ## 13. Known limitations (stated, not hidden)
 
 - Subprocess sandboxing is not a hard isolation boundary; on Windows fewer limits are enforceable.
 - Prompt-injection defences reduce, but cannot eliminate, model manipulation; the guarantee we make is that manipulation cannot bypass policy or approval.
 - The local hash chain does not defend against a privileged local attacker.
+- Dependency audits are manual until Phase 10 (see §12).
 - Live-provider behaviour, keychain integration and the Tauri shell are not verifiable in the CI/build container and are marked as such in BUILD_STATE.md.

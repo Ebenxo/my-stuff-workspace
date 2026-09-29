@@ -25,20 +25,38 @@ An agent can only call tools that are both on its allow-list **and** permitted b
 
 ## Built-in team
 
-| Slug | Team name | Role | Tools (allow-list) | Max risk | Notes |
-|---|---|---|---|---|---|
-| `orchestrator` | Nexus | Orchestration | `search_memory`, `list_directory`, `read_file`, `datetime` | SAFE | Coordinates; its delegation/recovery decisions are made by deterministic code in `orchestration/` with the model consulted only for merge/summary and ambiguous cases. Does not do specialist work |
-| `planner` | Compass | Planning | `list_directory`, `read_file`, `search_files`, `search_memory`, `datetime` | SAFE | Emits `PlanResult` (DAG) |
-| `researcher` | Atlas | Research | `list_directory`, `read_file`, `search_files`, `web_search`, `http_request` (GET), `search_memory`, `parse_json`, `parse_csv`, `create_markdown` | MODERATE | Every claim carries a source; separates fact from assumption; flags contradictions |
-| `coder` | Forge | Engineering | `list_directory`, `read_file`, `search_files`, `write_file`, `create_directory`, `move_file`, `run_python`, `run_command`, `git_status`, `git_diff`, `git_log`, `search_memory`, `create_document` | HIGH | Reads repository context first; runs tests before finishing |
-| `analyst` | Cipher | Data | `read_file`, `parse_csv`, `parse_json`, `database_query`, `calculator`, `run_python`, `create_document` | MODERATE | |
-| `writer` | Scribe | Writing | `read_file`, `list_directory`, `write_file`, `create_document`, `create_markdown`, `search_memory` | MODERATE | |
-| `designer` | Nova | Design | `read_file`, `list_directory`, `write_file`, `create_document`, `create_markdown` | MODERATE | Specs, wireframe definitions, critiques |
-| `file_manager` | Archive | Files | `list_directory`, `search_files`, `read_file`, `write_file`, `create_directory`, `move_file`, `delete_file` | HIGH | `delete_file` always requires approval, even under the permissive policy |
-| `critic` | Sentinel | Quality | `read_file`, `list_directory`, `parse_json`, `parse_csv` | SAFE | Reviews another agent's output; cannot modify anything |
-| `verifier` | Warden | Verification | `read_file`, `list_directory`, `parse_json`, `parse_csv` | SAFE | Returns `PASS`/`PARTIAL`/`FAIL` |
+Defined in code (`app/agents/builtin.py`), synced to the `agents` table at every startup, ids `agent_builtin_<slug>`. "Read" = `list_directory`, `read_file`, `search_files`. Memory tools (`search_memory`, `remember`) join the allow-lists in Phase 7.
 
-Custom agents are created from the same schema through the Agent Creator. A custom agent can never be granted more than the project policy allows; a builtin's safety-relevant fields (`max_risk`, tool allow-list expansion) can be edited only by the user and the edit is an audited event.
+| Slug | Name | Tools (allow-list) | Max risk | Limits (steps / tool calls) | Notes |
+|---|---|---|---|---|---|
+| `orchestrator` | Orchestrator | Read | SAFE | 12 / 40 | Coordinates; its delegation/recovery decisions are deterministic code in `orchestration/` (Phase 5), with the model consulted for merge/summary and ambiguous cases. Does not do specialist work |
+| `planner` | Planner | Read | SAFE | 10 / 40 | Emits `PlanResult` (DAG) |
+| `researcher` | Researcher | Read, `web_search`, `http_request`, `create_document`, `create_markdown`, `calculator`, `datetime` | MODERATE | 25 / 40 | Every claim carries a source; separates fact from inference; flags contradictions. Non-GET `http_request` is HIGH, so beyond its ceiling |
+| `coder` | Coder | Read, `write_file`, `create_directory`, `move_file`, `run_python`, `run_command`, `git_status`, `git_diff`, `git_log`, `create_document`, `create_markdown` | HIGH | 30 / 60, 600 s | Reads repository context first; runs what it writes. `run_command` always asks |
+| `data_analyst` | Data Analyst | Read, `parse_csv`, `parse_json`, `calculator`, `datetime`, `database_query`, `run_python`, `write_file`, `create_document`, `create_markdown` | MODERATE | 25 / 40 | Computes with tools, never estimates numbers |
+| `writer` | Writer | Read, `write_file`, `create_document`, `create_markdown` | MODERATE | 15 / 40 | |
+| `designer` | Designer | Read, `write_file`, `create_document`, `create_markdown` | MODERATE | 15 / 40 | Self-contained HTML/CSS or SVG; contrast and 390 px checks in its brief |
+| `file_manager` | File Manager | Read, `write_file`, `create_directory`, `move_file`, `delete_file` | HIGH | 25 / 40 | `delete_file` always asks, even under the permissive level |
+| `critic` | Critic | Read | SAFE | 12 / 40 | Reviews another agent's output; cannot modify anything |
+| `verifier` | Verifier | Read, `parse_csv`, `parse_json`, `calculator`, `datetime`, `database_query`, `git_status`, `git_diff`, `git_log` | SAFE | 15 / 40 | Returns `PASS`/`PARTIAL`/`FAIL`; read-only checks only |
+
+Invariants enforced by tests (`tests/test_agent_definitions.py`): every allow-list entry names a registered tool; no agent is given a tool its own ceiling would always refuse; planning and reviewing agents are SAFE-only and cannot write memory; only the Coder and File Manager reach HIGH; no built-in reaches VERY_HIGH; no prompt asks for step-by-step reasoning.
+
+Custom agents are created from the same schema (Agents → New agent) and default to MODERATE. On a **built-in**, a person may change only the tuning fields (`BUILTIN_OVERRIDABLE`: models, limits, temperature, tools, permissions, status); its role, name and instructions stay as shipped, and each change is an `AGENT_UPDATED` event. Overrides survive the startup refresh of the built-ins.
+
+## The agent loop (built, Phase 3)
+
+`AgentRunner` (`app/agents/runner.py`) runs one agent on one task:
+
+1. Build the prompt: the agent's role prompt + the shared step protocol + `UNTRUSTED_RULES` + the tool catalogue (only tools it can actually use) as the system prompt; the task as the first user message; any context blocks fenced as untrusted data.
+2. Ask the gateway for one `AgentStep` (structured output with bounded repair). Only the public `summary` is kept; providers discard thinking.
+3. Persist the proposed step **before** acting (checkpoint), emit `AGENT_STEP`.
+4. `tool_call` → `ToolExecutor` (allow-list, private-run check, validation, risk, policy, approval wait, sandbox, redaction, taint, injection scan). The result goes back fenced as untrusted, with a security notice when instruction-like text was found. `finish` → reconcile artifacts (only ones this run created) and end. `ask_human` → park as `WAITING_INPUT`.
+5. Guards after every step: step cap (last-step warning), tool-call cap (one refusal, then stop), token budget (warning at 85 %), working-time limit (time waiting for a person is excluded), and loop detection (identical call nudged at 3 repeats, stopped at 5).
+
+Endings map to run statuses and failure categories: `COMPLETED`; `FAILED` (`step_limit`, `tool_call_limit`, `token_budget`, `loop_detected`, `agent_reported_failure`, model errors with the gateway's category); `TIMED_OUT`; `CANCELLED` (open approvals cancelled, in-flight tool call closed); `WAITING_INPUT`; `INTERRUPTED` (app stopped or restarted; resumable).
+
+**Recovery.** At startup every open run is marked `INTERRUPTED`, its approvals cancelled and its in-flight tool calls closed. Resuming reloads the checkpoint; an action that was in flight when the process died is **never silently re-run**: the agent is told it may or may not have happened and to check first. The run's taint set is rebuilt from the checkpoint, so a resumed run keeps its "has read untrusted content" status. Only one API may use a data folder at a time (`InstanceLock`), so recovery can never interrupt another live instance's runs.
 
 ## Structured contracts
 

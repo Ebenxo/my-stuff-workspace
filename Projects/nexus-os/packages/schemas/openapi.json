@@ -358,6 +358,11 @@
             ],
             "title": "Project Id"
           },
+          "prompt": {
+            "default": "",
+            "title": "Prompt",
+            "type": "string"
+          },
           "result": {
             "anyOf": [
               {

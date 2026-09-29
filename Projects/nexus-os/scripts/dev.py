@@ -57,17 +57,29 @@ def main() -> int:
         print("Need `uv` and `pnpm` on PATH.", file=sys.stderr)
         return 1
 
+    if wait_for(f"http://127.0.0.1:{API_PORT}/api/health/ping", seconds=0.5):
+        # Otherwise the readiness check below would pass against the old server.
+        print(f"Something is already serving on port {API_PORT}. Stop it first.", file=sys.stderr)
+        return 1
+
+    # Clean up on SIGTERM as well as Ctrl-C (SystemExit runs the finally block below).
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+    # Each child leads its own process group so shutdown reaches the grandchildren too
+    # (pnpm does not forward signals to Vite; uv runs the API as a separate process).
+    group: dict[str, object] = (
+        {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" else {"start_new_session": True}
+    )
     procs: list[subprocess.Popen[bytes]] = []
     try:
         procs.append(
-            subprocess.Popen([uv, "run", "--project", "services/api", "nexus", "serve"], cwd=ROOT, env=env)  # noqa: S603
+            subprocess.Popen([uv, "run", "--project", "services/api", "nexus", "serve"], cwd=ROOT, env=env, **group)  # type: ignore[call-overload]  # noqa: S603
         )
         if not wait_for(f"http://127.0.0.1:{API_PORT}/api/health/ping"):
             print("API did not start.", file=sys.stderr)
             return 1
         print(f"\n  API  http://127.0.0.1:{API_PORT}   data: {args.home}")
         if not args.api_only:
-            procs.append(subprocess.Popen([pnpm, "--filter", "@nexus/web", "dev"], cwd=ROOT, env=env))  # type: ignore[arg-type]  # noqa: S603
+            procs.append(subprocess.Popen([pnpm, "--filter", "@nexus/web", "dev"], cwd=ROOT, env=env, **group))  # type: ignore[call-overload]  # noqa: S603
             print("  Web  http://localhost:5173\n")
         while all(p.poll() is None for p in procs):
             time.sleep(0.5)
@@ -76,13 +88,25 @@ def main() -> int:
         return 0
     finally:
         for p in procs:
-            if p.poll() is None:
-                p.send_signal(signal.SIGINT if os.name != "nt" else signal.CTRL_BREAK_EVENT)
+            # SIGTERM, not SIGINT: a launcher started in the background passes an *ignored* SIGINT on
+            # to its children. uvicorn and Vite both shut down gracefully on SIGTERM. Signal the whole
+            # group even if the direct child already exited: its grandchildren may still be running.
+            _signal_group(p, signal.CTRL_BREAK_EVENT if os.name == "nt" else signal.SIGTERM)
         for p in procs:
             try:
                 p.wait(timeout=8)
             except subprocess.TimeoutExpired:
-                p.kill()
+                _signal_group(p, signal.SIGTERM if os.name == "nt" else signal.SIGKILL)
+
+
+def _signal_group(p: subprocess.Popen[bytes], sig: int) -> None:
+    try:
+        if os.name == "nt":
+            p.send_signal(sig)
+        else:
+            os.killpg(p.pid, sig)
+    except (ProcessLookupError, PermissionError, OSError):
+        pass  # already gone
 
 
 if __name__ == "__main__":

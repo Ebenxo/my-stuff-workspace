@@ -142,6 +142,41 @@ async def test_output_flood_is_capped_and_the_process_stopped(box: LocalSandbox,
     assert not r.timed_out and time.monotonic() - started < 10  # stopped by the cap, not by the timeout
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX process-group kill")
+async def test_a_slow_kill_after_an_output_flood_does_not_hang_until_the_timeout(
+    box: LocalSandbox, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Found as an intermittent full-suite failure: once the cap was hit the reader stopped reading, so
+    # asyncio paused the full pipe, never saw EOF after the kill, and proc.wait() (which waits for the
+    # pipes) hung until the timeout. Delaying the kill makes that race deterministic.
+    import asyncio
+
+    real_killpg = os.killpg
+    loop = asyncio.get_running_loop()
+
+    def slow_killpg(pgid: int, sig: int) -> None:
+        loop.call_later(0.5, lambda: real_killpg(pgid, sig) if _alive(pgid) else None)
+
+    def _alive(pgid: int) -> bool:
+        try:
+            real_killpg(pgid, 0)
+            return True
+        except OSError:
+            return False
+
+    monkeypatch.setattr(os, "killpg", slow_killpg)
+    started = time.monotonic()
+    r = await box.run(
+        spec(
+            tmp_path,
+            "import sys\nwhile True:\n    sys.stdout.write('x' * 100000)\n",
+            max_output_bytes=50_000,
+            timeout_s=8,
+        )
+    )
+    assert r.truncated and not r.timed_out and time.monotonic() - started < 6
+
+
 async def test_stdin_is_delivered(box: LocalSandbox, tmp_path: Path) -> None:
     r = await box.run(spec(tmp_path, "import sys\nprint(sys.stdin.read().upper())", stdin=b"hello"))
     assert r.stdout.strip() == "HELLO"

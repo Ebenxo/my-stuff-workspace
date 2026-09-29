@@ -122,10 +122,12 @@ class _Capture:
             if self.total < self.cap:
                 self.chunks.append(chunk[: self.cap - self.total])
             self.total += len(chunk)
-            if self.total > self.cap:
+            if self.total > self.cap and not self.truncated:
                 self.truncated = True
-                overflow.set()
-                return
+                overflow.set()  # the watcher kills the process
+            # Keep reading (and discarding) past the cap until EOF. If nobody reads, asyncio pauses the
+            # pipe once its buffer fills, never sees EOF, and proc.wait() - which waits for the pipes -
+            # hangs until the timeout (found as an intermittent test failure under load).
 
     def text(self) -> str:
         return b"".join(self.chunks).decode("utf-8", errors="replace")

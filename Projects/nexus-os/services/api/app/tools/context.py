@@ -49,6 +49,7 @@ class ToolContextFactory:
         objective_id: str | None = None,
         agent_id: str | None = None,
         unattended: bool = False,
+        private: bool = False,
     ) -> ToolContext:
         project_dir = await self._dir(project_id)
 
@@ -79,4 +80,5 @@ class ToolContextFactory:
             memory=self._memory,
             allowed_domains=await self._domains(project_id),
             unattended=unattended,
+            private=private,
         )

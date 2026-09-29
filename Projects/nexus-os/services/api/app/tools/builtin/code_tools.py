@@ -142,6 +142,10 @@ def _assess_command(ctx: ToolContext, a: RunCommandArgs) -> RiskAssessment:
     )
     if base.deny_reason:
         return base
+    if a.network and ctx.private:
+        return RiskAssessment(
+            deny_reason="This run is private (kept on this device), so commands may not use the network."
+        )
     try:  # fail before asking a person to approve a command that could never start
         clean, cwd = ctx.fs.resolve(a.cwd, Access.WRITE)
     except FsError as e:

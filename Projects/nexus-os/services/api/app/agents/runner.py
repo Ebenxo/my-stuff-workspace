@@ -378,6 +378,8 @@ class AgentRunner:
                 )
                 await self._save(run_id, state)
         tools = self._tools.allowed_for(agent.tools, disabled=await self._rows.disabled_names())
+        if req.private:  # the model is never shown a tool it could not use (the executor refuses them too)
+            tools = [t for t in tools if not t.reaches_outside]
         system = self._builder.system(
             agent, tools, max_steps=agent.max_steps, max_tool_calls=agent.max_tool_calls
         )
@@ -388,6 +390,7 @@ class AgentRunner:
             objective_id=req.objective_id,
             agent_id=agent.id,
             unattended=req.unattended,
+            private=req.private,
         )
         ectx = ExecContext(
             project_id=req.project_id,

@@ -102,3 +102,6 @@ name = "Orchestration and agents do not touch the ORM directly"
 type = "forbidden"
 source_modules = ["app.orchestration", "app.agents", "app.workflows", "app.scheduler"]
 forbidden_modules = ["sqlalchemy", "app.models"]
+# They reach the database only through the repository stores (which return DTOs), so the ORM is
+# naturally an indirect dependency; what is forbidden is importing it themselves.
+allow_indirect_imports = "True"

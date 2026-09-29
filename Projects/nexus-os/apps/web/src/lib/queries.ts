@@ -38,6 +38,7 @@ export function useProjects(status?: "active" | "archived") {
 export function useProject(id: string) {
   return useQuery({
     queryKey: qk.project(id),
+    enabled: !!id, // callers that learn the id later (e.g. from a run) must not request "/api/projects/"
     queryFn: () => unwrap(api.GET("/api/projects/{project_id}", { params: { path: { project_id: id } } })),
   });
 }

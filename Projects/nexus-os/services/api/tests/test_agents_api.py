@@ -128,6 +128,7 @@ async def test_run_an_agent_through_the_api_and_read_its_artifact(client: httpx.
 
     runs = (await client.get("/api/runs", params={"project_id": ae.project_id, "agent": "writer"})).json()
     assert [r["id"] for r in runs] == [run["id"]]
+    assert runs[0]["prompt"] == "Write a brief"  # lists can show what each run was asked to do
     assert (await client.get("/api/runs", params={"status_filter": "FAILED"})).json() == []
 
 

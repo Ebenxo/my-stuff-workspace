@@ -68,6 +68,11 @@ class ToolContext:
     memory: Any = None  # MemoryFacade (Phase 7)
     allowed_domains: list[str] = field(default_factory=list)
     unattended: bool = False
+    private: bool = False  # "keep on this device": nothing may leave the machine during this run
+
+
+# Capabilities that send something off this machine. A private run may not use them at all.
+EXTERNAL_CAPABILITIES = frozenset({Capability.NET_HTTP, Capability.NET_SEARCH, Capability.MCP})
 
 
 Handler = Callable[[ToolContext, Any], Awaitable[Any]]
@@ -92,6 +97,11 @@ class ToolDefinition:
     timeout_s: float = 30.0
     max_output_chars: int = 20_000
     source: str = "builtin"
+
+    @property
+    def reaches_outside(self) -> bool:
+        """Can this tool send data off the machine (web, search, MCP servers)?"""
+        return bool(self.permissions & EXTERNAL_CAPABILITIES)
 
     def json_schema(self) -> dict[str, Any]:
         return self.input_schema.model_json_schema()

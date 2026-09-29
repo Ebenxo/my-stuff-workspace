@@ -494,3 +494,47 @@ async def test_observation_model_round_trips() -> None:
         kind="tool", tool="t", text="x", artifact_refs=[{"artifact_id": "a", "name": "n", "version": 2}]
     )
     assert Observation.model_validate(o.model_dump(mode="json")) == o
+
+
+# ------------------------------------------------------------------ private runs
+
+
+async def test_a_private_run_never_sees_or_uses_tools_that_reach_outside(
+    ae: AE, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def no_network(*_a: Any, **_k: Any) -> Any:
+        raise AssertionError("a private run reached the network")
+
+    monkeypatch.setattr(ae.c.safe_http, "request", no_network)
+    ae.provider.push(
+        call("web_search", {"query": "competitor pricing"}),
+        call("http_request", {"url": "https://example.com/"}),
+        finish("Could not look anything up", status="partial"),
+    )
+    agent = ae.agent(tools=["web_search", "http_request", "read_file"])
+    out = await ae.run(agent, private=True)
+    assert out.status is RunStatus.COMPLETED
+    tools_shown = (ae.provider.requests[0].system or "").split("## Your tools")[1]
+    assert (
+        "read_file" in tools_shown and "web_search" not in tools_shown and "http_request" not in tools_shown
+    )
+    _, steps = await ae.c.run_store.snapshot(out.run.id)
+    for s in steps[:2]:
+        assert s["observation"]["status"] == "denied" and s["observation"]["error_code"] == "private_run"
+    assert "kept on this device" in steps[0]["observation"]["text"]
+
+
+async def test_a_private_run_cannot_give_a_command_network_access(ae: AE) -> None:
+    ae.provider.push(call("run_command", {"argv": ["echo", "hi"], "network": True}), finish(status="partial"))
+    agent = ae.agent(tools=["run_command"], max_risk=RiskLevel.VERY_HIGH)
+    out = await ae.run(agent, private=True, permission_level=PermissionLevel.PERMISSIVE)
+    _, steps = await ae.c.run_store.snapshot(out.run.id)
+    assert steps[0]["observation"]["status"] == "denied"
+    assert "may not use the network" in steps[0]["observation"]["text"]
+    assert not await ae.c.approvals.list_approvals(project_id=ae.project_id)  # refused, nobody was asked
+
+
+async def test_the_same_tools_work_in_a_normal_run(ae: AE) -> None:
+    ae.provider.push(finish())
+    await ae.run(ae.agent(tools=["web_search", "read_file"]))
+    assert "web_search" in (ae.provider.requests[0].system or "").split("## Your tools")[1]

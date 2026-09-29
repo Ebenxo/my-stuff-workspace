@@ -31,6 +31,7 @@ from app.api.routers import (
     usage,
 )
 from app.core.clock import Clock
+from app.core.instance_lock import InstanceLock
 from app.core.logging import configure_logging
 from app.core.secrets import SecretStore
 from app.core.settings import Settings
@@ -57,19 +58,25 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         cfg.ensure_home()
-        await asyncio.to_thread(migrate.upgrade, cfg.sync_db_url)
-        container = await build_container(cfg, secrets=secrets, clock=clock, http=http)
-        app.state.container = container
-        await container.settings_service.get()  # ensure the settings row exists
-        await container.tool_row_store.sync(container.tools.mirror_rows())
-        await container.agent_service.sync_builtins()
-        await container.agent_service.recover()
-        await container.bus.emit(EventType.SYSTEM_STARTED, payload={"version": __version__})
-        log.info("NEXUS API %s ready on %s:%s (home=%s)", __version__, cfg.host, cfg.port, cfg.home)
+        # Before touching the database: recovery below would disrupt another live instance's runs.
+        instance = InstanceLock(cfg.home)
+        instance.acquire()
         try:
-            yield
+            await asyncio.to_thread(migrate.upgrade, cfg.sync_db_url)
+            container = await build_container(cfg, secrets=secrets, clock=clock, http=http)
+            app.state.container = container
+            try:
+                await container.settings_service.get()  # ensure the settings row exists
+                await container.tool_row_store.sync(container.tools.mirror_rows())
+                await container.agent_service.sync_builtins()
+                await container.agent_service.recover()
+                await container.bus.emit(EventType.SYSTEM_STARTED, payload={"version": __version__})
+                log.info("NEXUS API %s ready on %s:%s (home=%s)", __version__, cfg.host, cfg.port, cfg.home)
+                yield
+            finally:
+                await container.close()
         finally:
-            await container.close()
+            instance.release()
 
     app = FastAPI(
         title="NEXUS OS API",
@@ -80,6 +87,9 @@ def create_app(
         openapi_url="/api/openapi.json",
         generate_unique_id_function=_operation_id,
         separate_input_output_schemas=False,
+        # No trailing-slash redirects: they point at the API's own origin, so a browser behind the dev
+        # proxy (or any other origin) would follow them without its token. A wrong path is a 404.
+        redirect_slashes=False,
     )
     install_error_handlers(app)
     for module in (

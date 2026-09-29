@@ -36,6 +36,52 @@ export function describeEvent(e: EventRecord): EventView {
       return { text: `${str(p["role"]) ?? "user"} message added`, tone: "neutral" };
     case "NOTIFICATION_CREATED":
       return { text: str(p["title"]) ?? "Notification", tone: "info" };
+    case "AGENT_STARTED":
+      return { text: `${str(p["name"]) ?? "An agent"} started: ${str(p["prompt"]) ?? "a task"}`, tone: "accent" };
+    case "AGENT_STEP":
+      return { text: `Step ${String(p["n"] ?? "?")}: ${str(p["summary"]) ?? "working"}`, tone: "neutral" };
+    case "AGENT_COMPLETED":
+      return { text: `Agent finished: ${str(p["summary"]) ?? "done"}`, tone: "success" };
+    case "AGENT_FAILED":
+      return { text: `Agent stopped: ${str(p["message"]) ?? "it did not finish"}`, tone: "danger" };
+    case "AGENT_CANCELLED":
+      return { text: "Agent run cancelled", tone: "warning" };
+    case "AGENT_INTERRUPTED":
+      return { text: "Agent run interrupted; it can be resumed", tone: "warning" };
+    case "AGENT_RESUMED":
+      return { text: "Agent run resumed", tone: "accent" };
+    case "AGENT_MESSAGE":
+      return { text: `Agent asks: ${str(p["text"]) ?? "a question"}`, tone: "warning" };
+    case "TOOL_CALLED":
+      return { text: `Tool: ${str(p["tool"]) ?? "?"} (${(str(p["risk"]) ?? "?").toLowerCase()} risk)`, tone: "neutral" };
+    case "TOOL_COMPLETED":
+      return { text: `${str(p["tool"]) ?? "Tool"} finished`, tone: "success" };
+    case "TOOL_FAILED":
+      return { text: `${str(p["tool"]) ?? "Tool"} failed${str(p["code"]) ? ` (${str(p["code"])})` : ""}`, tone: "danger" };
+    case "TOOL_DENIED":
+      return { text: `${str(p["tool"]) ?? "Tool"} was refused${str(p["reason"]) ? `: ${str(p["reason"])}` : ""}`, tone: "danger" };
+    case "POLICY_DENIED":
+      return { text: `Blocked by policy: ${str(p["tool"]) ?? "an action"}`, tone: "danger" };
+    case "SECURITY_FLAG":
+      return { text: `Instruction-like text found in ${str(p["source"]) ?? "outside content"}; treated as data`, tone: "warning" };
+    case "APPROVAL_REQUIRED":
+      return { text: `Approval needed: ${str(p["tool"]) ?? "an action"}`, tone: "warning" };
+    case "APPROVAL_GRANTED":
+      return { text: `Approved: ${str(p["tool"]) ?? "an action"}`, tone: "success" };
+    case "APPROVAL_DENIED":
+      return { text: `Denied: ${str(p["tool"]) ?? "an action"}`, tone: "danger" };
+    case "APPROVAL_EDITED":
+      return { text: `Edited before approving: ${str(p["tool"]) ?? "an action"}`, tone: "info" };
+    case "ARTIFACT_CREATED":
+      return { text: `Saved ${str(p["name"]) ?? "a deliverable"}`, tone: "success" };
+    case "ARTIFACT_UPDATED":
+      return { text: `Updated ${str(p["name"]) ?? "a deliverable"} to v${String(p["version"] ?? "?")}`, tone: "success" };
+    case "FILE_WRITTEN":
+      return { text: `${p["created"] === true ? "Created" : "Updated"} ${str(p["path"]) ?? "a file"}`, tone: "neutral" };
+    case "FILE_DELETED":
+      return { text: `Moved ${str(p["path"]) ?? "a file"} to trash`, tone: "warning" };
+    case "CLIPBOARD_REQUEST":
+      return { text: `Copy offered: ${str(p["label"]) ?? "text"}`, tone: "info" };
     default:
       return {
         text: e.type.toLowerCase().replaceAll("_", " ").replace(/^./, (c) => c.toUpperCase()),
@@ -49,6 +95,13 @@ export function describeEvent(e: EventRecord): EventView {
       };
   }
 }
+
+/**
+ * Events that belong in the raw Events log but not in human-facing activity feeds: notifications
+ * repeat an event already shown (and live in the bell), and usage is bookkeeping for every model call.
+ */
+const BOOKKEEPING = new Set(["NOTIFICATION_CREATED", "USAGE_RECORDED"]);
+export const isActivityEvent = (e: EventRecord): boolean => !BOOKKEEPING.has(e.type);
 
 export const isErrorEvent = (e: EventRecord): boolean =>
   /(_FAILED|_ERROR|_DENIED)$/.test(e.type) || e.type === "SECURITY_FLAG";

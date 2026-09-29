@@ -3,6 +3,7 @@ import { ChevronDown, TerminalSquare } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { ActivityList } from "../features/events/ActivityList";
 import { isErrorEvent } from "../features/events/describe";
+import { ToolCallList } from "../features/tools/ToolCallList";
 import { useEvents } from "../stores/events";
 import { useUi, type BottomTab } from "../stores/ui";
 import { Terminal } from "./Terminal";
@@ -59,6 +60,7 @@ export function BottomPanel() {
         <div className="flex items-center justify-between border-b border-line pr-2">
           <TabsList className="border-b-0">
             <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger value="tools">Tools</TabsTrigger>
             <TabsTrigger value="errors">Errors</TabsTrigger>
             <TabsTrigger value="terminal">
               <span className="inline-flex items-center gap-1.5">
@@ -78,6 +80,9 @@ export function BottomPanel() {
         </div>
         <TabsContent value="events" className="min-h-0 flex-1">
           <Feed />
+        </TabsContent>
+        <TabsContent value="tools" className="min-h-0 flex-1 overflow-y-auto">
+          <ToolCallList limit={60} />
         </TabsContent>
         <TabsContent value="errors" className="min-h-0 flex-1">
           <Feed errorsOnly />

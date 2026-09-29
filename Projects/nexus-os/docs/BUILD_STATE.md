@@ -1,10 +1,22 @@
 # NEXUS OS — build state
 
-_Last updated: 2026-09-29 (end of Phase 2)_
+_Last updated: 2026-09-29 (end of Phases 3–4)_
 
 ## Current phase
 
-**Phase 2 — AI providers: complete.** Phases 0–2 done. Next: Phases 3–4 — single-agent runtime, tools, permissions, approvals.
+**Phases 3–4 — agent runtime, tools, permissions, approvals: complete.** Phases 0–4 done. Next: Phases 5–6, planner, orchestrator, task graph and the multi-agent team.
+
+### Added in Phases 3–4 (agent runtime, tools, permissions)
+
+- **Ten built-in agents** (Orchestrator, Planner, Researcher, Coder, Data Analyst, Writer, Designer, File Manager, Critic, Verifier) defined in code with role prompts, tool allow-lists, risk ceilings and limits; synced at startup; built-ins can be *tuned* (model, limits, tools, permissions, enabled) but not rewritten; custom agents can be created, edited and deleted.
+- **`AgentRunner`**: structured `AgentStep` loop (tool call / finish / ask the person) through the gateway with repair. Guards: step cap with a last-step warning, tool-call cap, token budget with an 85 % warning, working-time limit that excludes time waiting for a person, loop detection (nudge at 3 identical calls, stop at 5). Checkpoint after every step; resume after a crash, a restart or an answer; an in-flight action is never silently re-run; taint survives resume; cancel closes approvals and tool calls; app shutdown parks runs as `INTERRUPTED`; only artifacts the run really created appear in its result; the prompt and observations are stored redacted; old results are elided from the model's view (never from the checkpoint) to fit the context budget.
+- **Tools (22 built in):** filesystem (path-guarded, history on overwrite, soft delete to trash), artifacts (versioned), CSV/JSON parsing, calculator (safe AST), datetime, read-only SQLite queries (authorizer + time limit), sandboxed Python (stdlib only, no site-packages, scrubbed env), commands (always ask; denylist; working folder checked before anyone is asked), read-only git (hostile repo config neutralised), SSRF-safe HTTP, web search (SearXNG/Brave, user-configured), clipboard offer (needs a click).
+- **`ToolExecutor`**: the only path to a tool handler: allow-list → private-run check → schema validation → risk assessment → pure policy engine → approval (once / session / deny / edit, with re-validation and re-assessment of edits) → timeout → redaction and size cap → taint and injection scan → `ToolCall` row and events.
+- **Sandbox**: local subprocess backend with process-group kill, rlimits, network namespace isolation where the OS allows, scrubbed environment; `enforced` reports what was really applied.
+- **Private runs** ("Keep on this device"): local models only (router) and no tool that reaches off the machine (web, search, MCP, networked commands); hidden from the model and refused by the executor.
+- **APIs**: agents (CRUD, run), runs (list, detail with steps and tool calls, cancel, resume, answer), approvals (list, decide, session grants list/revoke), tools (catalogue, enable switch), tool calls, artifacts (list, versions, content), project files (list, read, write with history, soft delete) with the same path guard agents use.
+- **UI**: Agents page (team cards, run dialog, tune/create dialog with risk-ceiling warnings and validation), live run page (status, question box, approval cards, step timeline, result with artifact links, tool calls, cancel/resume), approval cards (what will happen, taint warning, approve once/for session/edit JSON/deny), Approvals page and side-panel tab with counts in the sidebar, project tabs (Files with editor, Deliverables with version picker and sandboxed preview, Runs, Tool activity, Approvals), Settings → Tools & approvals (per-tool switches, session grants), bottom-panel Tools tab, Command Center approval banner and recent runs, plain-language activity for every agent/tool/approval event, copy offers as a toast.
+- **Operations**: one API per data folder (OS lock taken before startup recovery); no trailing-slash redirects; `scripts/dev.py` refuses to start over an existing server and shuts down every child process on Ctrl-C or SIGTERM.
 
 ## What works today (verified by automated tests unless noted)
 
@@ -35,25 +47,54 @@ _Last updated: 2026-09-29 (end of Phase 2)_
 - **Tauri glue (`apps/desktop/src-tauri`) is written but has never been compiled** — the build container lacks webkit2gtk/GTK. Syntax-checked with `rustfmt` only.
 - Production packaging of the Python API for the desktop app (PyInstaller/externalBin) is not done.
 - OS keychain path is untested here (the container has no keychain); the file fallback is tested and reported as *degraded*.
-- The Command Center objective box is present but disabled until the planner/runtime exist (Phase 5).
+- Multi-step objectives are not built yet (planner and orchestrator arrive in Phase 5). The Command Center runs a single agent directly until then.
 - No live provider calls are possible in this environment (no API keys).
+- **Agents have run end to end only against scripted models**: the `ScriptedProvider` in tests, and in the live UI check a local OpenAI-compatible stand-in server that replays fixed steps. How well real models follow the step protocol is unverified; the structured-output repair loop and `INVALID_OUTPUT` handling are the safety net.
+- Sandbox limits are verified on Linux only (rlimits, process-group kill, network namespace). On Windows only the timeout, env scrubbing and working folder apply, and that path has not been run.
+- Memory tools (`search_memory`, `remember`) are Phase 7; agent allow-lists will gain them then.
 
 ## Testing status
 
 | Area | Result |
 |---|---|
-| Backend (pytest) | 220 passed |
-| Lint / format (ruff), strict types (mypy), import contracts | clean |
-| Frontend (vitest) | 39 passed (shared 9, web 30) |
+| Backend (pytest) | 714 passed |
+| Lint / format (ruff), strict types (mypy), import contracts (3) | clean |
+| Frontend (vitest) | 83 passed (shared 9, web 74) |
 | ESLint, `tsc` (all packages) | clean |
 | Web production build | ok |
 | Rust sidecar (`cargo test`) | 8 passed |
 | API-type drift (`scripts/gen_openapi.py --check`) | up to date |
-| E2E (Playwright) | ad-hoc screenshots only so far; scripted E2E arrives with the demo objective (Phase 10) |
+| Live UI check (Playwright, real API + web app, local stand-in model) | run a Writer that saves an artifact; run a File Manager whose delete waits for approval (file verified present before and gone after); answer an agent's question; browse files, deliverables, runs and tool activity; Tools settings. No console errors; no horizontal overflow at 390 px. Screenshots checked by eye |
+| Scripted E2E | arrives with the demo objective (Phase 10) |
 
 Run everything: `python scripts/check.py`.
 
-## Architecture decisions made in this phase
+## Architecture decisions made in Phases 3–4
+
+- Agents never import the ORM; they use repository stores that return DTOs. The import contract forbids *direct* imports (the stores naturally depend on the ORM).
+- The agent protocol is one structured `AgentStep` per model turn (provider-native structured output plus repair), not provider-specific tool calling, so every provider, including local models, behaves the same and every action lands in the executor.
+- Runs execute as supervised asyncio tasks, not on the bounded job queue: a run parked on an approval can wait a day and must not hold a worker slot. At most 8 run at once.
+- The checkpoint records the proposed action before it executes, so recovery can tell "done" from "may have happened"; the latter is reported to the agent, never replayed.
+- Time waiting for a person is excluded from an agent's working-time limit.
+- Private means private: besides local-only models, tools that reach off the machine are unavailable (hidden and refused).
+- Session approvals live in memory: they end when NEXUS restarts, by design.
+
+## Bugs found by tests and live checks in Phases 3–4 (all fixed, with regression tests)
+
+- **A second API instance on the same data folder interrupted the first one's live runs**: startup recovery ran before the port bind failed. Found live when a stale dev server was still running. Now an OS lock on the data folder is taken before any startup work.
+- **Trailing-slash redirects leaked past the dev proxy**: the run page asked for `/api/projects/` before it knew the project, FastAPI redirected to the API's own origin, and the browser followed without its token (401s in the console). Fixed both ends: no redirects at all, and the query waits for an id.
+- `scripts/dev.py` left Vite and the API running after it was stopped (children inherited an ignored SIGINT; pnpm does not forward signals), and reported "ready" against an old server on the same port.
+- The Activity panel showed each approval and completion twice (notification events repeated them) plus a "Usage recorded" line per model call; these stay in the raw Events tab only.
+- **The sandbox could hang until its timeout after an output flood**: once the output cap was hit it stopped reading, asyncio paused the full pipe and never saw EOF after the kill, and `proc.wait()` waits for the pipes. Seen once as an intermittent full-suite failure; reproduced deterministically by delaying the kill; fixed by reading (and discarding) until EOF.
+- Recursive CTEs were refused by the SQLite authorizer instead of being time-limited.
+- `run_command` with an impossible working folder asked a person to approve a command that could never start.
+- A cancel that arrived while a tool call was being set up for approval left the call "awaiting approval" forever.
+- Approval cards could appear before the tool call's status said it was waiting (ordering).
+- A run's status can briefly lag its new approval (the approval row is written first, then the run is marked waiting). A test assumed otherwise and failed intermittently; tests now wait for the status, and the UI refreshes on the approval event.
+- `TOOLS.md` promised that web search was blocked for private runs; it was not. Now it is, for every outside-reaching tool.
+- `SECURITY.md` claimed dependency audits ran in `scripts/check.py`; they do not (corrected; scheduled for Phase 10).
+
+## Architecture decisions made in earlier phases
 
 - One Python service with import-linter-enforced layers (see `pyproject.toml`); runtime modules may not import FastAPI, and orchestration/agents may not touch the ORM.
 - Migrations live inside the package (`app/migrations`) and are independent of app code (custom type rendered as plain `DateTime`).
@@ -80,4 +121,4 @@ Run everything: `python scripts/check.py`.
 
 ## Next
 
-Phases 3–4: `AgentDefinition`/`AgentRun`, the agent loop with all guards (max steps, timeout, tool-use and token limits, retries, loop detection) and checkpointing; `ToolRegistry`; path-guarded filesystem tools; sandboxed Python and command execution; the policy engine, approvals (once / session / deny / edit) and taint tracking; artifact store with versions; one agent running a real tool-using task end to end (scripted provider), with UI for approvals and tool activity.
+Phases 5–6: `Objective`, `Task`, `TaskDependency` tables (migration `0003`); `PlanResult` from the Planner with a validator (DAG, known agents, tools on allow-lists, approvals flagged); `TaskGraph` (topological order, ready set, cycle detection, downstream cancellation); a strategy estimator that picks the cheapest shape (single agent, pipeline, parallel, reviewer); the orchestrator executing tasks with bounded concurrency through `AgentRunner`, passing upstream outputs as fenced context, with deterministic recovery per failure category; Critic review → revision loop; Verifier with PASS/PARTIAL/FAIL and one replan; agent messages as events; objective APIs (create, plan preview, edit plan, run, auto-run safe steps, cancel, retry task); the Command Center objective box, plan preview and task-graph view; the demo project (clearly labelled, scripted).

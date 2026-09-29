@@ -1052,6 +1052,11 @@ export interface components {
             objective_id: string | null;
             /** Project Id */
             project_id: string | null;
+            /**
+             * Prompt
+             * @default
+             */
+            prompt?: string;
             /** Result */
             result: {
                 [key: string]: unknown;

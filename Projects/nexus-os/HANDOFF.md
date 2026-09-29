@@ -30,3 +30,11 @@ Shared log between Claude Code and Codex (neither shares chat history). Read `do
 **Not verified:** successful live generation on any cloud provider (no valid keys); Gemini native schema per model.
 **Owner action (optional):** to verify live, add a real key in Settings → AI providers and press Test connection.
 **Next:** Phases 3–4, agent runtime + tools + permissions.
+
+## 2026-09-29 — Phases 3–4 (agent runtime, tools, permissions) — Claude Code
+
+**Built:** ten built-in agents; the agent loop with every guard (steps, tool calls, tokens, working time excluding waits for a person, loop detection), checkpoints, resume, cancel and startup recovery; 22 tools behind one executor (policy engine, approvals once/session/deny/edit, taint tracking, injection flags, sandbox, SSRF guard, path guard, versioned artifacts); private runs that cannot reach off the machine; APIs for agents, runs, approvals, tools, tool calls, artifacts and project files; UI for the team, live runs, approval cards, project files/deliverables/runs/tool activity, and tool switches.
+**Verified:** `python scripts/check.py` green (714 pytest, 83 vitest, 8 cargo, ruff, mypy strict, 3 import contracts, eslint, tsc, build, API-type drift). Real API + web app driven with Playwright against a local stand-in model: an agent saved a deliverable; a delete waited for approval (file present before, gone after); an agent's question was answered; no console errors; no overflow at 390 px; screenshots checked by eye.
+**Bugs the live check found (fixed, with tests):** a second API on the same data folder interrupted the first's live runs (now an OS lock on the folder); trailing-slash redirects bypassed the dev proxy's token (redirects disabled); `scripts/dev.py` orphaned its children and could report "ready" against an old server; duplicated lines in the Activity panel. Also corrected two docs that claimed things that were not true (web search blocked for private runs — now implemented; dependency audits in `check.py` — not yet, scheduled for Phase 10).
+**Not verified:** agents with a real model (only scripted ones here); Windows sandbox path; Tauri build (no webkit here).
+**Next:** Phases 5–6, planner, orchestrator, task graph, multi-agent review and verification, demo project.

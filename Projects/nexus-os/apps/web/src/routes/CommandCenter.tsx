@@ -1,9 +1,13 @@
 import { formatRelativeTime, greeting } from "@nexus/shared";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, EmptyState, ErrorState, Skeleton } from "@nexus/ui";
-import { ArrowRight, FolderPlus, Plus, Sparkles } from "lucide-react";
+import { ArrowRight, FolderPlus, Plus, ShieldAlert, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
+import { RunAgentDialog } from "../features/agents/RunAgentDialog";
+import { RunList } from "../features/agents/RunList";
+import { usePendingApprovalCount } from "../lib/agentQueries";
 import { ActivityList } from "../features/events/ActivityList";
+import { isActivityEvent } from "../features/events/describe";
 import { NewProjectDialog } from "../features/projects/NewProjectDialog";
 import { ProjectCard } from "../features/projects/ProjectCard";
 import { errorMessage, useHealth, useProjects, useProviders, useSettings, useUnreadCount } from "../lib/queries";
@@ -32,8 +36,10 @@ export function CommandCenterRoute() {
   const health = useHealth();
   const eventCount = useEvents((s) => s.events.length);
   const events = useEvents((s) => s.events);
-  const recent = useMemo(() => [...events].reverse().slice(0, 8), [events]);
+  const recent = useMemo(() => events.filter(isActivityEvent).reverse().slice(0, 8), [events]);
   const [creating, setCreating] = useState(false);
+  const [running, setRunning] = useState(false);
+  const pendingApprovals = usePendingApprovalCount();
   const name = settings.data?.display_name?.trim();
 
   const status = health.data?.status;
@@ -61,6 +67,23 @@ export function CommandCenterRoute() {
         </div>
       ) : null}
 
+      {pendingApprovals > 0 ? (
+        <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3">
+          <p className="flex items-center gap-2 text-[13px] text-fg">
+            <ShieldAlert className="size-4 text-warning" aria-hidden="true" />
+            <span>
+              <strong className="font-medium">
+                {pendingApprovals} {pendingApprovals === 1 ? "action is" : "actions are"} waiting for your approval.
+              </strong>{" "}
+              <span className="text-fg-muted">The agents will wait until you decide.</span>
+            </span>
+          </p>
+          <Button asChild size="sm" variant="primary">
+            <Link to="/approvals">Review</Link>
+          </Button>
+        </div>
+      ) : null}
+
       <div className="mb-8 rounded-xl border border-line-strong bg-surface p-3 shadow-sm">
         <label htmlFor="objective" className="sr-only">
           Objective
@@ -75,10 +98,10 @@ export function CommandCenterRoute() {
         <div className="flex items-center justify-between gap-3 px-2 pt-1">
           <p className="flex items-center gap-1.5 text-xs text-fg-muted">
             <Sparkles className="size-3.5" aria-hidden="true" />
-            Objectives arrive with the planner and agent runtime, in the next build phases.
+            Multi-step objectives arrive with the planner. Until then, run a specialist agent directly.
           </p>
-          <Button variant="primary" size="sm" disabled>
-            Start
+          <Button variant="primary" size="sm" onClick={() => setRunning(true)}>
+            Run an agent
           </Button>
         </div>
       </div>
@@ -149,6 +172,21 @@ export function CommandCenterRoute() {
         )}
       </Section>
 
+      <Section
+        title="Recent agent runs"
+        action={
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/agents">
+              Agents <ArrowRight />
+            </Link>
+          </Button>
+        }
+      >
+        <Card>
+          <RunList filter={{ limit: 5 }} />
+        </Card>
+      </Section>
+
       <Section title="Recent activity">
         <Card>
           {recent.length === 0 ? (
@@ -164,6 +202,7 @@ export function CommandCenterRoute() {
         </Card>
       </Section>
       <NewProjectDialog open={creating} onOpenChange={setCreating} />
+      <RunAgentDialog open={running} onOpenChange={setRunning} />
     </Page>
   );
 }

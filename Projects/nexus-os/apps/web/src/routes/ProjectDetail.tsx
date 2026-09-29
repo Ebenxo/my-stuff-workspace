@@ -1,15 +1,26 @@
 import { ApiError } from "@nexus/shared";
 import { formatRelativeTime } from "@nexus/shared";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, EmptyState, ErrorState, Skeleton, toast } from "@nexus/ui";
-import { Archive, ArchiveRestore, Pencil } from "lucide-react";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, EmptyState, ErrorState, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger, toast } from "@nexus/ui";
+import { Archive, ArchiveRestore, Pencil, Play } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
+import { RunAgentDialog } from "../features/agents/RunAgentDialog";
+import { RunList } from "../features/agents/RunList";
+import { ApprovalsPanel } from "../features/approvals/ApprovalsPanel";
 import { ActivityList } from "../features/events/ActivityList";
+import { isActivityEvent } from "../features/events/describe";
+import { ArtifactsTab } from "../features/files/ArtifactsTab";
+import { FilesTab } from "../features/files/FilesTab";
 import { ProjectForm } from "../features/projects/ProjectForm";
 import { PERMISSION_COPY } from "../features/projects/permissions";
+import { ToolCallList } from "../features/tools/ToolCallList";
+import { useApprovals } from "../lib/agentQueries";
 import { errorMessage, useProject, useSetProjectArchived, useSettings, useUpdateProject } from "../lib/queries";
 import { useEvents } from "../stores/events";
 import { Page, PageHeader, Section } from "./Page";
+
+const TABS = ["overview", "files", "artifacts", "runs", "tools", "approvals"] as const;
+type ProjectTab = (typeof TABS)[number];
 
 export function ProjectDetailRoute() {
   const { projectId = "" } = useParams();
@@ -18,9 +29,14 @@ export function ProjectDetailRoute() {
   const update = useUpdateProject(projectId);
   const archive = useSetProjectArchived();
   const [editing, setEditing] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const tabParam = params.get("tab");
+  const tab: ProjectTab = (TABS as readonly string[]).includes(tabParam ?? "") ? (tabParam as ProjectTab) : "overview";
+  const pending = useApprovals("PENDING", projectId);
   const events = useEvents((s) => s.events);
   const projectEvents = useMemo(
-    () => events.filter((e) => e.project_id === projectId).slice(-30).reverse(),
+    () => events.filter((e) => e.project_id === projectId && isActivityEvent(e)).slice(-30).reverse(),
     [events, projectId],
   );
 
@@ -70,6 +86,9 @@ export function ProjectDetailRoute() {
         }
         actions={
           <>
+            <Button size="sm" variant="primary" disabled={archived} onClick={() => setRunning(true)}>
+              <Play /> Run an agent
+            </Button>
             <Button size="sm" onClick={() => setEditing(true)}>
               <Pencil /> Edit
             </Button>
@@ -94,6 +113,32 @@ export function ProjectDetailRoute() {
         }
       />
 
+      <Tabs
+        value={tab}
+        onValueChange={(v) => {
+          const next = new URLSearchParams(params);
+          if (v === "overview") next.delete("tab");
+          else next.set("tab", v);
+          setParams(next, { replace: true });
+        }}
+      >
+        <TabsList className="mb-5 overflow-x-auto">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="files">Files</TabsTrigger>
+          <TabsTrigger value="artifacts">Deliverables</TabsTrigger>
+          <TabsTrigger value="runs">Runs</TabsTrigger>
+          <TabsTrigger value="tools">Tool activity</TabsTrigger>
+          <TabsTrigger value="approvals">
+            Approvals
+            {pending.data && pending.data.length > 0 ? (
+              <Badge tone="warning" className="ml-1.5">
+                {pending.data.length}
+              </Badge>
+            ) : null}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
       <div className="mb-8 grid gap-3 sm:grid-cols-3">
         <Card>
           <CardHeader>
@@ -135,6 +180,32 @@ export function ProjectDetailRoute() {
           )}
         </Card>
       </Section>
+        </TabsContent>
+
+        <TabsContent value="files">
+          <FilesTab projectId={projectId} />
+        </TabsContent>
+        <TabsContent value="artifacts">
+          <ArtifactsTab projectId={projectId} />
+        </TabsContent>
+        <TabsContent value="runs">
+          <Card>
+            <RunList filter={{ projectId, limit: 30 }} empty="Run an agent in this project and its work will be listed here." />
+          </Card>
+        </TabsContent>
+        <TabsContent value="tools">
+          <Card>
+            <ToolCallList projectId={projectId} limit={100} />
+          </Card>
+        </TabsContent>
+        <TabsContent value="approvals">
+          <Card>
+            <ApprovalsPanel projectId={projectId} />
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <RunAgentDialog open={running} onOpenChange={setRunning} projectId={projectId} />
 
       <Dialog
         open={editing}

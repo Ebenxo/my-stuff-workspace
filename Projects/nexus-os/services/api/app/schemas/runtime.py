@@ -67,6 +67,7 @@ class AgentRunOut(BaseModel):
     project_id: str | None
     objective_id: str | None
     task_id: str | None
+    prompt: str = ""
     status: RunStatus
     model: str | None
     step_count: int

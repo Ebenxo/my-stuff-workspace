@@ -64,6 +64,11 @@ class AgentRun(Base):
     started_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_default)
     finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
 
+    @property
+    def prompt(self) -> str:
+        """The task in the person's words (already redacted at write time), for run lists."""
+        return str((self.request or {}).get("prompt", ""))[:200]
+
 
 class Tool(Base):
     __tablename__ = "tools"

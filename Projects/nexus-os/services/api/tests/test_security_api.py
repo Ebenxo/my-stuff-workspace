@@ -27,6 +27,13 @@ async def test_valid_token_accepted(client: httpx.AsyncClient) -> None:
     assert (await client.get("/api/projects")).status_code == 200
 
 
+async def test_no_trailing_slash_redirects(client: httpx.AsyncClient) -> None:
+    # A redirect names the API's own origin; a browser behind the dev proxy would follow it without
+    # its token (found live: "/api/projects/" answered 307 -> 401). A wrong path is simply a 404.
+    r = await client.get("/api/projects/")
+    assert r.status_code == 404 and "location" not in r.headers
+
+
 async def test_dns_rebinding_host_rejected(client: httpx.AsyncClient) -> None:
     r = await client.get("/api/projects", headers={"Host": "evil.example.com"})
     assert r.status_code == 403

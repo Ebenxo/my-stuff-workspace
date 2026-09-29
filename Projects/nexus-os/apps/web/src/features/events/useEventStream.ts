@@ -1,5 +1,6 @@
 import { parseEventRecord } from "@nexus/schemas";
 import { authHeaders, streamEvents, unwrap } from "@nexus/shared";
+import { toast } from "@nexus/ui";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { api, runtimeConfig } from "../../lib/api";
@@ -9,9 +10,34 @@ const INVALIDATIONS: [RegExp, string[][]][] = [
   [/^PROJECT_/, [["projects"], ["project"]]],
   [/^(CONVERSATION|MESSAGE)_/, [["conversations"], ["messages"]]],
   [/^NOTIFICATION_/, [["notifications"]]],
-  [/^SETTINGS_/, [["settings"]]],
+  [/^SETTINGS_/, [["settings"], ["tools"]]],
   [/^SYSTEM_/, [["health"]]],
+  [/^AGENT_/, [["runs"], ["run"], ["agents"]]],
+  [/^(TOOL_|POLICY_|SECURITY_)/, [["tool-calls"], ["run"]]],
+  [/^APPROVAL_/, [["approvals"], ["approval-grants"], ["run"], ["runs"], ["tool-calls"]]],
+  [/^ARTIFACT_/, [["artifacts"], ["artifact"], ["artifact-versions"]]],
+  [/^FILE_/, [["files"], ["file"]]],
 ];
+
+/** A tool can offer text to copy. Nothing is copied until the person clicks: browsers need a user gesture. */
+function offerClipboard(payload: Record<string, unknown>): void {
+  const text = typeof payload["text"] === "string" ? payload["text"] : "";
+  if (!text) return;
+  const label = typeof payload["label"] === "string" && payload["label"] ? payload["label"] : "Copy text";
+  toast(label, {
+    description: text.length > 80 ? `${text.slice(0, 80)}…` : text,
+    duration: 30_000,
+    action: {
+      label: "Copy",
+      onClick: () => {
+        navigator.clipboard.writeText(text).then(
+          () => toast.success("Copied"),
+          () => toast.error("Couldn’t copy. Select the text and copy it yourself."),
+        );
+      },
+    },
+  });
+}
 
 function makeInvalidator(qc: QueryClient) {
   const pending = new Set<string>();
@@ -71,6 +97,7 @@ export function useEventStream(): void {
             if (!record) return;
             add([record]);
             invalidator.note(record.type);
+            if (record.type === "CLIPBOARD_REQUEST") offerClipboard(record.payload);
           } catch {
             // A malformed frame is dropped; the audit log remains the source of truth.
           }
