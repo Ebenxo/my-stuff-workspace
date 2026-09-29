@@ -36,31 +36,61 @@ class RT:
     def approvals(self) -> ApprovalService:
         return self.c.approvals
 
-    async def ectx(self, *, unattended: bool = False, taint: TaintTracker | None = None, level: PermissionLevel | None = None,
-                   agent: AgentDefinition | None = None, ttl: float | None = 30) -> ExecContext:
+    async def ectx(
+        self,
+        *,
+        unattended: bool = False,
+        taint: TaintTracker | None = None,
+        level: PermissionLevel | None = None,
+        agent: AgentDefinition | None = None,
+        ttl: float | None = 30,
+    ) -> ExecContext:
         agent = agent or self.agent
         run_id = new_id("run")
-        tctx = await self.c.tool_contexts.build(project_id=self.project_id, run_id=run_id, agent_id=agent.id, unattended=unattended)
+        tctx = await self.c.tool_contexts.build(
+            project_id=self.project_id, run_id=run_id, agent_id=agent.id, unattended=unattended
+        )
 
         async def on_wait(a: ApprovalOut | None) -> None:
             self.waits.append(a.id if a else None)
 
-        return ExecContext(project_id=self.project_id, run_id=run_id, task_id=None, objective_id=None, agent=agent,
-                           permission_level=level or self.level, tool_context=tctx, taint=taint or TaintTracker(), unattended=unattended,
-                           on_wait=on_wait, approval_ttl_s=ttl)
+        return ExecContext(
+            project_id=self.project_id,
+            run_id=run_id,
+            task_id=None,
+            objective_id=None,
+            agent=agent,
+            permission_level=level or self.level,
+            tool_context=tctx,
+            taint=taint or TaintTracker(),
+            unattended=unattended,
+            on_wait=on_wait,
+            approval_ttl_s=ttl,
+        )
 
-    async def call(self, name: str, args: dict[str, Any], ectx: ExecContext | None = None, summary: str = "test") -> ToolOutcome:
+    async def call(
+        self, name: str, args: dict[str, Any], ectx: ExecContext | None = None, summary: str = "test"
+    ) -> ToolOutcome:
         return await self.executor.execute(ectx or await self.ectx(), name, args, summary=summary)
 
-    async def pending(self, timeout: float = 5.0) -> ApprovalOut:
+    async def pending(self, wait_s: float = 5.0) -> ApprovalOut:
         """Wait for a run to park on an approval, and return it."""
-        deadline = asyncio.get_running_loop().time() + timeout
+        deadline = asyncio.get_running_loop().time() + wait_s
         while asyncio.get_running_loop().time() < deadline:
             found = await self.approvals.list_approvals(status="PENDING", project_id=self.project_id)
             if found:
                 return found[0]
             await asyncio.sleep(0.02)
         raise AssertionError("no approval was requested")
+
+    async def approved(
+        self, name: str, args: dict[str, Any], decision: str = "approve_once", ectx: ExecContext | None = None
+    ) -> tuple[ToolOutcome, ApprovalOut]:
+        """Run a call that needs a person: wait for the approval, decide, return the outcome and the approval."""
+        task = asyncio.create_task(self.call(name, args, ectx))
+        approval = await self.pending()
+        await self.decide(approval, decision)
+        return await asyncio.wait_for(task, 15), approval
 
     async def decide(self, approval: ApprovalOut, decision: str, **kw: Any) -> ApprovalOut:
         return await self.approvals.decide(approval.id, ApprovalDecision(decision=decision, **kw))  # type: ignore[arg-type]
@@ -72,13 +102,32 @@ class RT:
 ALL_TOOLS = ["*"]
 
 
-def make_agent(*, tools: list[str] | None = None, max_risk: RiskLevel = RiskLevel.HIGH, may_ask: bool = True, slug: str = "tester") -> AgentDefinition:
-    return AgentDefinition(id=new_id("agent"), slug=slug, name="Tester", role="Testing", tools=tools if tools is not None else ["*"],
-                           permissions=AgentPermissions(max_risk=max_risk, may_request_approval=may_ask))
+def make_agent(
+    *,
+    tools: list[str] | None = None,
+    max_risk: RiskLevel = RiskLevel.HIGH,
+    may_ask: bool = True,
+    slug: str = "tester",
+) -> AgentDefinition:
+    return AgentDefinition(
+        id=new_id("agent"),
+        slug=slug,
+        name="Tester",
+        role="Testing",
+        tools=tools if tools is not None else ["*"],
+        permissions=AgentPermissions(max_risk=max_risk, may_request_approval=may_ask),
+    )
 
 
-async def make_rt(app: FastAPI, *, level: PermissionLevel = PermissionLevel.BALANCED, tools: list[str] | None = None,
-                  max_risk: RiskLevel = RiskLevel.HIGH, may_ask: bool = True, name: str = "Tool Tests") -> RT:
+async def make_rt(
+    app: FastAPI,
+    *,
+    level: PermissionLevel = PermissionLevel.BALANCED,
+    tools: list[str] | None = None,
+    max_risk: RiskLevel = RiskLevel.HIGH,
+    may_ask: bool = True,
+    name: str = "Tool Tests",
+) -> RT:
     c: AppContainer = app.state.container
     project = await c.projects.create(ProjectCreate(name=name))
     agent = make_agent(tools=tools, max_risk=max_risk, may_ask=may_ask)

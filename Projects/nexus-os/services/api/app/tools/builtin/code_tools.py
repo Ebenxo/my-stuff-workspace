@@ -142,6 +142,12 @@ def _assess_command(ctx: ToolContext, a: RunCommandArgs) -> RiskAssessment:
     )
     if base.deny_reason:
         return base
+    try:  # fail before asking a person to approve a command that could never start
+        clean, cwd = ctx.fs.resolve(a.cwd, Access.WRITE)
+    except FsError as e:
+        return RiskAssessment(deny_reason=e.message)
+    if not cwd.is_dir():
+        return RiskAssessment(deny_reason=f"Working folder '{clean}' does not exist.")
     caps = ctx.sandbox.capabilities()
     note = ""
     if not a.network and "network_isolation" not in caps.enforced:

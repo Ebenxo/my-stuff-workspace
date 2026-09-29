@@ -22,6 +22,7 @@ from app.tools.base import Capability, ToolContext, ToolDefinition, ToolError
 from app.tools.safeexpr import ExpressionError, evaluate
 
 MAX_CSV_ROWS = 200_000
+QUERY_TIMEOUT_S = 8.0
 
 
 def _num(v: str) -> float | None:
@@ -223,7 +224,13 @@ class DatabaseQueryArgs(BaseModel):
 
 
 _SELECT = re.compile(r"^\s*(?:--[^\n]*\n\s*|/\*.*?\*/\s*)*(select|with)\b", re.IGNORECASE | re.DOTALL)
-_ALLOWED_ACTIONS = {sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ, sqlite3.SQLITE_FUNCTION}
+# Recursive CTEs are read-only; the progress handler below bounds how long they can run.
+_ALLOWED_ACTIONS = {
+    sqlite3.SQLITE_SELECT,
+    sqlite3.SQLITE_READ,
+    sqlite3.SQLITE_FUNCTION,
+    getattr(sqlite3, "SQLITE_RECURSIVE", 33),
+}
 
 
 def _query_sync(db_path: str, sql: str, max_rows: int, timeout_s: float) -> dict[str, Any]:
@@ -254,7 +261,7 @@ async def database_query(ctx: ToolContext, a: DatabaseQueryArgs) -> dict[str, An
     if path.suffix.lower() not in (".db", ".sqlite", ".sqlite3") or not path.is_file():
         raise ToolError("That is not a SQLite database file (.db, .sqlite, .sqlite3).", code="not_a_database")
     try:
-        return await asyncio.to_thread(_query_sync, path.as_posix(), a.sql, a.max_rows, 8.0)
+        return await asyncio.to_thread(_query_sync, path.as_posix(), a.sql, a.max_rows, QUERY_TIMEOUT_S)
     except sqlite3.OperationalError as exc:
         msg = str(exc)
         raise ToolError(
