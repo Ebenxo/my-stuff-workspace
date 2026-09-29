@@ -10,14 +10,13 @@ import asyncio
 import logging
 from typing import Any
 
-from app.agents.builtin import BUILTIN_AGENTS
+from app.agents.builtin import BUILTIN_AGENTS, task_class_for
 from app.agents.runner import AgentRunner, RunRequest
 from app.core.clock import Clock, SystemClock
 from app.core.errors import ConflictError, NotFoundError
 from app.events.bus import EventBus
 from app.events.types import EventType
 from app.permissions.approvals import ApprovalService
-from app.providers.router import TaskClass
 from app.repositories.runtime_store import AgentStore, RunStore, ToolCallStore
 from app.schemas.agents import AgentCreate, AgentDefinition, AgentUpdate
 from app.schemas.runtime import AgentRunOut, AgentRunRequest, RunStatus, ToolCallOut
@@ -27,20 +26,6 @@ from app.services.settings import SettingsService
 
 log = logging.getLogger(__name__)
 MAX_ACTIVE_RUNS = 8
-CODING_AGENTS = frozenset({"coder"})
-PLANNING_AGENTS = frozenset({"planner", "orchestrator"})
-DOCUMENT_AGENTS = frozenset({"writer", "researcher"})
-
-
-def task_class_for(agent: AgentDefinition) -> TaskClass:
-    """Which tier of model suits this agent's work (the router turns it into a model)."""
-    if agent.slug in CODING_AGENTS:
-        return TaskClass.CODING
-    if agent.slug in PLANNING_AGENTS:
-        return TaskClass.PLANNING
-    if agent.slug in DOCUMENT_AGENTS:
-        return TaskClass.LONG_DOCUMENT
-    return TaskClass.GENERAL
 
 
 class AgentService:
@@ -146,9 +131,7 @@ class AgentService:
             )
             return
         if outcome.status is RunStatus.COMPLETED:
-            await self._notify(
-                outcome.run, "finished", (outcome.result.summary if outcome.result else "")[:200]
-            )
+            await self._notify(outcome.run, "finished", outcome.summary[:200])
         elif outcome.status is RunStatus.WAITING_INPUT:
             await self._notify(outcome.run, "has a question", (outcome.question or "")[:200])
         elif outcome.status in (RunStatus.FAILED, RunStatus.TIMED_OUT):

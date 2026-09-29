@@ -270,6 +270,68 @@
         "title": "AgentDefinition",
         "type": "object"
       },
+      "AgentMessage": {
+        "description": "Structured collaboration record. Persisted as an AGENT_MESSAGE event.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "recipient": {
+            "title": "Recipient",
+            "type": "string"
+          },
+          "sender": {
+            "title": "Sender",
+            "type": "string"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "TASK_REQUEST",
+              "TASK_RESULT",
+              "QUESTION",
+              "ERROR",
+              "STATUS",
+              "REVIEW_REQUEST",
+              "REVIEW_RESULT",
+              "APPROVAL_REQUIRED"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sender",
+          "recipient",
+          "task_id",
+          "type",
+          "timestamp"
+        ],
+        "title": "AgentMessage",
+        "type": "object"
+      },
       "AgentPermissions": {
         "additionalProperties": false,
         "description": "What an agent may even *propose*. The policy engine still judges every action.",
@@ -1970,6 +2032,250 @@
         "title": "NotificationOut",
         "type": "object"
       },
+      "ObjectiveCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "model": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Manual model: '<provider_id>:<model>'",
+            "title": "Model"
+          },
+          "private": {
+            "default": false,
+            "title": "Private",
+            "type": "boolean"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "run_mode": {
+            "default": "review_plan",
+            "enum": [
+              "review_plan",
+              "auto"
+            ],
+            "title": "Run Mode",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 20000,
+            "minLength": 3,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "project_id",
+          "text"
+        ],
+        "title": "ObjectiveCreate",
+        "type": "object"
+      },
+      "ObjectiveDetail": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/AgentMessage"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "objective": {
+            "$ref": "#/components/schemas/ObjectiveOut"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/TaskOut"
+            },
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "objective",
+          "tasks",
+          "messages"
+        ],
+        "title": "ObjectiveDetail",
+        "type": "object"
+      },
+      "ObjectiveOut": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "execution_mode": {
+            "title": "Execution Mode",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plan"
+          },
+          "private": {
+            "title": "Private",
+            "type": "boolean"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "replan_count": {
+            "title": "Replan Count",
+            "type": "integer"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "run_mode": {
+            "title": "Run Mode",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ObjectiveStatus"
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "text",
+          "status",
+          "run_mode",
+          "execution_mode",
+          "strategy",
+          "plan",
+          "result",
+          "error",
+          "model",
+          "private",
+          "replan_count",
+          "created_at",
+          "updated_at",
+          "completed_at"
+        ],
+        "title": "ObjectiveOut",
+        "type": "object"
+      },
+      "ObjectiveRun": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "default": "normal",
+            "enum": [
+              "normal",
+              "safe_only"
+            ],
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "title": "ObjectiveRun",
+        "type": "object"
+      },
+      "ObjectiveStatus": {
+        "enum": [
+          "RECEIVED",
+          "PLANNING",
+          "AWAITING_PLAN_APPROVAL",
+          "RUNNING",
+          "VERIFYING",
+          "PAUSED",
+          "COMPLETED",
+          "PARTIAL",
+          "FAILED",
+          "CANCELLED"
+        ],
+        "title": "ObjectiveStatus",
+        "type": "string"
+      },
       "PermissionLevel": {
         "enum": [
           "cautious",
@@ -1978,6 +2284,130 @@
         ],
         "title": "PermissionLevel",
         "type": "string"
+      },
+      "PlanEdit": {
+        "additionalProperties": false,
+        "description": "Replace the plan's tasks before it runs. Validated exactly like a plan from the Planner.",
+        "properties": {
+          "completion_criteria": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 15,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Criteria"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/PlanTask"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tasks"
+        ],
+        "title": "PlanEdit",
+        "type": "object"
+      },
+      "PlanTask": {
+        "properties": {
+          "agent": {
+            "description": "Slug of the specialist, e.g. 'researcher'.",
+            "maxLength": 60,
+            "title": "Agent",
+            "type": "string"
+          },
+          "approval_required": {
+            "default": false,
+            "title": "Approval Required",
+            "type": "boolean"
+          },
+          "complexity": {
+            "default": "small",
+            "enum": [
+              "trivial",
+              "small",
+              "medium",
+              "large"
+            ],
+            "title": "Complexity",
+            "type": "string"
+          },
+          "depends_on": {
+            "items": {
+              "pattern": "^[A-Za-z0-9_-]{1,24}$",
+              "type": "string"
+            },
+            "maxItems": 12,
+            "title": "Depends On",
+            "type": "array"
+          },
+          "description": {
+            "description": "What to do and what good output looks like.",
+            "maxLength": 4000,
+            "title": "Description",
+            "type": "string"
+          },
+          "expected_outputs": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Expected Outputs",
+            "type": "array"
+          },
+          "key": {
+            "description": "Short id used in depends_on, e.g. 't1'.",
+            "pattern": "^[A-Za-z0-9_-]{1,24}$",
+            "title": "Key",
+            "type": "string"
+          },
+          "optional": {
+            "default": false,
+            "title": "Optional",
+            "type": "boolean"
+          },
+          "review": {
+            "default": false,
+            "description": "Have the Critic review this task's output.",
+            "title": "Review",
+            "type": "boolean"
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "tools": {
+            "description": "Tools it will likely need.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "description",
+          "agent"
+        ],
+        "title": "PlanTask",
+        "type": "object"
       },
       "ProjectCreate": {
         "additionalProperties": false,
@@ -2835,6 +3265,219 @@
         ],
         "title": "SessionGrantOut",
         "type": "object"
+      },
+      "TaskAnswer": {
+        "additionalProperties": false,
+        "properties": {
+          "text": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TaskAnswer",
+        "type": "object"
+      },
+      "TaskOut": {
+        "properties": {
+          "approval_required": {
+            "title": "Approval Required",
+            "type": "boolean"
+          },
+          "assigned_agent": {
+            "title": "Assigned Agent",
+            "type": "string"
+          },
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "depends_on": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Depends On",
+            "type": "array"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "inputs": {
+            "additionalProperties": true,
+            "title": "Inputs",
+            "type": "object"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_attempts": {
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "objective_id": {
+            "title": "Objective Id",
+            "type": "string"
+          },
+          "optional": {
+            "title": "Optional",
+            "type": "boolean"
+          },
+          "outputs": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputs"
+          },
+          "parent_task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Task Id"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "resume": {
+            "default": false,
+            "title": "Resume",
+            "type": "boolean"
+          },
+          "review": {
+            "title": "Review",
+            "type": "boolean"
+          },
+          "round": {
+            "title": "Round",
+            "type": "integer"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "objective_id",
+          "project_id",
+          "key",
+          "title",
+          "description",
+          "kind",
+          "assigned_agent",
+          "status",
+          "inputs",
+          "outputs",
+          "attempts",
+          "max_attempts",
+          "approval_required",
+          "optional",
+          "review",
+          "round",
+          "parent_task_id",
+          "run_id",
+          "error",
+          "started_at",
+          "completed_at",
+          "created_at"
+        ],
+        "title": "TaskOut",
+        "type": "object"
+      },
+      "TaskStatus": {
+        "enum": [
+          "WAITING",
+          "QUEUED",
+          "RUNNING",
+          "NEEDS_APPROVAL",
+          "BLOCKED",
+          "COMPLETED",
+          "SKIPPED",
+          "FAILED",
+          "CANCELLED"
+        ],
+        "title": "TaskStatus",
+        "type": "string"
       },
       "ToolCallOut": {
         "properties": {
@@ -4667,6 +5310,355 @@
         ]
       }
     },
+    "/api/objectives": {
+      "get": {
+        "operationId": "list_objectives",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status_filter",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Filter"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ObjectiveOut"
+                  },
+                  "title": "Response List Objectives",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Objectives",
+        "tags": [
+          "objectives"
+        ]
+      },
+      "post": {
+        "description": "Accept an objective and start planning it in the background.",
+        "operationId": "create_objective",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectiveCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectiveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Objective",
+        "tags": [
+          "objectives"
+        ]
+      }
+    },
+    "/api/objectives/{objective_id}": {
+      "get": {
+        "operationId": "get_objective",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objective_id",
+            "required": true,
+            "schema": {
+              "title": "Objective Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectiveDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Objective",
+        "tags": [
+          "objectives"
+        ]
+      }
+    },
+    "/api/objectives/{objective_id}/cancel": {
+      "post": {
+        "operationId": "cancel_objective",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objective_id",
+            "required": true,
+            "schema": {
+              "title": "Objective Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectiveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Objective",
+        "tags": [
+          "objectives"
+        ]
+      }
+    },
+    "/api/objectives/{objective_id}/plan": {
+      "put": {
+        "operationId": "edit_plan",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objective_id",
+            "required": true,
+            "schema": {
+              "title": "Objective Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectiveDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit Plan",
+        "tags": [
+          "objectives"
+        ]
+      }
+    },
+    "/api/objectives/{objective_id}/resume": {
+      "post": {
+        "operationId": "resume_objective",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objective_id",
+            "required": true,
+            "schema": {
+              "title": "Objective Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectiveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume Objective",
+        "tags": [
+          "objectives"
+        ]
+      }
+    },
+    "/api/objectives/{objective_id}/run": {
+      "post": {
+        "operationId": "run_objective",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "objective_id",
+            "required": true,
+            "schema": {
+              "title": "Objective Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectiveRun"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectiveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Objective",
+        "tags": [
+          "objectives"
+        ]
+      }
+    },
     "/api/projects": {
       "get": {
         "operationId": "list_projects",
@@ -6060,6 +7052,184 @@
         "summary": "Update Settings",
         "tags": [
           "settings"
+        ]
+      }
+    },
+    "/api/tasks/{task_id}": {
+      "get": {
+        "operationId": "get_task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task",
+        "tags": [
+          "objectives"
+        ]
+      }
+    },
+    "/api/tasks/{task_id}/answer": {
+      "post": {
+        "operationId": "answer_task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskAnswer"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Answer Task",
+        "tags": [
+          "objectives"
+        ]
+      }
+    },
+    "/api/tasks/{task_id}/retry": {
+      "post": {
+        "operationId": "retry_task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Task",
+        "tags": [
+          "objectives"
+        ]
+      }
+    },
+    "/api/tasks/{task_id}/skip": {
+      "post": {
+        "operationId": "skip_task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Skip Task",
+        "tags": [
+          "objectives"
         ]
       }
     },

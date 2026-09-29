@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
@@ -36,6 +37,15 @@ from app.providers.types import (
 )
 
 T = TypeVar("T", bound=BaseModel)
+
+_NAME_UNSAFE = re.compile(r"[^A-Za-z0-9_-]+")
+
+
+def schema_name(schema: type[BaseModel]) -> str:
+    """The name a provider sees for a structured-output schema. Anthropic tool names and OpenAI
+    schema names only allow ``[A-Za-z0-9_-]{1,64}``; generic models are named like ``X[Y]``."""
+    return _NAME_UNSAFE.sub("_", schema.__name__).strip("_")[:64] or "Result"
+
 
 JSON_INSTRUCTION = (
     "Respond with exactly one JSON object that conforms to the JSON Schema below. "
@@ -90,7 +100,7 @@ class LLMProvider(ABC):
         last_reason = "unknown"
         for attempt in range(max_repairs + 1):
             result = await self._structured_call(
-                req.model_copy(update={"messages": messages}), json_schema, schema.__name__
+                req.model_copy(update={"messages": messages}), json_schema, schema_name(schema)
             )
             usage = usage + result.usage
             try:

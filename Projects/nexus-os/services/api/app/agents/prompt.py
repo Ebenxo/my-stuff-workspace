@@ -8,13 +8,15 @@ Trust rules live here and nowhere else:
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Any
 
+from app.agents.results import TASK_HELP
 from app.agents.state import Observation, StepRecord
 from app.core.trust import UNTRUSTED_RULES, fence
 from app.providers.types import ChatMessage, estimate_tokens
-from app.schemas.agents import AgentDefinition, AgentStep
+from app.schemas.agents import AgentDefinition
 from app.tools.base import ToolDefinition
 
 DEFAULT_CONTEXT_TOKENS = 28_000
@@ -29,9 +31,7 @@ You work in steps. Every reply is ONE JSON object and nothing else:
 
 Actions:
 - {"type": "tool_call", "tool": "<name>", "arguments": {...}}   Use one of your tools.
-- {"type": "finish", "result": {"status": "completed|partial|failed|needs_input", "summary": "...",
-   "outputs": [{"kind": "text|data|artifact", "name": "...", "value": "...", "artifact_id": null}],
-   "artifacts": [{"artifact_id": "...", "name": "...", "version": 1}], "errors": [], "recommendations": []}}
+- {"type": "finish", "result": {...}}   When you are done. The result is described under "Your result".
 - {"type": "ask_human", "question": "...", "options": ["..."]}   Only when you truly cannot proceed.
 
 Rules:
@@ -41,9 +41,7 @@ Rules:
 - Some actions need a person's approval. If one is denied, do not repeat it: choose another approach, or
   finish with what you have and say what was blocked.
 - If a tool fails, read the error and change something. Never repeat an identical failing call.
-- Finish as soon as the task is done. Report honestly: "partial" when something is missing, "failed" when
-  you could not do it, with the reason in "errors". Never claim work you did not do.
-- List an artifact in "artifacts" only if you created it with a tool during this run.
+- Finish as soon as the task is done.
 - The project folder has files/ (the person's files), artifacts/ (deliverables, versioned) and temp/.
 """
 
@@ -94,7 +92,13 @@ class PromptBuilder:
 
     # ---- system ------------------------------------------------------------------------
     def system(
-        self, agent: AgentDefinition, tools: list[ToolDefinition], *, max_steps: int, max_tool_calls: int
+        self,
+        agent: AgentDefinition,
+        tools: list[ToolDefinition],
+        *,
+        max_steps: int,
+        max_tool_calls: int,
+        finish_help: str = TASK_HELP,
     ) -> str:
         catalogue = "\n\n".join(describe_tool(t) for t in tools) or "(You have no tools. Answer directly.)"
         limits = f"Limits: at most {max_steps} steps and {max_tool_calls} tool calls. Plan to finish well inside them."
@@ -103,6 +107,7 @@ class PromptBuilder:
                 f"You are the {agent.name} agent. {agent.role}.",
                 agent.system_prompt,
                 PROTOCOL + limits,
+                "## Your result\n" + finish_help,
                 "## Trust\n" + UNTRUSTED_RULES,
                 "## Your tools\n" + catalogue,
             ]
@@ -142,8 +147,10 @@ class PromptBuilder:
         view = self._fit(task, context, records)
         msgs = [ChatMessage(role="user", content=self.first_message(task, context))]
         for i, rec in enumerate(view):
-            step = AgentStep.model_validate({"summary": rec.summary, "action": rec.action})
-            msgs.append(ChatMessage(role="assistant", content=step.model_dump_json()))
+            # The step exactly as recorded (it was validated when the model produced it; whatever its
+            # result type, the model sees back what it said).
+            step = {"summary": rec.summary, "action": rec.action}
+            msgs.append(ChatMessage(role="assistant", content=json.dumps(step, ensure_ascii=False)))
             if rec.observation is not None:
                 msgs.append(
                     ChatMessage(role="user", content=self.observation_message(rec.observation, rec.notes))

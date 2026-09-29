@@ -8,6 +8,7 @@ UI labels "Demo (scripted)". It implements the full LLMProvider interface so eve
 from __future__ import annotations
 
 import json
+import re
 from collections import deque
 from collections.abc import AsyncIterator, Callable
 from typing import Any
@@ -15,7 +16,7 @@ from typing import Any
 import httpx
 from pydantic import BaseModel
 
-from app.providers.base import LLMProvider
+from app.providers.base import LLMProvider, schema_name
 from app.providers.errors import ProviderError
 from app.providers.types import (
     GenerateRequest,
@@ -41,6 +42,7 @@ class ScriptedProvider(LLMProvider):
         self.structured_names: list[str | None] = []
         self._queue: deque[Reply] = deque()
         self._handlers: dict[str, Callable[[GenerateRequest], Reply]] = {}
+        self.fallback: Callable[[GenerateRequest], Reply] | None = None  # e.g. a ScriptBook
 
     def push(self, *replies: Reply) -> ScriptedProvider:
         self._queue.extend(replies)
@@ -50,7 +52,7 @@ class ScriptedProvider(LLMProvider):
         self, schema: type[BaseModel] | str, handler: Callable[[GenerateRequest], Reply]
     ) -> ScriptedProvider:
         """Answer every structured call for ``schema`` with ``handler`` (takes precedence over the queue)."""
-        self._handlers[schema if isinstance(schema, str) else schema.__name__] = handler
+        self._handlers[schema if isinstance(schema, str) else schema_name(schema)] = handler
         return self
 
     @property
@@ -64,6 +66,8 @@ class ScriptedProvider(LLMProvider):
             reply: Reply = self._handlers[schema_name](req)
         elif self._queue:
             reply = self._queue.popleft()
+        elif self.fallback is not None:
+            reply = self.fallback(req)
         else:
             raise ProviderError("ScriptedProvider script exhausted (no reply queued for this call)")
         while callable(reply) and not isinstance(reply, BaseModel | Exception | str | dict):
@@ -114,3 +118,49 @@ class ScriptedProvider(LLMProvider):
                 output_cost_per_mtok=0.0,
             )
         ]
+
+
+_AGENT_LINE = re.compile(r"^You are the (.+?) agent\.", re.MULTILINE)
+_NONCE = re.compile(r'untrusted id="[0-9a-f]+"')
+
+
+class ScriptBook:
+    """Deterministic replies per agent and per turn, for tests and the labelled demo.
+
+    ``add(agent_name, *steps)`` queues one *run* of that agent: its first model turn gets ``steps[0]``,
+    its next turn ``steps[1]``, and so on (a repair request counts as a turn). The speaking agent is
+    read from the system prompt ("You are the Writer agent."), the turn from the number of assistant
+    messages, and a run is identified by its first user message, so parallel runs stay separate.
+    """
+
+    def __init__(self) -> None:
+        self._pending: dict[str, deque[list[Reply]]] = {}
+        self._active: dict[str, list[Reply]] = {}
+        self.calls: list[tuple[str, int]] = []
+
+    def add(self, agent: str, *steps: Reply) -> ScriptBook:
+        self._pending.setdefault(agent, deque()).append(list(steps))
+        return self
+
+    def remaining(self, agent: str | None = None) -> int:
+        if agent is not None:
+            return len(self._pending.get(agent, ()))
+        return sum(len(q) for q in self._pending.values())
+
+    def __call__(self, req: GenerateRequest) -> Reply:
+        found = _AGENT_LINE.search(req.system or "")
+        agent = found.group(1) if found else "unknown"
+        turn = sum(1 for m in req.messages if m.role == "assistant")
+        first = next((m.content for m in req.messages if m.role == "user"), "")
+        # Untrusted context is fenced with a fresh random nonce on every call; it must not change the key.
+        key = f"{agent}\x00{_NONCE.sub('', first)}"
+        if turn == 0 or key not in self._active:
+            queue = self._pending.get(agent)
+            if not queue:
+                raise ProviderError(f"No scripted run left for the {agent} agent")
+            self._active[key] = queue.popleft()
+        script = self._active[key]
+        if turn >= len(script):
+            raise ProviderError(f"The {agent} agent's script has no step {turn + 1}")
+        self.calls.append((agent, turn))
+        return script[turn]

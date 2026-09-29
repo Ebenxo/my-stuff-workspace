@@ -232,8 +232,14 @@ async def test_answer_a_question_over_the_api(client: httpx.AsyncClient, ae: AE)
     run = await start(client, ae, "writer")
     body = await wait_for(client, run["id"], "WAITING_INPUT")
     assert body["run"]["result"]["question"] == "Which tone?"
-    notes = (await client.get("/api/notifications")).json()
-    assert any("has a question" in n["title"] for n in notes)
+    # The notification follows the status change (the supervisor sends it after the run parks).
+    for _ in range(100):
+        notes = (await client.get("/api/notifications")).json()
+        if any("has a question" in n["title"] for n in notes):
+            break
+        await asyncio.sleep(0.03)
+    else:
+        raise AssertionError("no 'has a question' notification")
 
     assert (await client.post(f"/api/runs/{run['id']}/answer", json={"text": ""})).status_code == 422
     ae.provider.push(finish("Wrote it casually"))

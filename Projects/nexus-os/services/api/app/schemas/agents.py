@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
@@ -138,9 +138,14 @@ class ToolCallAction(BaseModel):
     arguments: dict[str, Any] = Field(default_factory=dict)
 
 
-class FinishAction(BaseModel):
+R = TypeVar("R", bound=BaseModel)
+
+
+class FinishWith(BaseModel, Generic[R]):
+    """End the run with a typed result (a TaskResult for ordinary work, a plan, a review, a verdict)."""
+
     type: Literal["finish"]
-    result: TaskResult
+    result: R
 
 
 class AskHumanAction(BaseModel):
@@ -149,8 +154,18 @@ class AskHumanAction(BaseModel):
     options: list[str] = Field(default_factory=list, max_length=8)
 
 
-class AgentStep(BaseModel):
-    """One model turn. ``summary`` is a short public description of the intent: never reasoning."""
+class StepWith(BaseModel, Generic[R]):
+    """One model turn. ``summary`` is a short public description of the intent: never reasoning.
+
+    Concrete step types are *named subclasses* (``AgentStep``, ``PlanStep``…): providers use the
+    class name as the structured-output name, and ``StepWith[X]`` is not a valid one."""
 
     summary: str = Field(max_length=300)
-    action: Annotated[ToolCallAction | FinishAction | AskHumanAction, Field(discriminator="type")]
+    action: Annotated[ToolCallAction | FinishWith[R] | AskHumanAction, Field(discriminator="type")]
+
+
+FinishAction = FinishWith[TaskResult]
+
+
+class AgentStep(StepWith[TaskResult]):
+    """A step of an ordinary task: it finishes with a TaskResult."""

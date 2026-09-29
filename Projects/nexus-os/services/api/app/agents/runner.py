@@ -23,7 +23,10 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+from pydantic import BaseModel, ValidationError
+
 from app.agents.prompt import ContextBlock, PromptBuilder
+from app.agents.results import ResultKind, kind_of
 from app.agents.state import Observation, StepRecord, dump_records, load_records
 from app.core.failures import FailureCategory
 from app.core.ids import new_id
@@ -38,11 +41,10 @@ from app.providers.types import GenerateRequest
 from app.repositories.runtime_store import AgentStore, RunStore, ToolRowStore
 from app.schemas.agents import (
     AgentDefinition,
-    AgentStep,
     ArtifactRef,
     AskHumanAction,
-    FinishAction,
     OutputRef,
+    StepWith,
     TaskResult,
     ToolCallAction,
 )
@@ -61,6 +63,7 @@ REPEAT_WINDOW = 10
 TOKEN_WARN_FRACTION = 0.85
 
 ContextProvider = Callable[[AgentDefinition, str, str], Awaitable[list[ContextBlock]]]
+StatusHook = Callable[[RunStatus], Awaitable[None]]
 
 
 @dataclass
@@ -77,6 +80,7 @@ class RunRequest:
     unattended: bool = False
     task_class: TaskClass = TaskClass.GENERAL
     approval_ttl_s: float | None = 24 * 3600
+    result_kind: str = "task"  # task | plan | review | verification (see app.agents.results)
 
     def to_json(self) -> dict[str, Any]:
         """What is stored for resumption. Text is redacted first: a pasted key never reaches the database."""
@@ -93,6 +97,7 @@ class RunRequest:
             "unattended": self.unattended,
             "task_class": self.task_class.value,
             "approval_ttl_s": self.approval_ttl_s,
+            "result_kind": self.result_kind,
         }
 
     @classmethod
@@ -110,15 +115,20 @@ class RunRequest:
             unattended=bool(data.get("unattended", False)),
             task_class=TaskClass(data.get("task_class", "general")),
             approval_ttl_s=data.get("approval_ttl_s"),
+            result_kind=str(data.get("result_kind", "task")),
         )
 
 
 @dataclass
 class RunOutcome:
     run: AgentRunOut
-    result: TaskResult | None = None
+    result: BaseModel | None = None  # TaskResult, PlanResult, ReviewResult or VerificationResult
     question: str | None = None
     options: list[str] = field(default_factory=list)
+
+    @property
+    def summary(self) -> str:
+        return str(getattr(self.result, "summary", "") or "")
 
     @property
     def status(self) -> RunStatus:
@@ -142,6 +152,18 @@ class _State:
     artifacts: dict[str, dict[str, Any]] = field(default_factory=dict)
     limit_refusals: int = 0
     token_warned: bool = False
+    attempt: int = (
+        1  # each attempt (a resume after a limit) gets a fresh allowance of steps, calls and tokens
+    )
+
+    def steps_cap(self, agent: AgentDefinition) -> int:
+        return agent.max_steps * self.attempt
+
+    def calls_cap(self, agent: AgentDefinition) -> int:
+        return agent.max_tool_calls * self.attempt
+
+    def tokens_cap(self, agent: AgentDefinition) -> int:
+        return agent.token_budget * self.attempt
 
     def active_s(self) -> float:
         now = time.monotonic()
@@ -183,6 +205,18 @@ class _Stop:
 
 def _signature(action: dict[str, Any]) -> str:
     return f"{action.get('tool')}:{json.dumps(action.get('arguments', {}), sort_keys=True, default=str)}"
+
+
+def _stored_result(kind: ResultKind, raw: dict[str, Any] | None) -> BaseModel | None:
+    """A finished run's result: the typed result when it completed, the partial TaskResult otherwise."""
+    if not raw:
+        return None
+    for model in (kind.result, TaskResult):
+        try:
+            return model.model_validate(raw)
+        except ValidationError:
+            continue
+    return None
 
 
 def _classify_reported_failure(records: list[StepRecord]) -> FailureCategory:
@@ -260,16 +294,25 @@ class AgentRunner:
         )
         return run
 
-    async def run(self, req: RunRequest, *, run_id: str | None = None) -> RunOutcome:
+    async def run(
+        self, req: RunRequest, *, run_id: str | None = None, on_status: StatusHook | None = None
+    ) -> RunOutcome:
         run = await self.create(req, run_id=run_id)
-        return await self.execute(run.id, agent=req.agent)
+        return await self.execute(run.id, agent=req.agent, on_status=on_status)
 
-    async def execute(self, run_id: str, *, agent: AgentDefinition | None = None) -> RunOutcome:
-        """Run (or continue) a run from its checkpoint until it finishes, waits or stops."""
+    async def execute(
+        self, run_id: str, *, agent: AgentDefinition | None = None, on_status: StatusHook | None = None
+    ) -> RunOutcome:
+        """Run (or continue) a run from its checkpoint until it finishes, waits or stops.
+
+        ``on_status`` is told when the run parks on an approval and when it resumes (the orchestrator
+        mirrors that onto its task)."""
         run = await self._runs.get(run_id)
         request, raw = await self._runs.snapshot(run_id)
         if run.status.terminal:
-            return RunOutcome(run, result=TaskResult.model_validate(run.result) if run.result else None)
+            return RunOutcome(
+                run, result=_stored_result(kind_of(request.get("result_kind", "task")), run.result)
+            )
         agent = agent or await self._agents.get(request["agent_id"])
         req = RunRequest.from_json(agent, request)
         state = _State(
@@ -278,11 +321,12 @@ class AgentRunner:
             tokens_in=run.tokens_in,
             tokens_out=run.tokens_out,
             model=run.model,
+            attempt=run.attempt,
         )
         for rec in state.records:
             if rec.observation:
                 state.note_artifacts(rec.observation.artifact_refs)
-        return await self._drive(run_id, req, state)
+        return await self._drive(run_id, req, state, on_status)
 
     async def prepare_resume(
         self, run_id: str, *, answer: str | None = None, agent: AgentDefinition | None = None
@@ -352,8 +396,11 @@ class AgentRunner:
         return await self._runs.get(run_id)
 
     # ---- the loop ----------------------------------------------------------------------
-    async def _drive(self, run_id: str, req: RunRequest, state: _State) -> RunOutcome:
+    async def _drive(
+        self, run_id: str, req: RunRequest, state: _State, on_status: StatusHook | None = None
+    ) -> RunOutcome:
         agent = req.agent
+        kind = kind_of(req.result_kind)
         dangling = state.records[-1] if state.records else None
         if dangling is not None and dangling.observation is None:
             if dangling.action_type in ("ask_human", "finish"):  # still waiting for the person's answer
@@ -381,7 +428,11 @@ class AgentRunner:
         if req.private:  # the model is never shown a tool it could not use (the executor refuses them too)
             tools = [t for t in tools if not t.reaches_outside]
         system = self._builder.system(
-            agent, tools, max_steps=agent.max_steps, max_tool_calls=agent.max_tool_calls
+            agent,
+            tools,
+            max_steps=agent.max_steps,
+            max_tool_calls=agent.max_tool_calls,
+            finish_help=kind.finish_help,
         )
         tctx = await self._contexts.build(
             project_id=req.project_id,
@@ -402,11 +453,11 @@ class AgentRunner:
             tool_context=tctx,
             taint=TaintTracker.from_list(state.taint_sources()),
             unattended=req.unattended,
-            on_wait=self._wait_hook(run_id, state),
+            on_wait=self._wait_hook(run_id, state, on_status),
             approval_ttl_s=req.approval_ttl_s,
         )
         try:
-            return await self._loop(run_id, req, state, system, ectx)
+            return await self._loop(run_id, req, state, system, ectx, kind)
         except asyncio.CancelledError:
             if self.shutting_down:
                 await asyncio.shield(self._interrupted(run_id, req, state))
@@ -428,7 +479,7 @@ class AgentRunner:
             )
 
     async def _loop(
-        self, run_id: str, req: RunRequest, state: _State, system: str, ectx: ExecContext
+        self, run_id: str, req: RunRequest, state: _State, system: str, ectx: ExecContext, kind: ResultKind
     ) -> RunOutcome:
         agent = req.agent
         while True:
@@ -437,7 +488,7 @@ class AgentRunner:
                 return await self._stop(run_id, req, state, stop)
 
             try:
-                step, model = await self._model_step(run_id, req, state, system)
+                step, model = await self._model_step(run_id, req, state, system, kind)
             except GatewayError as exc:
                 return await self._stop(
                     run_id, req, state, _Stop(RunStatus.FAILED, exc.category, exc.code, exc.message)
@@ -477,11 +528,14 @@ class AgentRunner:
             )
 
             action = step.action
-            if isinstance(action, FinishAction):
-                return await self._finish(run_id, req, state, action.result)
             if isinstance(action, AskHumanAction):
                 return await self._ask(run_id, req, state, rec, action)
-            if state.tool_calls >= agent.max_tool_calls:
+            if not isinstance(action, ToolCallAction):  # finish, with a result of this run's kind
+                result: BaseModel = action.result
+                if isinstance(result, TaskResult):
+                    return await self._finish(run_id, req, state, result)
+                return await self._finish_typed(run_id, req, state, result)
+            if state.tool_calls >= state.calls_cap(agent):
                 if state.limit_refusals >= 1:
                     return await self._stop(
                         run_id,
@@ -491,7 +545,7 @@ class AgentRunner:
                             RunStatus.FAILED,
                             FailureCategory.TIMEOUT,
                             "tool_call_limit",
-                            f"Stopped after {agent.max_tool_calls} tool calls without finishing.",
+                            f"Stopped after {state.calls_cap(agent)} tool calls without finishing.",
                         ),
                     )
                 state.limit_refusals += 1
@@ -499,7 +553,7 @@ class AgentRunner:
                     kind="system",
                     status="refused",
                     tool=action.tool,
-                    text=f"The tool call limit ({agent.max_tool_calls}) is used up. Finish now with what you have.",
+                    text=f"The tool call limit ({state.calls_cap(agent)}) is used up. Finish now with what you have.",
                 )
             else:
                 state.tool_calls += 1
@@ -511,11 +565,11 @@ class AgentRunner:
                 return await self._stop(run_id, req, state, abort)
 
     async def _model_step(
-        self, run_id: str, req: RunRequest, state: _State, system: str
-    ) -> tuple[AgentStep, str]:
+        self, run_id: str, req: RunRequest, state: _State, system: str, kind: ResultKind
+    ) -> tuple[StepWith[BaseModel], str]:
         agent = req.agent
         messages = self._builder.messages(req.prompt, req.context, state.records)
-        remaining_tokens = max(1, agent.token_budget - state.tokens)
+        remaining_tokens = max(1, state.tokens_cap(agent) - state.tokens)
         gen = GenerateRequest(
             model="",  # the gateway fills in the routed model
             messages=messages,
@@ -539,7 +593,7 @@ class AgentRunner:
         )
         budget_s = max(1.0, agent.max_runtime_s - state.active_s())
         async with asyncio.timeout(budget_s):
-            result, meta = await self._gateway.generate_structured(ctx, gen, AgentStep)
+            result, meta = await self._gateway.generate_structured(ctx, gen, kind.step)
         state.tokens_in += meta.usage.input_tokens
         state.tokens_out += meta.usage.output_tokens
         state.model = meta.model or state.model
@@ -596,12 +650,12 @@ class AgentRunner:
 
     # ---- guards ------------------------------------------------------------------------
     def _limit_hit(self, agent: AgentDefinition, state: _State) -> _Stop | None:
-        if len(state.records) >= agent.max_steps:
+        if len(state.records) >= state.steps_cap(agent):
             return _Stop(
                 RunStatus.FAILED,
                 FailureCategory.TIMEOUT,
                 "step_limit",
-                f"Stopped after {agent.max_steps} steps without finishing.",
+                f"Stopped after {state.steps_cap(agent)} steps without finishing.",
             )
         if state.active_s() >= agent.max_runtime_s:
             return _Stop(
@@ -610,25 +664,25 @@ class AgentRunner:
                 "runtime_limit",
                 f"Stopped after {agent.max_runtime_s}s of working time.",
             )
-        if state.tokens >= agent.token_budget:
+        if state.tokens >= state.tokens_cap(agent):
             return _Stop(
                 RunStatus.FAILED,
                 FailureCategory.TIMEOUT,
                 "token_budget",
-                f"Stopped after using its {agent.token_budget:,}-token budget.",
+                f"Stopped after using its {state.tokens_cap(agent):,}-token budget.",
             )
         return None
 
     def _after_step(self, agent: AgentDefinition, state: _State, rec: StepRecord) -> _Stop | None:
         """Notes for the next model turn, and the loop breaker."""
-        left = agent.max_steps - len(state.records)
+        left = state.steps_cap(agent) - len(state.records)
         if left == 1 and agent.max_steps > 1:
             rec.notes.append(
                 'This is your last step. Finish now with what you have; use status "partial" if anything is incomplete.'
             )
-        if agent.max_tool_calls and state.tool_calls == agent.max_tool_calls:
+        if agent.max_tool_calls and state.tool_calls == state.calls_cap(agent):
             rec.notes.append("You have used all of your tool calls. Finish now with what you have.")
-        if not state.token_warned and state.tokens >= TOKEN_WARN_FRACTION * agent.token_budget:
+        if not state.token_warned and state.tokens >= TOKEN_WARN_FRACTION * state.tokens_cap(agent):
             state.token_warned = True
             rec.notes.append("You are close to your token budget. Wrap up now.")
         if rec.action_type != "tool_call":
@@ -651,14 +705,19 @@ class AgentRunner:
             )
         return None
 
-    def _wait_hook(self, run_id: str, state: _State) -> Callable[[ApprovalOut | None], Awaitable[None]]:
+    def _wait_hook(
+        self, run_id: str, state: _State, on_status: StatusHook | None = None
+    ) -> Callable[[ApprovalOut | None], Awaitable[None]]:
         async def hook(approval: ApprovalOut | None) -> None:
             if approval is not None:  # parked: waiting for a person does not count as working time
                 state.pause()
-                await self._runs.set_status(run_id, RunStatus.WAITING_APPROVAL)
+                status = RunStatus.WAITING_APPROVAL
             else:
                 state.unpause()
-                await self._runs.set_status(run_id, RunStatus.RUNNING)
+                status = RunStatus.RUNNING
+            await self._runs.set_status(run_id, status)
+            if on_status is not None:
+                await on_status(status)
 
         return hook
 
@@ -690,6 +749,24 @@ class AgentRunner:
     def _partial(self, state: _State, message: str) -> TaskResult:
         refs = [ArtifactRef(**ref) for ref in state.artifacts.values()]
         return TaskResult(status="failed", summary=f"Stopped: {message}", errors=[message], artifacts=refs)
+
+    async def _finish_typed(
+        self, run_id: str, req: RunRequest, state: _State, result: BaseModel
+    ) -> RunOutcome:
+        """A plan, review or verdict. Only the orchestrator reads these; they carry no artifacts."""
+        run = await self._runs.finish(run_id, RunStatus.COMPLETED, result=result.model_dump(mode="json"))
+        await self._emit(
+            EventType.AGENT_COMPLETED,
+            run_id,
+            req,
+            {
+                "status": "completed",
+                "summary": str(getattr(result, "summary", ""))[:300],
+                "kind": req.result_kind,
+                **self._counters(state),
+            },
+        )
+        return RunOutcome(run, result=result)
 
     async def _finish(self, run_id: str, req: RunRequest, state: _State, result: TaskResult) -> RunOutcome:
         result, dropped = self._reconcile(result, state)

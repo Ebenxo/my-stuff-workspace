@@ -409,6 +409,112 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/objectives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Objectives */
+        get: operations["list_objectives"];
+        put?: never;
+        /**
+         * Create Objective
+         * @description Accept an objective and start planning it in the background.
+         */
+        post: operations["create_objective"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/objectives/{objective_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Objective */
+        get: operations["get_objective"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/objectives/{objective_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Objective */
+        post: operations["cancel_objective"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/objectives/{objective_id}/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edit Plan */
+        put: operations["edit_plan"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/objectives/{objective_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume Objective */
+        post: operations["resume_objective"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/objectives/{objective_id}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run Objective */
+        post: operations["run_objective"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects": {
         parameters: {
             query?: never;
@@ -779,6 +885,74 @@ export interface paths {
         patch: operations["update_settings"];
         trace?: never;
     };
+    "/api/tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Task */
+        get: operations["get_task"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{task_id}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Answer Task */
+        post: operations["answer_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{task_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Task */
+        post: operations["retry_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tasks/{task_id}/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Skip Task */
+        post: operations["skip_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tool-calls": {
         parameters: {
             query?: never;
@@ -1018,6 +1192,34 @@ export interface components {
              * @default 1
              */
             version?: number;
+        };
+        /**
+         * AgentMessage
+         * @description Structured collaboration record. Persisted as an AGENT_MESSAGE event.
+         */
+        AgentMessage: {
+            /** Id */
+            id: string;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Recipient */
+            recipient: string;
+            /** Sender */
+            sender: string;
+            /** Task Id */
+            task_id: string | null;
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "TASK_REQUEST" | "TASK_RESULT" | "QUESTION" | "ERROR" | "STATUS" | "REVIEW_REQUEST" | "REVIEW_RESULT" | "APPROVAL_REQUIRED";
         };
         /**
          * AgentPermissions
@@ -1576,11 +1778,165 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** ObjectiveCreate */
+        ObjectiveCreate: {
+            /**
+             * Model
+             * @description Manual model: '<provider_id>:<model>'
+             */
+            model?: string | null;
+            /**
+             * Private
+             * @default false
+             */
+            private?: boolean;
+            /** Project Id */
+            project_id: string;
+            /**
+             * Run Mode
+             * @default review_plan
+             * @enum {string}
+             */
+            run_mode?: "review_plan" | "auto";
+            /** Text */
+            text: string;
+        };
+        /** ObjectiveDetail */
+        ObjectiveDetail: {
+            /** Messages */
+            messages: components["schemas"]["AgentMessage"][];
+            objective: components["schemas"]["ObjectiveOut"];
+            /** Tasks */
+            tasks: components["schemas"]["TaskOut"][];
+        };
+        /** ObjectiveOut */
+        ObjectiveOut: {
+            /** Completed At */
+            completed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Error */
+            error: {
+                [key: string]: unknown;
+            } | null;
+            /** Execution Mode */
+            execution_mode: string;
+            /** Id */
+            id: string;
+            /** Model */
+            model: string | null;
+            /** Plan */
+            plan: {
+                [key: string]: unknown;
+            } | null;
+            /** Private */
+            private: boolean;
+            /** Project Id */
+            project_id: string;
+            /** Replan Count */
+            replan_count: number;
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            } | null;
+            /** Run Mode */
+            run_mode: string;
+            status: components["schemas"]["ObjectiveStatus"];
+            /** Strategy */
+            strategy: {
+                [key: string]: unknown;
+            } | null;
+            /** Text */
+            text: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ObjectiveRun */
+        ObjectiveRun: {
+            /**
+             * Mode
+             * @default normal
+             * @enum {string}
+             */
+            mode?: "normal" | "safe_only";
+        };
+        /**
+         * ObjectiveStatus
+         * @enum {string}
+         */
+        ObjectiveStatus: "RECEIVED" | "PLANNING" | "AWAITING_PLAN_APPROVAL" | "RUNNING" | "VERIFYING" | "PAUSED" | "COMPLETED" | "PARTIAL" | "FAILED" | "CANCELLED";
         /**
          * PermissionLevel
          * @enum {string}
          */
         PermissionLevel: "cautious" | "balanced" | "permissive";
+        /**
+         * PlanEdit
+         * @description Replace the plan's tasks before it runs. Validated exactly like a plan from the Planner.
+         */
+        PlanEdit: {
+            /** Completion Criteria */
+            completion_criteria?: string[] | null;
+            /** Tasks */
+            tasks: components["schemas"]["PlanTask"][];
+        };
+        /** PlanTask */
+        PlanTask: {
+            /**
+             * Agent
+             * @description Slug of the specialist, e.g. 'researcher'.
+             */
+            agent: string;
+            /**
+             * Approval Required
+             * @default false
+             */
+            approval_required?: boolean;
+            /**
+             * Complexity
+             * @default small
+             * @enum {string}
+             */
+            complexity?: "trivial" | "small" | "medium" | "large";
+            /** Depends On */
+            depends_on?: string[];
+            /**
+             * Description
+             * @description What to do and what good output looks like.
+             */
+            description: string;
+            /** Expected Outputs */
+            expected_outputs?: string[];
+            /**
+             * Key
+             * @description Short id used in depends_on, e.g. 't1'.
+             */
+            key: string;
+            /**
+             * Optional
+             * @default false
+             */
+            optional?: boolean;
+            /**
+             * Review
+             * @description Have the Critic review this task's output.
+             * @default false
+             */
+            review?: boolean;
+            /** Title */
+            title: string;
+            /**
+             * Tools
+             * @description Tools it will likely need.
+             */
+            tools?: string[];
+        };
         /** ProjectCreate */
         ProjectCreate: {
             /**
@@ -1852,6 +2208,80 @@ export interface components {
             /** Tool Name */
             tool_name: string;
         };
+        /** TaskAnswer */
+        TaskAnswer: {
+            /** Text */
+            text: string;
+        };
+        /** TaskOut */
+        TaskOut: {
+            /** Approval Required */
+            approval_required: boolean;
+            /** Assigned Agent */
+            assigned_agent: string;
+            /** Attempts */
+            attempts: number;
+            /** Completed At */
+            completed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Depends On */
+            depends_on?: string[];
+            /** Description */
+            description: string;
+            /** Error */
+            error: {
+                [key: string]: unknown;
+            } | null;
+            /** Id */
+            id: string;
+            /** Inputs */
+            inputs: {
+                [key: string]: unknown;
+            };
+            /** Key */
+            key: string;
+            /** Kind */
+            kind: string;
+            /** Max Attempts */
+            max_attempts: number;
+            /** Objective Id */
+            objective_id: string;
+            /** Optional */
+            optional: boolean;
+            /** Outputs */
+            outputs: {
+                [key: string]: unknown;
+            } | null;
+            /** Parent Task Id */
+            parent_task_id: string | null;
+            /** Project Id */
+            project_id: string;
+            /**
+             * Resume
+             * @default false
+             */
+            resume?: boolean;
+            /** Review */
+            review: boolean;
+            /** Round */
+            round: number;
+            /** Run Id */
+            run_id: string | null;
+            /** Started At */
+            started_at: string | null;
+            status: components["schemas"]["TaskStatus"];
+            /** Title */
+            title: string;
+        };
+        /**
+         * TaskStatus
+         * @enum {string}
+         */
+        TaskStatus: "WAITING" | "QUEUED" | "RUNNING" | "NEEDS_APPROVAL" | "BLOCKED" | "COMPLETED" | "SKIPPED" | "FAILED" | "CANCELLED";
         /** ToolCallOut */
         ToolCallOut: {
             /** Approval Id */
@@ -2837,6 +3267,235 @@ export interface operations {
             };
         };
     };
+    list_objectives: {
+        parameters: {
+            query?: {
+                project_id?: string | null;
+                status_filter?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_objective: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ObjectiveCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_objective: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_objective: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_plan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_objective: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_objective: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                objective_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ObjectiveRun"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ObjectiveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_projects: {
         parameters: {
             query?: {
@@ -3788,6 +4447,134 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    answer_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskAnswer"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    skip_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskOut"];
                 };
             };
             /** @description Validation Error */

@@ -24,6 +24,7 @@ from app.api.routers import (
     files,
     health,
     notifications,
+    objectives,
     projects,
     providers,
     settings,
@@ -70,6 +71,7 @@ def create_app(
                 await container.tool_row_store.sync(container.tools.mirror_rows())
                 await container.agent_service.sync_builtins()
                 await container.agent_service.recover()
+                await container.objective_service.recover()  # after runs are marked interrupted
                 await container.bus.emit(EventType.SYSTEM_STARTED, payload={"version": __version__})
                 log.info("NEXUS API %s ready on %s:%s (home=%s)", __version__, cfg.host, cfg.port, cfg.home)
                 yield
@@ -97,6 +99,7 @@ def create_app(
         settings,
         projects,
         notifications,
+        objectives,
         events,
         providers,
         usage,

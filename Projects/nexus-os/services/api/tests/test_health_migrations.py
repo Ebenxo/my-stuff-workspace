@@ -57,9 +57,20 @@ def test_migrations_upgrade_downgrade_and_match_models(tmp_path: Path) -> None:
         "usage_records",
         "events",
         "notifications",
+        "agents",
+        "agent_runs",
+        "tools",
+        "tool_calls",
+        "approvals",
+        "artifacts",
+        "artifact_versions",
+        "objectives",
+        "tasks",
+        "task_dependencies",
         "alembic_version",
     }
     assert expected <= tables
+    assert head == "0003"
 
     with engine.connect() as conn:
         ctx = MigrationContext.configure(conn, opts={"compare_type": True})

@@ -14,11 +14,13 @@ from app.core.settings import Settings
 from app.events.bus import EventBus
 from app.files.artifacts import ArtifactStore
 from app.models.database import Database
+from app.orchestration.orchestrator import Orchestrator
 from app.permissions.approvals import ApprovalService, SessionGrants
 from app.providers.gateway import LLMGateway
 from app.providers.registry import ProviderRegistry, new_http_client
 from app.providers.router import ModelRouter
 from app.providers.usage import UsageService
+from app.repositories.orchestration_store import ObjectiveStore, TaskStore
 from app.repositories.runtime_store import (
     AgentStore,
     ApprovalStore,
@@ -27,12 +29,14 @@ from app.repositories.runtime_store import (
     ToolCallStore,
     ToolRowStore,
 )
+from app.schemas.common import PermissionLevel
 from app.schemas.providers import Budgets
 from app.services.agents import AgentService
 from app.services.conversations import ConversationService
 from app.services.files import FilesService
 from app.services.health import HealthService, register_core_checks
 from app.services.notifications import NotificationService
+from app.services.objectives import ObjectiveService
 from app.services.projects import ProjectService
 from app.services.providers import ProviderService
 from app.services.settings import SettingsService
@@ -78,6 +82,10 @@ class AppContainer:
     executor: ToolExecutor
     runner: AgentRunner
     agent_service: AgentService
+    objective_store: ObjectiveStore
+    task_store: TaskStore
+    orchestrator: Orchestrator
+    objective_service: ObjectiveService
     tool_service: ToolService
     files: FilesService
     tool_contexts: ToolContextFactory
@@ -87,6 +95,7 @@ class AppContainer:
     started_at: float
 
     async def close(self) -> None:
+        await self.objective_service.shutdown()  # first: objectives own agent runs of their own
         await self.agent_service.shutdown()
         await self.queue.shutdown()
         await self.http.aclose()
@@ -177,6 +186,40 @@ async def build_container(
         bus=bus,
         clock=clock,
     )
+
+    async def level_for(project_id: str) -> PermissionLevel:
+        project = await projects.get(project_id)
+        return project.settings.permission_level or await settings_service.default_permission_level()
+
+    objective_store = ObjectiveStore(db, clock)
+    task_store = TaskStore(db, clock)
+    orchestrator = Orchestrator(
+        objectives=objective_store,
+        tasks=task_store,
+        runner=runner,
+        agents=agent_store,
+        runs=run_store,
+        registry=tools,
+        tool_rows=tool_row_store,
+        bus=bus,
+        level_for=level_for,
+        project_dir_for=projects.project_dir,
+        clock=clock,
+    )
+    objective_service = ObjectiveService(
+        objectives=objective_store,
+        tasks=task_store,
+        orchestrator=orchestrator,
+        runner=runner,
+        runs=run_store,
+        agents=agent_store,
+        registry=tools,
+        tool_rows=tool_row_store,
+        projects=projects,
+        notifications=notifications,
+        bus=bus,
+        clock=clock,
+    )
     tool_service = ToolService(tool_row_store, tool_call_store, tools, bus)
     files = FilesService(projects, bus)
     started_at = time.monotonic()
@@ -221,6 +264,10 @@ async def build_container(
         executor=executor,
         runner=runner,
         agent_service=agent_service,
+        objective_store=objective_store,
+        task_store=task_store,
+        orchestrator=orchestrator,
+        objective_service=objective_service,
         tool_service=tool_service,
         files=files,
         tool_contexts=tool_contexts,

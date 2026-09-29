@@ -9,6 +9,7 @@ permissions on a built-in (``BUILTIN_OVERRIDABLE``), never the prompt or identit
 from __future__ import annotations
 
 from app.core.risk import RiskLevel
+from app.providers.router import TaskClass
 from app.schemas.agents import AgentDefinition, AgentPermissions, MemoryScope
 
 READ_TOOLS = ["list_directory", "read_file", "search_files"]
@@ -331,3 +332,19 @@ BUILTIN_AGENTS: list[AgentDefinition] = [
     CRITIC,
     VERIFIER,
 ]
+
+
+CODING_AGENTS = frozenset({"coder"})
+PLANNING_AGENTS = frozenset({"planner", "orchestrator"})
+DOCUMENT_AGENTS = frozenset({"writer", "researcher"})
+
+
+def task_class_for(agent: AgentDefinition) -> TaskClass:
+    """Which tier of model suits this agent's work (the router turns it into a model)."""
+    if agent.slug in CODING_AGENTS:
+        return TaskClass.CODING
+    if agent.slug in PLANNING_AGENTS:
+        return TaskClass.PLANNING
+    if agent.slug in DOCUMENT_AGENTS:
+        return TaskClass.LONG_DOCUMENT
+    return TaskClass.GENERAL
