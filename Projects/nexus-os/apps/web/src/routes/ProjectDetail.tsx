@@ -21,8 +21,9 @@ import { useApprovals } from "../lib/agentQueries";
 import { errorMessage, useProject, useSetProjectArchived, useSettings, useUpdateProject } from "../lib/queries";
 import { useEvents } from "../stores/events";
 import { Page, PageHeader, Section } from "./Page";
+import { WorkflowList } from "./Workflows";
 
-const TABS = ["overview", "objectives", "files", "artifacts", "memory", "runs", "tools", "approvals"] as const;
+const TABS = ["overview", "objectives", "workflows", "files", "artifacts", "memory", "runs", "tools", "approvals"] as const;
 type ProjectTab = (typeof TABS)[number];
 
 export function ProjectDetailRoute() {
@@ -128,6 +129,7 @@ export function ProjectDetailRoute() {
         <TabsList className="mb-5 overflow-x-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="objectives">Objectives</TabsTrigger>
+          <TabsTrigger value="workflows">Workflows</TabsTrigger>
           <TabsTrigger value="files">Files</TabsTrigger>
           <TabsTrigger value="artifacts">Deliverables</TabsTrigger>
           <TabsTrigger value="memory">Memory</TabsTrigger>
@@ -196,6 +198,9 @@ export function ProjectDetailRoute() {
           <Card>
             <ObjectiveList projectId={projectId} limit={50} empty="Give this project an objective and NEXUS will plan it, assign agents, and check the result." />
           </Card>
+        </TabsContent>
+        <TabsContent value="workflows">
+          <WorkflowList projectId={projectId} />
         </TabsContent>
         <TabsContent value="files">
           <FilesTab projectId={projectId} />

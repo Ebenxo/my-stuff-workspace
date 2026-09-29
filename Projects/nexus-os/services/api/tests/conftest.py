@@ -28,6 +28,7 @@ def settings(tmp_path: Path) -> Settings:
         port=free_port(),
         api_token=TOKEN,  # type: ignore[arg-type]
         rate_limit_enabled=False,
+        scheduler_enabled=False,
         _env_file=None,  # type: ignore[call-arg]
     )
 

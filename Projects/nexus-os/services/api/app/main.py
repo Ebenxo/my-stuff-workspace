@@ -32,6 +32,7 @@ from app.api.routers import (
     settings,
     tools,
     usage,
+    workflows,
 )
 from app.core.clock import Clock
 from app.core.instance_lock import InstanceLock
@@ -76,6 +77,9 @@ def create_app(
                 await container.objective_service.recover()  # after runs are marked interrupted
                 await container.memory.reembed_stale()  # new items, or a changed embedder
                 await container.universal_search.ensure_built()
+                await container.workflows.recover()
+                if cfg.scheduler_enabled:
+                    await container.scheduler.start()
                 await container.bus.emit(EventType.SYSTEM_STARTED, payload={"version": __version__})
                 log.info("NEXUS API %s ready on %s:%s (home=%s)", __version__, cfg.host, cfg.port, cfg.home)
                 yield
@@ -114,6 +118,7 @@ def create_app(
         files,
         memory,
         search,
+        workflows,
     ):
         app.include_router(module.router)
 

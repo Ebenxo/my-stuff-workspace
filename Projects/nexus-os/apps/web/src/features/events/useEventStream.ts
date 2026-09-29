@@ -19,6 +19,7 @@ const INVALIDATIONS: [RegExp, string[][]][] = [
   [/^ARTIFACT_/, [["artifacts"], ["artifact"], ["artifact-versions"]]],
   [/^FILE_/, [["files"], ["file"]]],
   [/^MEMORY_/, [["memory"], ["search"]]],
+  [/^(WORKFLOW|SCHEDULE)_/, [["workflows"], ["workflow"], ["workflow-runs"], ["workflow-run"], ["schedules"]]],
   [/^(PROJECT|OBJECTIVE|ARTIFACT)_/, [["search"]]],
 ];
 

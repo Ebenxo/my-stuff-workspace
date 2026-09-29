@@ -1,10 +1,24 @@
 # NEXUS OS — build state
 
-_Last updated: 2026-09-29 (end of Phase 7)_
+_Last updated: 2026-09-29 (end of Phase 8)_
 
 ## Current phase
 
-**Phase 7 — memory and the context engine: complete.** Phases 0–7 done. Next: Phases 8–9, workflows (engine and React Flow editor), the scheduler, and MCP.
+**Phase 8 — workflows and the scheduler: complete.** Phases 0–8 done. Next: Phase 9, MCP servers (Settings → Integrations).
+
+### Added in Phase 8 (workflows, scheduler)
+
+- **Workflow definitions** (migration `0005`: `workflows`, `workflow_versions`, `workflow_runs`, `schedules`). A definition is a versioned JSON graph of typed steps: start (trigger), agent, tool, condition, approval, transform, output, delay (1 s–24 h), loop (one agent or tool per item, at most 50) and sub-workflow, plus typed inputs (text, number, yes/no). Every save that changes the graph is a new version; a run records the version it used.
+- **Validation** before saving counts as runnable: exactly one start, no unknown steps or duplicate ids, no cycles (loops are a step type), everything reachable from the start, yes/no outcomes only on conditions and approvals, each step's config checked against its type, every `{{ expression }}` parsed, agents, tools and sub-workflows checked against what exists and is enabled. Issues come back per step in plain words.
+- **Safe expression language** (`workflows/expr.py`): parsed with Python's `ast` and interpreted over an allow-list (literals, arithmetic, comparisons, boolean logic, `x if c else y`, key and index lookup, 21 named functions such as `len`, `lower`, `join`, `default`). No attribute access, no names starting with `_`, no imports or lambdas, size and depth caps. `{{ }}` templates render text; a lone template keeps the value's type.
+- **Engine** (`workflows/engine.py`): up to 3 steps run at once; a step runs when every incoming connection is settled; a condition or rejection skips the path not taken (skips propagate, joins wait for their live inputs); the first failure stops the run unless the step says *continue on error*. Agent steps run through the same `AgentRunner` as any run (values from other steps reach the agent as fenced data, and untrusted values taint it); tool steps go through the same `ToolExecutor` under a per-workflow identity allowed only that one tool. Approval steps and tool approvals park the run as *Needs you*; the decision is delivered live or on resume. **Unattended (scheduled) runs never auto-approve a HIGH or VERY_HIGH action**, whatever the project's permission level; they wait.
+- **Recovery**: at startup, running workflows resume: a finished agent step keeps its result, an interrupted agent step resumes its run from its checkpoint, an interrupted tool or loop step is marked failed (never re-executed blindly), waiting approvals stay waiting. Cancel stops running steps, cancels their runs and denies their pending approvals. Failed runs can be retried from the failed steps.
+- **Sub-workflows** run as child runs (nesting at most 3 deep, never themselves); the parent waits and takes the child's outputs.
+- **Scheduler** (`scheduler/`): five-field cron (names, ranges, steps, `@daily`-style shortcuts, day-of-month OR day-of-week like classic cron), any IANA time zone (a time skipped by a DST jump does not fire that day; a repeated time fires once), next-run preview in plain words ("Weekdays at 08:30"). A tick every 30 s while NEXUS is open; a run missed while it was closed fires once on the next start (no pile-up); a schedule whose previous run is still going is skipped and says so; a turned-off workflow's schedule is skipped with a reason, and a deleted workflow's schedule is paused. Scheduled runs are unattended.
+- **Events** for every change and run step (`WORKFLOW_*`, `SCHEDULE_*`), shown in plain words in Activity.
+- **APIs**: workflows (CRUD, validate, versions, run, runs), workflow runs (list, detail, cancel, retry, approve/reject/answer a step), schedules (list, preview, create, edit, delete, run now).
+- **UI**: Workflows page and project Workflows tab (create from a starter, on/off); the editor: React Flow canvas flowing top to bottom, a step toolbar (a new step follows the selected one and is connected to it, so a sequence is built by clicking; handles can also be dragged, with yes/no handles on branching steps), an inspector per step type (agent and tool pickers, JSON arguments, values editor, loop body, sub-workflow picker and inputs), workflow inputs editor, live validation with per-step problems, save as a version, run dialog with typed inputs; a run page with the graph coloured by step state, step details (input, output, error, linked agent run or child workflow), approve/reject/answer, cancel and retry; run history, versions, and a schedule panel (presets, cron with live preview and errors, time zone, inputs, run now, pause).
+
 
 ### Added in Phase 7 (memory, context, search)
 
@@ -79,16 +93,19 @@ _Last updated: 2026-09-29 (end of Phase 7)_
 - Recovery does not yet switch to a different model or tool, or delegate to another agent, as the design allows; the gateway's own fallback models are the only model switch. Supervisor, debate, map-reduce and swarm strategies are not built.
 - Sandbox limits are verified on Linux only (rlimits, process-group kill, network namespace). On Windows only the timeout, env scrubbing and working folder apply, and that path has not been run.
 - The embedder is lexical (feature hashing), not neural: synonyms do not match. A neural embedder can be plugged in behind the `Embedder` protocol; none is wired up. A `VectorStore` interface for external vector databases is not extracted (vectors live in SQLite and similarity is computed in process over up to 2,000 candidates per query).
-- Conversation-scoped memory is defined but unused (no conversation UI drives agents yet). Compression is manual (a button); scheduling it waits for the Phase 8 scheduler. Project files are not in universal search.
+- Conversation-scoped memory is defined but unused (no conversation UI drives agents yet). Compression is manual (a button); it is not scheduled (automatic tidying would change what people see without asking). Project files are not in universal search.
+- **Workflow agent steps have run only with scripted models**; tool, approval, condition, loop, delay, sub-workflow and schedule paths are exercised with real tools in tests and live.
+- **Schedules fire only while NEXUS is running** (a missed run fires once on the next start). There is no OS-level background service.
+- Workflows have no webhook, file-watch or event triggers yet (manual, schedule and sub-workflow only). The canvas has no undo; saved versions are the history. Workflows cannot be exported or imported.
 - Memory recall quality with real models is untested; ranking is verified with unit tests and the scripted demo.
 
 ## Testing status
 
 | Area | Result |
 |---|---|
-| Backend (pytest) | 839 passed |
+| Backend (pytest) | 912 passed |
 | Lint / format (ruff), strict types (mypy), import contracts (3) | clean |
-| Frontend (vitest) | 115 passed (shared 9, web 106) |
+| Frontend (vitest) | 126 passed (shared 9, web 117) |
 | ESLint, `tsc` (all packages) | clean |
 | Web production build | ok |
 | Rust sidecar (`cargo test`) | 8 passed |
@@ -96,9 +113,28 @@ _Last updated: 2026-09-29 (end of Phase 7)_
 | Live UI check (Playwright, real API + web app, local stand-in model) | run a Writer that saves an artifact; run a File Manager whose delete waits for approval (file verified present before and gone after); answer an agent's question; browse files, deliverables, runs and tool activity; Tools settings. No console errors; no horizontal overflow at 390 px. Screenshots checked by eye |
 | Live objective check (Playwright, real API + web app, scripted demo model) | Try the demo → plan review (2 tasks, approach, criteria) → plan editor opens → Run plan → graph fills in live (research, write, Critic review, revision, second review, verification: 6 nodes, 5 edges) → Verifier PASS with 4/4 criteria → report opens from the result. 15 hand-offs shown; project Objectives tab and Command Center list it. No console errors, no failed requests, no overflow at 390 px; screenshots checked by eye |
 | Live memory check (Playwright, real API + web app, scripted demo model) | Demo objective → "Remember this for next time?" → Remember (nav badge showed the suggestion); project Memory tab: add a pinned memory, a key refused in the dialog with its category, "rank as agents would" lists both with reasons; a second demo objective: all 6 runs were given memory (12 items in total), the run page lists what was given; top-bar search finds the report with highlights. No console errors or failed requests besides the deliberate refusal; no overflow at 390 px on Memory, Search, run and objective pages; screenshots checked by eye |
+| Live workflow check (Playwright, real API + web app) | Create a workflow; build Start → Approval → Tool (`write_file`) → Output by clicking, add a Delay and connect it by dragging handle to handle (4 connections); validation says *Ready to run*; save as v2; run with an input: the run waits on the approval and the file does not exist (404), approve → Completed and the file holds the rendered text; a bad cron is explained in words; a weekday schedule is created and previewed. No console errors besides the deliberate bad-cron 422s; no overflow at 390 px on the list, editor and run pages; screenshots checked by eye |
 | Scripted E2E in `check.py` | Phase 10 |
 
 Run everything: `python scripts/check.py`.
+
+## Architecture decisions made in Phase 8
+
+- A workflow graph is stored as one validated JSON document per version, not as node and edge tables: versions are immutable snapshots, runs point at the version they used, and nothing ever queries individual steps across workflows.
+- Expressions are an allow-listed interpreter over Python's `ast`, not `eval` or a sandboxed language: small, auditable, and safe even for text an agent wrote.
+- Workflow steps reuse the agent runner and tool executor instead of a second execution path, so permissions, taint, private-run rules, approvals, redaction and events apply unchanged. A tool step acts under a synthetic per-workflow agent whose allow-list is exactly that one tool.
+- Unattended runs never auto-approve HIGH or VERY_HIGH actions, even when the project would; a scheduled run waits for the person instead.
+- An interrupted tool step is failed, not replayed (it may already have acted); an interrupted agent step resumes from its checkpoint.
+- The scheduler runs in the API process (a 30 s tick) rather than as a separate service; catch-up fires a missed schedule once, not once per missed slot.
+- The canvas flows top to bottom and new steps attach to the selected one: the live check showed that dragging small handles was the hardest part of building a workflow, and a horizontal flow did not fit the editor's column or a phone.
+
+## Bugs found by tests and live checks in Phase 8 (all fixed, with regression tests)
+
+- **A decision could be lost**: an approval that arrived while the engine was between checking its waiting steps and going to sleep was not seen until the next event. Decisions are now delivered to the live run and wake it.
+- Cancelling a run whose tool step waited on an approval left that approval pending: the executor cleared the step's approval id on cancel. The id is now kept until the step returns normally, and cancel denies it.
+- Shutting NEXUS down marked running workflow steps *cancelled* instead of *interrupted* (the runner learned of the shutdown after the engine), so they did not resume. The shutdown order is fixed.
+- When a schedule's workflow had been deleted, the schedule was turned off but the generic *skipped* status overwrote the reason, so the schedule list did not say why it stopped.
+- Live check: connecting steps by dragging failed on the tiny handles (now larger, and adding a step connects it); the horizontal layout was unreadable in the editor's column and on phones (now vertical).
 
 ## Architecture decisions made in Phase 7
 
@@ -188,4 +224,4 @@ Run everything: `python scripts/check.py`.
 
 ## Next
 
-Phases 8–9: workflow definitions (versioned JSON: trigger, agent, tool, condition, approval, loop, sub-workflow, output nodes) with a safe expression evaluator; a workflow engine with run history that parks on approvals (unattended runs never auto-approve high-risk actions); a React Flow editor; a scheduler with cron triggers (and scheduled memory tidying); MCP server management (stdio/HTTP, discovery of tools, resources and prompts, health), with discovered tools registered at HIGH risk by default and routed through the same executor; Settings → Integrations → MCP servers.
+Phase 9: MCP server management (stdio and streamable HTTP, discovery of tools, resources and prompts, health), with discovered tools registered at HIGH risk by default, treated as untrusted, unavailable to private runs, and routed through the same executor; secrets for server environment and headers kept in the secret store; Settings → Integrations → MCP servers.

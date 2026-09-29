@@ -16,6 +16,9 @@ import { RunRoute } from "./routes/Run";
 import { SearchRoute } from "./routes/Search";
 import { GeneralSettingsRoute, HealthRoute, SettingsLayout, ToolsRoute } from "./routes/Settings";
 import { UsageRoute } from "./routes/Usage";
+import { WorkflowEditorRoute } from "./routes/WorkflowEditor";
+import { WorkflowRunRoute } from "./routes/WorkflowRun";
+import { WorkflowsRoute } from "./routes/Workflows";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +39,9 @@ const router = createBrowserRouter([
       { path: "runs/:runId", element: <RunRoute /> },
       { path: "approvals", element: <ApprovalsRoute /> },
       { path: "memory", element: <MemoryRoute /> },
+      { path: "workflows", element: <WorkflowsRoute /> },
+      { path: "workflows/:workflowId", element: <WorkflowEditorRoute /> },
+      { path: "workflow-runs/:runId", element: <WorkflowRunRoute /> },
       { path: "search", element: <SearchRoute /> },
       {
         path: "settings",

@@ -34,6 +34,8 @@ from app.repositories.runtime_store import (
     ToolRowStore,
 )
 from app.repositories.search_index import SearchIndex
+from app.repositories.workflow_store import ScheduleStore, WorkflowRunStore, WorkflowStore
+from app.scheduler.service import Scheduler
 from app.schemas.common import PermissionLevel
 from app.schemas.providers import Budgets
 from app.services.agents import AgentService
@@ -56,6 +58,8 @@ from app.tools.netguard import SafeHttpClient
 from app.tools.registry import ToolRegistry
 from app.tools.sandbox import LocalSandbox, SandboxManager
 from app.tools.search import SearchService
+from app.workflows.engine import WorkflowEngine
+from app.workflows.service import WorkflowService
 
 
 @dataclass
@@ -104,10 +108,18 @@ class AppContainer:
     memory: MemoryService
     search_index: SearchIndex
     universal_search: UniversalSearch  # the app's own search box
+    workflow_store: WorkflowStore
+    workflow_run_store: WorkflowRunStore
+    schedule_store: ScheduleStore
+    workflow_engine: WorkflowEngine
+    workflows: WorkflowService
+    scheduler: Scheduler
     started_at: float
 
     async def close(self) -> None:
-        await self.objective_service.shutdown()  # first: objectives own agent runs of their own
+        await self.scheduler.stop()
+        await self.workflows.shutdown()  # first: workflows and objectives own agent runs of their own
+        await self.objective_service.shutdown()
         await self.agent_service.shutdown()
         await self.queue.shutdown()
         await self.http.aclose()
@@ -247,6 +259,42 @@ async def build_container(
         search_index, projects=projects, objectives=objective_store, artifacts=artifacts, memory=memory
     )
     bus.add_listener(universal_search.on_event)
+
+    async def notify_workflow(kind: str, title: str, body: str, ref: dict[str, object]) -> None:
+        await notifications.notify(kind, title, body, ref=ref)
+
+    workflow_store = WorkflowStore(db, clock)
+    workflow_run_store = WorkflowRunStore(db, clock)
+    schedule_store = ScheduleStore(db, clock)
+    workflow_engine = WorkflowEngine(
+        workflows=workflow_store,
+        runs=workflow_run_store,
+        runner=runner,
+        agents=agent_store,
+        agent_runs=run_store,
+        executor=executor,
+        tool_contexts=tool_contexts,
+        bus=bus,
+        level_for=level_for,
+        clock=clock,
+        notify=notify_workflow,
+    )
+    workflows = WorkflowService(
+        workflows=workflow_store,
+        runs=workflow_run_store,
+        engine=workflow_engine,
+        runner=runner,
+        agents=agent_store,
+        registry=tools,
+        tool_rows=tool_row_store,
+        approvals=approvals,
+        bus=bus,
+        project_exists=projects.get,
+        clock=clock,
+    )
+    scheduler = Scheduler(
+        schedules=schedule_store, runs=workflow_run_store, workflows=workflows, bus=bus, clock=clock
+    )
     started_at = time.monotonic()
     register_core_checks(
         health,
@@ -304,5 +352,11 @@ async def build_container(
         memory=memory,
         search_index=search_index,
         universal_search=universal_search,
+        workflow_store=workflow_store,
+        workflow_run_store=workflow_run_store,
+        schedule_store=schedule_store,
+        workflow_engine=workflow_engine,
+        workflows=workflows,
+        scheduler=scheduler,
         started_at=started_at,
     )

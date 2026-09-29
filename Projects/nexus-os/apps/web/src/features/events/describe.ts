@@ -176,6 +176,41 @@ export function describeEvent(e: EventRecord): EventView {
     }
     case "MEMORY_COMPRESSED":
       return { text: `Folded ${String(p["merged"] ?? "some")} older notes into one summary`, tone: "info" };
+    case "WORKFLOW_CREATED":
+      return { text: `Workflow created: ${str(p["name"]) ?? ""}`, tone: "neutral" };
+    case "WORKFLOW_UPDATED":
+      return { text: p["new_version"] === true ? `Workflow saved as version ${String(p["version"])}: ${str(p["name"]) ?? ""}` : `Workflow updated: ${str(p["name"]) ?? ""}`, tone: "neutral" };
+    case "WORKFLOW_DELETED":
+      return { text: `Workflow deleted: ${str(p["name"]) ?? ""}`, tone: "warning" };
+    case "WORKFLOW_STARTED":
+      return { text: `${p["scheduled"] === true ? "Scheduled run" : "Run"} of ${str(p["name"]) ?? "a workflow"} started`, tone: "accent" };
+    case "WORKFLOW_NODE_STARTED":
+      return { text: `${str(p["name"]) ?? "Workflow"}: ${str(p["label"]) ?? str(p["node"]) ?? "a step"} started`, tone: "neutral" };
+    case "WORKFLOW_NODE_COMPLETED":
+      return {
+        text: `${str(p["name"]) ?? "Workflow"}: ${str(p["label"]) ?? str(p["node"]) ?? "a step"} ${p["approved"] === false ? "rejected" : p["approved"] === true ? "approved" : "done"}`,
+        tone: p["approved"] === false ? "warning" : "success",
+      };
+    case "WORKFLOW_NODE_FAILED":
+      return { text: `${str(p["name"]) ?? "Workflow"}: ${str(p["label"]) ?? str(p["node"]) ?? "a step"} failed${str(p["message"]) ? `: ${str(p["message"])}` : ""}`, tone: "danger" };
+    case "WORKFLOW_WAITING":
+      return { text: `${str(p["name"]) ?? "A workflow"} is waiting for you`, tone: "warning" };
+    case "WORKFLOW_COMPLETED":
+      return { text: `${str(p["name"]) ?? "Workflow"} finished`, tone: "success" };
+    case "WORKFLOW_FAILED":
+      return { text: `${str(p["name"]) ?? "Workflow"} failed${str(p["message"]) ? `: ${str(p["message"])}` : ""}`, tone: "danger" };
+    case "WORKFLOW_CANCELLED":
+      return { text: `${str(p["name"]) ?? "Workflow"} run cancelled`, tone: "warning" };
+    case "SCHEDULE_CREATED":
+      return { text: `Scheduled: ${str(p["description"]) ?? str(p["cron"]) ?? ""}`, tone: "info" };
+    case "SCHEDULE_UPDATED":
+      return { text: p["enabled"] === false ? "Schedule turned off" : "Schedule updated", tone: "neutral" };
+    case "SCHEDULE_DELETED":
+      return { text: "Schedule deleted", tone: "neutral" };
+    case "SCHEDULE_FIRED":
+      return { text: p["manual"] === true ? "Scheduled workflow run by hand" : "Schedule started a workflow run", tone: "accent" };
+    case "SCHEDULE_SKIPPED":
+      return { text: `Scheduled run skipped: ${str(p["reason"]) ?? ""}`, tone: "warning" };
     case "CLIPBOARD_REQUEST":
       return { text: `Copy offered: ${str(p["label"]) ?? "text"}`, tone: "info" };
     default:

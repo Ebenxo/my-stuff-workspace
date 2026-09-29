@@ -54,15 +54,16 @@ Engine: SQLite (WAL, `foreign_keys=ON`) via SQLAlchemy 2.0 async (`aiosqlite`). 
 | `memory_embeddings` | `item_id` FK, `embedder`, `dim`, `vector` (JSON float array) | Separate table so items can be re-embedded when the embedder changes |
 | `search_index` | FTS5 virtual table: `kind`, `ref_id`, `project_id`, `title`, `body` | Falls back to `LIKE` where FTS5 is unavailable |
 
-### Workflows — migration `0005_workflows`
+### Workflows — migration `0005` (built)
 
 | Table | Columns | Notes |
 |---|---|---|
-| `workflows` | `id`, `project_id` (nullable = global), `name`, `description`, `version`, `trigger` JSON, `enabled`, timestamps | Editing bumps `version`; runs record the version they ran |
-| `workflow_nodes` | `id`, `workflow_id` FK, `key`, `type` (`trigger`/`agent`/`tool`/`condition`/`approval`/`transform`/`output`/`delay`/`loop`/`subworkflow`), `label`, `config` JSON, `position` JSON | |
-| `workflow_edges` | `id`, `workflow_id` FK, `source_key`, `target_key`, `source_handle` (e.g. `true`/`false`), `label` | |
-| `workflow_runs` | `id`, `workflow_id`, `workflow_version`, `status`, `unattended`, `schedule_id`, `trigger` JSON, `inputs` JSON, `node_states` JSON, `outputs` JSON, `error` JSON, `started_at`, `finished_at` | |
-| `schedules` | `id`, `workflow_id`, `cron`, `timezone`, `enabled`, `last_run_at`, `next_run_at`, `created_at` | |
+| `workflows` | `id`, `project_id`, `name`, `description`, `version`, `enabled`, `definition` JSON (inputs, nodes, edges), `deleted`, timestamps | The graph is stored whole: it is always read and written as one unit. Saving a changed graph bumps `version`; `deleted` keeps run history pointing at it |
+| `workflow_versions` | `workflow_id` FK, `version`, `definition` JSON, `created_at` | Every saved graph; a run reads the version it started with |
+| `workflow_runs` | `id`, `workflow_id`, `workflow_version`, `project_id`, `status` (`RUNNING`/`WAITING`/`COMPLETED`/`FAILED`/`CANCELLED`), `unattended`, `schedule_id`, `parent_run_id`, `depth`, `inputs` JSON, `outputs` JSON, `node_states` JSON (per step: status, output, error, run_id, child_run_id, approval_id, resume, attempts, times), `error` JSON, `started_at`, `finished_at` | Saved after every step change, so a run can be recovered |
+| `schedules` | `id`, `workflow_id`, `cron`, `timezone`, `inputs` JSON, `enabled`, `last_run_at`, `last_run_id`, `last_status`, `next_run_at`, `created_at` | |
+
+(The Phase 0 design split nodes and edges into `workflow_nodes`/`workflow_edges`; one versioned JSON graph proved simpler and atomic.)
 
 ### Integrations — migration `0006_integrations`
 

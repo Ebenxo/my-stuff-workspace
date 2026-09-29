@@ -14,6 +14,7 @@ function titleFor(pathname: string): string {
   if (pathname.startsWith("/objectives")) return "Objective";
   if (pathname.startsWith("/approvals")) return "Approvals";
   if (pathname.startsWith("/memory")) return "Memory";
+  if (pathname.startsWith("/workflow")) return "Workflows";
   if (pathname.startsWith("/search")) return "Search";
   return "NEXUS";
 }

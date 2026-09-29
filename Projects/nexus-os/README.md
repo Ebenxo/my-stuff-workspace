@@ -56,6 +56,10 @@ For a single focused job you can also run one agent directly from **Agents**.
 
 NEXUS remembers what you (and, with your say-so, its agents) decide is worth keeping: facts, decisions and preferences, per project or across all projects. Before each run the relevant memories are given to the agent as clearly marked background; the run page shows exactly what it was given and why. Everything remembered is visible and editable under **Memory**, suggestions wait for you, and passwords, keys and personal identifiers are refused outright. The search box in the top bar finds projects, objectives, deliverables and memories. Details: [`docs/MEMORY.md`](docs/MEMORY.md).
 
+## Workflows and schedules
+
+For work you repeat, build a **workflow** under **Workflows** (or a project's Workflows tab): a chain of steps drawn top to bottom — an agent task, a tool, a yes/no condition, an approval that waits for you, computed values, a delay, a loop over a list, another workflow — with inputs you fill in when it runs. Select a step and click a step type to add the next one; `{{ inputs.topic }}`-style templates pass values along. The editor checks the workflow as you build it and every save is a version. Give it a **schedule** (cron, with presets and a plain-words preview) and it runs while NEXUS is open; scheduled runs never approve anything risky on their own — they wait for you under *Needs you*.
+
 ## Quality gates
 
 ```bash

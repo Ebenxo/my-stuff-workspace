@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     dev: bool = False
     log_level: str = "INFO"
     rate_limit_enabled: bool = True
+    # Start scheduled workflows. Tests switch it off and call Scheduler.tick() themselves.
+    scheduler_enabled: bool = True
     # Provider used when the user has none configured. Only "demo" is accepted, and only explicitly.
     enable_demo_provider: bool = True
 
