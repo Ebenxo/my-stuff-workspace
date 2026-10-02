@@ -161,9 +161,9 @@ Asked for by the owner: one working view of everything that is going on, has gon
 
 | Area | Result |
 |---|---|
-| Backend (pytest) | __PYTEST__ passed |
+| Backend (pytest) | 964 passed |
 | Lint / format (ruff), strict types (mypy), import contracts (3) | clean |
-| Frontend (vitest) | __VITEST__ |
+| Frontend (vitest) | 166 passed (shared 9, web 157) |
 | ESLint, `tsc` (all packages) | clean |
 | Web production build | ok |
 | Rust sidecar (`cargo test`) | 8 passed |
