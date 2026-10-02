@@ -1,0 +1,32 @@
+# Dependencies / build output
+node_modules/
+.venv/
+dist/
+build/
+target/
+.vite/
+coverage/
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local runtime data (databases, secrets, workspaces) - never commit
+data/dev/
+data/runtime/
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.local
+api_token
+secrets.json
+
+# Browser preview build (scripts/build_preview.py)
+dist-preview/

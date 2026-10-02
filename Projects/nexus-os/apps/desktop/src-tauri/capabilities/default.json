@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Minimal capabilities: the main window may use core window/event APIs only. No shell, fs or opener access.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}
