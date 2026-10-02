@@ -22,6 +22,9 @@ const INVALIDATIONS: [RegExp, string[][]][] = [
   [/^(WORKFLOW|SCHEDULE)_/, [["workflows"], ["workflow"], ["workflow-runs"], ["workflow-run"], ["schedules"]]],
   [/^MCP_|^SECURITY_FLAG$/, [["mcp"], ["tools"], ["health"]]],
   [/^(PROJECT|OBJECTIVE|ARTIFACT)_/, [["search"]]],
+  [/^IDEA_/, [["ideas"], ["search"]]],
+  // The timeline follows everything that starts, stops, waits or comes due (not each agent step).
+  [/^(?!AGENT_STEP$)(OBJECTIVE|PLAN|AGENT|APPROVAL|WORKFLOW|SCHEDULE|IDEA)_/, [["timeline"]]],
 ];
 
 /** A tool can offer text to copy. Nothing is copied until the person clicks: browsers need a user gesture. */

@@ -3,8 +3,9 @@
 //
 // onboarding (connect a model) → command palette → project → an agent uses tools → approval →
 // the demo objective (plan, agents, review, verification, deliverable) → memory → search →
-// a workflow built in the editor and run twice → audit-log verification → every page at 1440 px
-// and 390 px: no horizontal scrolling, basic accessibility checks, no console errors or failed requests.
+// a workflow built in the editor and run twice → audit-log verification → shortcuts → an idea, an overdue
+// to-do and the timeline → every page at 1440 px and 390 px: no horizontal scrolling, basic accessibility
+// checks, no console errors or failed requests.
 
 import { chromium } from "@playwright/test";
 import { existsSync, mkdirSync } from "node:fs";
@@ -255,8 +256,46 @@ try {
     await page.waitForURL(/\/workflows$/);
   });
 
+  await step("9. an idea, an overdue to-do, and the timeline", async () => {
+    await page.goto(`${WEB}/ideas`);
+    const list = page.getByRole("list", { name: "Ideas, notes and to-dos" });
+    const idea = page.getByLabel("Idea", { exact: true });
+    await idea.fill("A case-study page for every finished project");
+    await idea.press("Enter");
+    await list.getByText("A case-study page for every finished project").waitFor();
+
+    await page.getByRole("radio", { name: "To-do", exact: true }).click();
+    await page.getByLabel("To-do", { exact: true }).fill("Send the invoice");
+    await page.getByRole("button", { name: /Due time/ }).click();
+    const past = new Date(Date.now() - 5 * 60_000);
+    const pad = (n) => String(n).padStart(2, "0");
+    const local = `${past.getFullYear()}-${pad(past.getMonth() + 1)}-${pad(past.getDate())}T${pad(past.getHours())}:${pad(past.getMinutes())}`;
+    await page.getByLabel("Due", { exact: true }).fill(local);
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    const todo = page.getByRole("listitem", { name: /^To-do: Send the invoice/ });
+    await todo.getByText(/^Overdue · /).waitFor();
+
+    await page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: "Timeline" }).click();
+    await page.waitForURL(/\/timeline$/);
+    const needs = page.getByRole("list", { name: "Needs you" });
+    await needs.getByRole("link", { name: /Send the invoice/ }).waitFor();
+    await page.getByRole("region", { name: "Today" }).getByText("Idea added: A case-study page for every finished project").waitFor();
+    await shot("09-timeline");
+
+    await needs.getByRole("link", { name: /Send the invoice/ }).click();
+    await page.waitForURL(/\/ideas\?idea=idea_/);
+    await todo.getByRole("checkbox", { name: "Mark as done" }).click();
+    await todo.getByRole("checkbox", { name: "Mark as not done" }).waitFor();
+    const timeline = (await api("GET", "/api/timeline")).json;
+    expect(!timeline.waiting.some((i) => i.kind === "idea"), "the finished to-do still waits on the timeline");
+    const found = (await api("GET", "/api/search?q=invoice")).json.hits;
+    expect(found.some((h) => h.kind === "idea"), "search does not find the to-do");
+  });
+
   const pages = [
     "/",
+    "/timeline",
+    "/ideas",
     "/projects",
     urls.project,
     `${urls.project}?tab=files`,
@@ -279,7 +318,7 @@ try {
     "/settings/health",
   ].filter(Boolean);
 
-  await step(`9. ${pages.length} pages at 1440 and 390 px: layout and accessibility`, async () => {
+  await step(`10. ${pages.length} pages at 1440 and 390 px: layout and accessibility`, async () => {
     const issues = [];
     for (const width of [1440, 390]) {
       await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });

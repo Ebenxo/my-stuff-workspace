@@ -1,7 +1,7 @@
-"""Universal search across projects, objectives, deliverables and memory.
+"""Universal search across projects, objectives, deliverables, memory and ideas.
 
 The index follows the event log: an in-process listener re-indexes a project, objective or artifact
-whenever an event says it changed (memory is indexed by the MemoryService itself). Listeners run right
+whenever an event says it changed (memory and ideas are indexed by their own services). Listeners run right
 after the event is committed, so the index is current by the time the action returns. A full rebuild
 runs at startup when the index is empty (first start after the migration, or after a reset).
 """
@@ -9,6 +9,7 @@ runs at startup when the index is empty (first start after the migration, or aft
 from __future__ import annotations
 
 import logging
+from collections.abc import Awaitable, Callable, Sequence
 
 from app.core.errors import NotFoundError
 from app.events.types import EventType
@@ -49,8 +50,10 @@ class UniversalSearch:
         objectives: ObjectiveStore,
         artifacts: ArtifactStore,
         memory: MemoryService,
+        reindexers: Sequence[Callable[[], Awaitable[int]]] = (),
     ) -> None:
         self._index = index
+        self._reindexers = list(reindexers)  # other services that index their own items (ideas)
         self._projects = projects
         self._objectives = objectives
         self._artifacts = artifacts
@@ -107,6 +110,8 @@ class UniversalSearch:
             await self.index_objective(o.id)
             count += 1
         count += await self._memory.reindex_all()
+        for reindex in self._reindexers:
+            count += await reindex()
         return count
 
     async def ensure_built(self) -> None:

@@ -21,6 +21,7 @@ class EventFilter:
     task_id: str | None = None
     run_id: str | None = None
     types: frozenset[str] | None = None
+    exclude_types: frozenset[str] | None = None
     global_only: bool = False
 
     def matches(self, record: EventRecord) -> bool:
@@ -33,6 +34,8 @@ class EventFilter:
         if self.task_id is not None and record.task_id != self.task_id:
             return False
         if self.run_id is not None and record.run_id != self.run_id:
+            return False
+        if self.exclude_types is not None and record.type in self.exclude_types:
             return False
         return not (self.types is not None and record.type not in self.types)
 
@@ -72,8 +75,15 @@ class EventRepository:
         return row
 
     async def query(
-        self, flt: EventFilter, *, after_seq: int = 0, limit: int = 200, newest_first: bool = False
+        self,
+        flt: EventFilter,
+        *,
+        after_seq: int = 0,
+        before_seq: int = 0,
+        limit: int = 200,
+        newest_first: bool = False,
     ) -> list[EventRecord]:
+        """``before_seq`` pages backwards through history (with ``newest_first``); 0 means no bound."""
         stmt = select(Event)
         if flt.global_only:
             stmt = stmt.where(Event.project_id.is_(None))
@@ -87,6 +97,10 @@ class EventRepository:
             stmt = stmt.where(Event.run_id == flt.run_id)
         if flt.types:
             stmt = stmt.where(Event.type.in_(sorted(flt.types)))
+        if flt.exclude_types:
+            stmt = stmt.where(Event.type.not_in(sorted(flt.exclude_types)))
+        if before_seq:
+            stmt = stmt.where(Event.seq < before_seq)
         if newest_first:
             stmt = stmt.order_by(Event.seq.desc()).limit(limit)
             if after_seq:

@@ -23,6 +23,7 @@ from app.api.routers import (
     events,
     files,
     health,
+    ideas,
     mcp,
     memory,
     notifications,
@@ -123,6 +124,7 @@ def create_app(
         search,
         workflows,
         mcp,
+        ideas,
     ):
         app.include_router(module.router)
 

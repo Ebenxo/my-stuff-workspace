@@ -40,7 +40,7 @@ describe("keyboard shortcuts", () => {
     expect(first).toEqual({ pendingG: true });
     expect(resolveKey(key("w"), { pendingG: true, typing: false })).toEqual({ action: "go:/workflows", pendingG: false });
     expect(resolveKey(key("z"), { pendingG: true, typing: false })).toEqual({ pendingG: false });
-    expect(Object.keys(GO)).toEqual(["c", "p", "a", "w", "r", "m", "s"]);
+    expect(Object.keys(GO)).toEqual(["c", "t", "p", "a", "w", "r", "m", "i", "s"]);
   });
 
   it("never takes letters while someone is typing, but modifier shortcuts still work", () => {

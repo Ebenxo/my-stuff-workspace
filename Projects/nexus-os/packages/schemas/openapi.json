@@ -1853,6 +1853,312 @@
         "title": "HealthReport",
         "type": "object"
       },
+      "IdeaCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "due_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "kind": {
+            "default": "idea",
+            "enum": [
+              "idea",
+              "note",
+              "todo"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "pinned": {
+            "default": false,
+            "title": "Pinned",
+            "type": "boolean"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "text": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "IdeaCreate",
+        "type": "object"
+      },
+      "IdeaObjectiveOut": {
+        "properties": {
+          "idea": {
+            "$ref": "#/components/schemas/IdeaOut"
+          },
+          "objective": {
+            "$ref": "#/components/schemas/ObjectiveOut"
+          }
+        },
+        "required": [
+          "idea",
+          "objective"
+        ],
+        "title": "IdeaObjectiveOut",
+        "type": "object"
+      },
+      "IdeaOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "done_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done At"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "idea",
+              "note",
+              "todo"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "objective_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Objective Id"
+          },
+          "pinned": {
+            "title": "Pinned",
+            "type": "boolean"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "reminded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reminded At"
+          },
+          "status": {
+            "enum": [
+              "open",
+              "done"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "kind",
+          "text",
+          "status",
+          "pinned",
+          "due_at",
+          "reminded_at",
+          "done_at",
+          "objective_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "IdeaOut",
+        "type": "object"
+      },
+      "IdeaToObjective": {
+        "additionalProperties": false,
+        "description": "Start an idea as an objective. The project defaults to the idea's own.",
+        "properties": {
+          "private": {
+            "default": false,
+            "title": "Private",
+            "type": "boolean"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "run_mode": {
+            "default": "review_plan",
+            "enum": [
+              "review_plan",
+              "auto"
+            ],
+            "title": "Run Mode",
+            "type": "string"
+          }
+        },
+        "title": "IdeaToObjective",
+        "type": "object"
+      },
+      "IdeaUpdate": {
+        "additionalProperties": false,
+        "description": "Only the fields sent are changed. Send ``null`` to clear ``project_id`` or ``due_at``.",
+        "properties": {
+          "due_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "idea",
+                  "note",
+                  "todo"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "pinned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinned"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "open",
+                  "done"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "title": "IdeaUpdate",
+        "type": "object"
+      },
       "MCPHealth": {
         "properties": {
           "checked_at": {
@@ -4946,7 +5252,8 @@
               "project",
               "objective",
               "artifact",
-              "memory"
+              "memory",
+              "idea"
             ],
             "title": "Kind",
             "type": "string"
@@ -5264,6 +5571,146 @@
         ],
         "title": "TaskStatus",
         "type": "string"
+      },
+      "TimelineItem": {
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "idea_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "idea",
+                  "note",
+                  "todo"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idea Kind"
+          },
+          "kind": {
+            "enum": [
+              "objective",
+              "agent_run",
+              "workflow_run",
+              "schedule",
+              "approval",
+              "idea"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "ref_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref Id"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "title",
+          "status",
+          "project_id",
+          "at"
+        ],
+        "title": "TimelineItem",
+        "type": "object"
+      },
+      "TimelineOut": {
+        "description": "What is happening now, what needs the person, what is coming up, and what they pinned.",
+        "properties": {
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "next": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineItem"
+            },
+            "title": "Next",
+            "type": "array"
+          },
+          "now": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineItem"
+            },
+            "title": "Now",
+            "type": "array"
+          },
+          "pinned": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineItem"
+            },
+            "title": "Pinned",
+            "type": "array"
+          },
+          "waiting": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineItem"
+            },
+            "title": "Waiting",
+            "type": "array"
+          }
+        },
+        "required": [
+          "generated_at",
+          "now",
+          "waiting",
+          "next",
+          "pinned"
+        ],
+        "title": "TimelineOut",
+        "type": "object"
       },
       "ToolCallOut": {
         "properties": {
@@ -7256,12 +7703,42 @@
             }
           },
           {
+            "description": "Comma-separated event types to leave out",
+            "in": "query",
+            "name": "exclude_types",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated event types to leave out",
+              "title": "Exclude Types"
+            }
+          },
+          {
             "in": "query",
             "name": "after_seq",
             "required": false,
             "schema": {
               "default": 0,
               "title": "After Seq",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Only events older than this seq (page back in history)",
+            "in": "query",
+            "name": "before_seq",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Only events older than this seq (page back in history)",
+              "title": "Before Seq",
               "type": "integer"
             }
           },
@@ -7556,6 +8033,380 @@
         "summary": "Ping",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/api/ideas": {
+      "get": {
+        "operationId": "list_ideas",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status_filter",
+            "required": false,
+            "schema": {
+              "default": "open",
+              "enum": [
+                "open",
+                "done",
+                "all"
+              ],
+              "title": "Status Filter",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "idea",
+                    "note",
+                    "todo"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pinned",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pinned"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IdeaOut"
+                  },
+                  "title": "Response List Ideas",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Ideas",
+        "tags": [
+          "ideas"
+        ]
+      },
+      "post": {
+        "operationId": "create_idea",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdeaCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdeaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Idea",
+        "tags": [
+          "ideas"
+        ]
+      }
+    },
+    "/api/ideas/due-count": {
+      "get": {
+        "description": "Open to-dos (and dated ideas or notes) whose due time has come.",
+        "operationId": "ideas_due_count",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Ideas Due Count",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ideas Due Count",
+        "tags": [
+          "ideas"
+        ]
+      }
+    },
+    "/api/ideas/{idea_id}": {
+      "delete": {
+        "operationId": "delete_idea",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "idea_id",
+            "required": true,
+            "schema": {
+              "title": "Idea Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Idea",
+        "tags": [
+          "ideas"
+        ]
+      },
+      "get": {
+        "operationId": "get_idea",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "idea_id",
+            "required": true,
+            "schema": {
+              "title": "Idea Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdeaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Idea",
+        "tags": [
+          "ideas"
+        ]
+      },
+      "patch": {
+        "operationId": "update_idea",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "idea_id",
+            "required": true,
+            "schema": {
+              "title": "Idea Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdeaUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdeaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Idea",
+        "tags": [
+          "ideas"
+        ]
+      }
+    },
+    "/api/ideas/{idea_id}/objective": {
+      "post": {
+        "description": "Start the idea as an objective (planning begins in the background); the idea is marked done.",
+        "operationId": "start_idea_as_objective",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "idea_id",
+            "required": true,
+            "schema": {
+              "title": "Idea Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdeaToObjective"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdeaObjectiveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Idea As Objective",
+        "tags": [
+          "ideas"
         ]
       }
     },
@@ -10889,7 +11740,8 @@
                   "project",
                   "objective",
                   "artifact",
-                  "memory"
+                  "memory",
+                  "idea"
                 ],
                 "type": "string"
               },
@@ -11171,6 +12023,57 @@
         "summary": "Skip Task",
         "tags": [
           "objectives"
+        ]
+      }
+    },
+    "/api/timeline": {
+      "get": {
+        "description": "Now, waiting on you, coming up, and pinned. History is the event log (``/api/events``).",
+        "operationId": "timeline",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimelineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Timeline",
+        "tags": [
+          "ideas",
+          "timeline"
         ]
       }
     },

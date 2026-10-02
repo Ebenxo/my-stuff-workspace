@@ -103,3 +103,13 @@ export type McpStatus = S["MCPServerOut"]["status"];
 export type McpTransport = S["MCPServerOut"]["transport"];
 export type ResourceContent = S["ResourceContent"];
 export type PromptMessage = S["PromptMessage"];
+
+export type Idea = S["IdeaOut"];
+export type IdeaCreate = S["IdeaCreate"];
+export type IdeaUpdate = S["IdeaUpdate"];
+export type IdeaKind = S["IdeaOut"]["kind"];
+export type IdeaToObjective = S["IdeaToObjective"];
+export type IdeaObjective = S["IdeaObjectiveOut"];
+export type Timeline = S["TimelineOut"];
+export type TimelineItem = S["TimelineItem"];
+export type TimelineKind = S["TimelineItem"]["kind"];

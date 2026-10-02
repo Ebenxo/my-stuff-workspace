@@ -203,11 +203,17 @@ class EventBus:
         return len(self._subscribers)
 
     async def query(
-        self, flt: EventFilter, *, after_seq: int = 0, limit: int = 200, newest_first: bool = False
+        self,
+        flt: EventFilter,
+        *,
+        after_seq: int = 0,
+        before_seq: int = 0,
+        limit: int = 200,
+        newest_first: bool = False,
     ) -> list[EventRecord]:
         async with self._db.session() as session:
             return await EventRepository(session).query(
-                flt, after_seq=after_seq, limit=limit, newest_first=newest_first
+                flt, after_seq=after_seq, before_seq=before_seq, limit=limit, newest_first=newest_first
             )
 
     async def latest_seq(self) -> int:

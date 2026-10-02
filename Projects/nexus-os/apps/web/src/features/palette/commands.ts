@@ -14,11 +14,13 @@ export interface PaletteCommand {
 
 export const COMMANDS: PaletteCommand[] = [
   { id: "go-home", group: "Go to", label: "Command Center", to: "/", keywords: ["home", "dashboard", "start"] },
+  { id: "go-timeline", group: "Go to", label: "Timeline", to: "/timeline", keywords: ["history", "activity", "upcoming", "schedule", "now", "log"] },
   { id: "go-projects", group: "Go to", label: "Projects", to: "/projects" },
   { id: "go-agents", group: "Go to", label: "Agents", to: "/agents", keywords: ["team", "runs"] },
   { id: "go-workflows", group: "Go to", label: "Workflows", to: "/workflows", keywords: ["automation", "schedule"] },
   { id: "go-approvals", group: "Go to", label: "Approvals", to: "/approvals", keywords: ["review", "permissions"] },
   { id: "go-memory", group: "Go to", label: "Memory", to: "/memory", keywords: ["remember", "facts"] },
+  { id: "go-ideas", group: "Go to", label: "Ideas & notes", to: "/ideas", keywords: ["notes", "todo", "to-do", "reminders", "pinned"] },
   { id: "go-search", group: "Go to", label: "Search", to: "/search", keywords: ["find"] },
   { id: "go-settings", group: "Settings", label: "General settings", to: "/settings", keywords: ["name", "workspace", "permission level"] },
   { id: "go-providers", group: "Settings", label: "AI providers", to: "/settings/providers", keywords: ["models", "api key", "anthropic", "openai", "ollama", "lm studio", "gemini"] },
@@ -27,6 +29,7 @@ export const COMMANDS: PaletteCommand[] = [
   { id: "go-usage", group: "Settings", label: "Usage & budgets", to: "/settings/usage", keywords: ["cost", "tokens", "spend"] },
   { id: "go-health", group: "Settings", label: "System health", to: "/settings/health", keywords: ["status", "audit", "verify"] },
   { id: "new-objective", group: "Create", label: "New objective", to: "/?focus=objective", keywords: ["goal", "task", "plan"] },
+  { id: "new-idea", group: "Create", label: "Capture an idea, note or to-do", to: "/ideas?new=1", keywords: ["note", "todo", "reminder", "jot"] },
   { id: "new-project", group: "Create", label: "New project", to: "/projects?new=1" },
   { id: "new-workflow", group: "Create", label: "New workflow", to: "/workflows?new=1", keywords: ["automation"] },
   { id: "new-mcp", group: "Create", label: "Add an MCP server", to: "/settings/integrations?add=1", keywords: ["integration", "connect", "tools"] },

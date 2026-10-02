@@ -5,6 +5,7 @@
 - Missed times (the app was closed) collapse into one catch-up run, then the schedule moves on.
 - A firing is skipped while the schedule's previous run is still going, so runs never pile up.
 - Every firing or skip is an event, with the reason.
+- Other time-based jobs (to-do reminders) ride on the same tick through ``also_on_tick``.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+from collections.abc import Awaitable, Callable, Sequence
 from datetime import datetime
 
 from app.core.clock import Clock, SystemClock
@@ -38,6 +40,7 @@ class Scheduler:
         bus: EventBus,
         clock: Clock | None = None,
         tick_s: float = TICK_S,
+        also_on_tick: Sequence[Callable[[datetime], Awaitable[object]]] = (),
     ) -> None:
         self._schedules = schedules
         self._runs = runs
@@ -45,6 +48,7 @@ class Scheduler:
         self._bus = bus
         self._clock = clock or SystemClock()
         self._tick_s = tick_s
+        self._also_on_tick = list(also_on_tick)
         self._task: asyncio.Task[None] | None = None
 
     # ======================================================================= schedules
@@ -124,6 +128,13 @@ class Scheduler:
             run_id = await self._fire(row, now)
             if run_id:
                 started.append(run_id)
+        for job in self._also_on_tick:
+            try:
+                await job(now)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                log.exception("scheduled job %s failed", getattr(job, "__qualname__", job))
         return started
 
     async def _fire(self, row: ScheduleOut, now: datetime, *, manual: bool = False) -> str | None:

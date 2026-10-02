@@ -13,19 +13,25 @@ from app.schemas.events import ChainVerification, EventRecord
 router = APIRouter(prefix="/api/events", tags=["events"])
 
 
+def _types(csv: str | None) -> frozenset[str] | None:
+    return frozenset(t for t in (csv or "").split(",") if t) or None
+
+
 def _filter(
     project_id: str | None,
     objective_id: str | None,
     task_id: str | None,
     run_id: str | None,
     types: str | None,
+    exclude_types: str | None = None,
 ) -> EventFilter:
     return EventFilter(
         project_id=project_id,
         objective_id=objective_id,
         task_id=task_id,
         run_id=run_id,
-        types=frozenset(t for t in (types or "").split(",") if t) or None,
+        types=_types(types),
+        exclude_types=_types(exclude_types),
     )
 
 
@@ -37,13 +43,23 @@ async def list_events(
     task_id: str | None = None,
     run_id: str | None = None,
     types: Annotated[str | None, Query(description="Comma-separated event types")] = None,
+    exclude_types: Annotated[
+        str | None, Query(description="Comma-separated event types to leave out")
+    ] = None,
     after_seq: int = 0,
+    before_seq: Annotated[
+        int, Query(description="Only events older than this seq (page back in history)")
+    ] = 0,
     limit: int = 200,
     newest_first: bool = False,
 ) -> list[EventRecord]:
-    flt = _filter(project_id, objective_id, task_id, run_id, types)
+    flt = _filter(project_id, objective_id, task_id, run_id, types, exclude_types)
     return await c.bus.query(
-        flt, after_seq=after_seq, limit=min(max(limit, 1), 1000), newest_first=newest_first
+        flt,
+        after_seq=after_seq,
+        before_seq=max(before_seq, 0),
+        limit=min(max(limit, 1), 1000),
+        newest_first=newest_first,
     )
 
 

@@ -71,6 +71,8 @@ export function searchHref(hit: Pick<SearchHit, "kind" | "id" | "project_id">): 
       return `/projects/${hit.project_id}?tab=artifacts&artifact=${hit.id}`;
     case "memory":
       return hit.project_id ? `/projects/${hit.project_id}?tab=memory&memory=${hit.id}` : `/memory?memory=${hit.id}`;
+    case "idea":
+      return `/ideas?idea=${hit.id}`;
   }
 }
 
@@ -79,6 +81,7 @@ export const KIND_LABEL: Record<SearchHit["kind"], string> = {
   objective: "Objectives",
   artifact: "Deliverables",
   memory: "Memory",
+  idea: "Ideas & notes",
 };
 
 /** Split an FTS snippet ("… [match] …") into plain and highlighted parts, without using HTML. */

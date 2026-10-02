@@ -5,11 +5,13 @@ export type ShortcutAction = "palette" | "shortcuts" | "search" | "toggle-bottom
 /** "g" then a letter goes somewhere. */
 export const GO: Record<string, { to: string; label: string }> = {
   c: { to: "/", label: "Command Center" },
+  t: { to: "/timeline", label: "Timeline" },
   p: { to: "/projects", label: "Projects" },
   a: { to: "/agents", label: "Agents" },
   w: { to: "/workflows", label: "Workflows" },
   r: { to: "/approvals", label: "Approvals (review)" },
   m: { to: "/memory", label: "Memory" },
+  i: { to: "/ideas", label: "Ideas & notes" },
   s: { to: "/settings", label: "Settings" },
 };
 

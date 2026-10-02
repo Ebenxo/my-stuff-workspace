@@ -38,6 +38,8 @@ pnpm install
 python scripts/dev.py          # API on http://127.0.0.1:8765, web on http://localhost:5173
 ```
 
+Then open **http://localhost:5173** in a browser on the same computer. On Windows use `py scripts\dev.py` if `python` is not on your PATH. Stop it with Ctrl+C.
+
 `scripts/dev.py` stores data in `data/dev/` (gitignored), creates a per-launch API token, and hands it to the Vite dev proxy so it never ships in the browser bundle. Works on Windows, macOS and Linux. Only one API can use a data folder at a time; a second copy needs its own folder and port, e.g. `NEXUS_PORT=8766 python scripts/dev.py --api-only --home data/dev2`.
 
 ## First run
@@ -46,7 +48,15 @@ The first time NEXUS opens it asks four things: what to call you, how careful ag
 
 ## Getting around
 
-Press **Ctrl K** (⌘K on a Mac) anywhere for the command palette: type part of a page, an action ("new workflow", "add an MCP server", "try the demo") or a project, or anything to search for. **?** lists every shortcut: **/** searches, **G** then a letter goes to a page (C Command Center, P Projects, A Agents, W Workflows, R Approvals, M Memory, S Settings), **Ctrl J** shows the bottom panel with events and the NEXUS command line (`help`, `status`, `approvals`, `open <page>`, `search <words>`, `verify`).
+Press **Ctrl K** (⌘K on a Mac) anywhere for the command palette: type part of a page, an action ("new workflow", "add an MCP server", "try the demo") or a project, or anything to search for. **?** lists every shortcut: **/** searches, **G** then a letter goes to a page (C Command Center, T Timeline, P Projects, A Agents, W Workflows, R Approvals, M Memory, I Ideas & notes, S Settings), **Ctrl J** shows the bottom panel with events and the NEXUS command line (`help`, `status`, `approvals`, `open <page>`, `search <words>`, `verify`).
+
+## Timeline: everything in one place
+
+**Timeline** (in the sidebar, or **G T**) shows what needs you (approvals, plans waiting for review, agents with a question, workflows at an approval step, overdue to-dos), what is happening now (objectives, agents and workflows at work), what is coming up (scheduled workflow runs and to-dos by due time), what you pinned, and below it the full history, newest first and grouped by day. Every entry links to the thing it is about; **Show every step** adds the fine-grained agent and tool steps; **Load older** goes back as far as the log goes; a project filter narrows it all to one project. It updates live. The Command Center shows the first few items in *Needs you & coming up*.
+
+## Ideas, notes and to-dos
+
+**Ideas & notes** (or **G I**) keeps the small things: ideas, notes and to-dos, each optionally in a project, pinned, or given a due time (with quick choices such as *Tomorrow morning*). When a to-do comes due, NEXUS sends one notification and puts it under *Needs you*; moving the due time sets a new reminder. Mark things done, edit them in place, search them, and start any idea as an objective with one click (you still review the plan first). The Command Center has a one-line *Jot something down* box: type, press Enter; start with `todo:` or `note:` to choose the kind. Ideas are part of the top-bar search.
 
 ## Try the demo
 
@@ -62,7 +72,7 @@ For a single focused job you can also run one agent directly from **Agents**.
 
 ## Memory and search
 
-NEXUS remembers what you (and, with your say-so, its agents) decide is worth keeping: facts, decisions and preferences, per project or across all projects. Before each run the relevant memories are given to the agent as clearly marked background; the run page shows exactly what it was given and why. Everything remembered is visible and editable under **Memory**, suggestions wait for you, and passwords, keys and personal identifiers are refused outright. The search box in the top bar finds projects, objectives, deliverables and memories. Details: [`docs/MEMORY.md`](docs/MEMORY.md).
+NEXUS remembers what you (and, with your say-so, its agents) decide is worth keeping: facts, decisions and preferences, per project or across all projects. Before each run the relevant memories are given to the agent as clearly marked background; the run page shows exactly what it was given and why. Everything remembered is visible and editable under **Memory**, suggestions wait for you, and passwords, keys and personal identifiers are refused outright. The search box in the top bar finds projects, objectives, deliverables, memories and ideas. Details: [`docs/MEMORY.md`](docs/MEMORY.md).
 
 ## Workflows and schedules
 
@@ -83,7 +93,7 @@ python scripts/e2e.py --keep       # just the end-to-end walkthrough; keeps its 
 python scripts/gen_openapi.py      # regenerate TypeScript API types after changing the backend
 ```
 
-The end-to-end walkthrough starts its own API, web app and a scripted stand-in model on free ports with a fresh data folder, then drives a real browser through onboarding, the command palette, an agent whose risky action waits for approval, the demo objective to verification, memory and search, a workflow built in the editor and run twice, audit-log verification, and every page at 1440 and 390 pixels wide with basic accessibility checks. It needs a Playwright browser (`pnpm exec playwright install chromium`); without one it reports itself as skipped.
+The end-to-end walkthrough starts its own API, web app and a scripted stand-in model on free ports with a fresh data folder, then drives a real browser through onboarding, the command palette, an agent whose risky action waits for approval, the demo objective to verification, memory and search, a workflow built in the editor and run twice, audit-log verification, shortcuts, an idea and an overdue to-do on the timeline, and every page at 1440 and 390 pixels wide with basic accessibility checks. It needs a Playwright browser (`pnpm exec playwright install chromium`); without one it reports itself as skipped.
 
 ## Security posture in one paragraph
 

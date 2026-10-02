@@ -24,6 +24,7 @@ from app.providers.gateway import LLMGateway
 from app.providers.registry import ProviderRegistry, new_http_client
 from app.providers.router import ModelRouter
 from app.providers.usage import UsageService
+from app.repositories.idea_store import IdeaStore
 from app.repositories.integration_store import IntegrationStore
 from app.repositories.memory_store import MemoryStore
 from app.repositories.orchestration_store import ObjectiveStore, TaskStore
@@ -45,12 +46,14 @@ from app.services.conversations import ConversationService
 from app.services.demo import DemoService
 from app.services.files import FilesService
 from app.services.health import HealthService, register_core_checks
+from app.services.ideas import IdeaService
 from app.services.mcp import MCPService
 from app.services.notifications import NotificationService
 from app.services.objectives import ObjectiveService
 from app.services.projects import ProjectService
 from app.services.providers import ProviderService
 from app.services.settings import SettingsService
+from app.services.timeline import TimelineService
 from app.services.tools import ToolService
 from app.services.universal_search import UniversalSearch
 from app.tasks.queue import InProcessJobQueue, JobQueue
@@ -120,6 +123,9 @@ class AppContainer:
     integration_store: IntegrationStore
     mcp_manager: MCPServerManager
     mcp: MCPService
+    idea_store: IdeaStore
+    ideas: IdeaService
+    timeline: TimelineService
     started_at: float
 
     async def close(self) -> None:
@@ -262,8 +268,23 @@ async def build_container(
     )
     tool_service = ToolService(tool_row_store, tool_call_store, tools, bus)
     files = FilesService(projects, bus)
+    idea_store = IdeaStore(db, clock)
+    ideas = IdeaService(
+        store=idea_store,
+        index=search_index,
+        projects=projects,
+        objectives=objective_service,
+        notifications=notifications,
+        bus=bus,
+        clock=clock,
+    )
     universal_search = UniversalSearch(
-        search_index, projects=projects, objectives=objective_store, artifacts=artifacts, memory=memory
+        search_index,
+        projects=projects,
+        objectives=objective_store,
+        artifacts=artifacts,
+        memory=memory,
+        reindexers=[ideas.reindex_all],
     )
     bus.add_listener(universal_search.on_event)
 
@@ -300,7 +321,23 @@ async def build_container(
         clock=clock,
     )
     scheduler = Scheduler(
-        schedules=schedule_store, runs=workflow_run_store, workflows=workflows, bus=bus, clock=clock
+        schedules=schedule_store,
+        runs=workflow_run_store,
+        workflows=workflows,
+        bus=bus,
+        clock=clock,
+        also_on_tick=[ideas.remind_due],
+    )
+    timeline = TimelineService(
+        objectives=objective_store,
+        runs=run_store,
+        agents=agent_store,
+        approvals=approval_store,
+        workflows=workflow_store,
+        workflow_runs=workflow_run_store,
+        schedules=schedule_store,
+        ideas=idea_store,
+        clock=clock,
     )
     integration_store = IntegrationStore(db, clock)
     mcp_manager = MCPServerManager(tools, tool_row_store, bus, clock)
@@ -372,5 +409,8 @@ async def build_container(
         integration_store=integration_store,
         mcp_manager=mcp_manager,
         mcp=mcp,
+        idea_store=idea_store,
+        ideas=ideas,
+        timeline=timeline,
         started_at=started_at,
     )

@@ -344,6 +344,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ideas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Ideas */
+        get: operations["list_ideas"];
+        put?: never;
+        /** Create Idea */
+        post: operations["create_idea"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ideas/due-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ideas Due Count
+         * @description Open to-dos (and dated ideas or notes) whose due time has come.
+         */
+        get: operations["ideas_due_count"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ideas/{idea_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Idea */
+        get: operations["get_idea"];
+        put?: never;
+        post?: never;
+        /** Delete Idea */
+        delete: operations["delete_idea"];
+        options?: never;
+        head?: never;
+        /** Update Idea */
+        patch: operations["update_idea"];
+        trace?: never;
+    };
+    "/api/ideas/{idea_id}/objective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Idea As Objective
+         * @description Start the idea as an objective (planning begins in the background); the idea is marked done.
+         */
+        post: operations["start_idea_as_objective"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/mcp/servers": {
         parameters: {
             query?: never;
@@ -1362,6 +1439,26 @@ export interface paths {
         put?: never;
         /** Skip Task */
         post: operations["skip_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Timeline
+         * @description Now, waiting on you, coming up, and pinned. History is the event log (``/api/events``).
+         */
+        get: operations["timeline"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2395,6 +2492,107 @@ export interface components {
             status: "ok" | "degraded" | "down" | "unavailable";
             /** Version */
             version: string;
+        };
+        /** IdeaCreate */
+        IdeaCreate: {
+            /** Due At */
+            due_at?: string | null;
+            /**
+             * Kind
+             * @default idea
+             * @enum {string}
+             */
+            kind?: "idea" | "note" | "todo";
+            /**
+             * Pinned
+             * @default false
+             */
+            pinned?: boolean;
+            /** Project Id */
+            project_id?: string | null;
+            /** Text */
+            text: string;
+        };
+        /** IdeaObjectiveOut */
+        IdeaObjectiveOut: {
+            idea: components["schemas"]["IdeaOut"];
+            objective: components["schemas"]["ObjectiveOut"];
+        };
+        /** IdeaOut */
+        IdeaOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Done At */
+            done_at: string | null;
+            /** Due At */
+            due_at: string | null;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "idea" | "note" | "todo";
+            /** Objective Id */
+            objective_id: string | null;
+            /** Pinned */
+            pinned: boolean;
+            /** Project Id */
+            project_id: string | null;
+            /** Reminded At */
+            reminded_at: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "done";
+            /** Text */
+            text: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * IdeaToObjective
+         * @description Start an idea as an objective. The project defaults to the idea's own.
+         */
+        IdeaToObjective: {
+            /**
+             * Private
+             * @default false
+             */
+            private?: boolean;
+            /** Project Id */
+            project_id?: string | null;
+            /**
+             * Run Mode
+             * @default review_plan
+             * @enum {string}
+             */
+            run_mode?: "review_plan" | "auto";
+        };
+        /**
+         * IdeaUpdate
+         * @description Only the fields sent are changed. Send ``null`` to clear ``project_id`` or ``due_at``.
+         */
+        IdeaUpdate: {
+            /** Due At */
+            due_at?: string | null;
+            /** Kind */
+            kind?: ("idea" | "note" | "todo") | null;
+            /** Pinned */
+            pinned?: boolean | null;
+            /** Project Id */
+            project_id?: string | null;
+            /** Status */
+            status?: ("open" | "done") | null;
+            /** Text */
+            text?: string | null;
         };
         /** MCPHealth */
         MCPHealth: {
@@ -3499,7 +3697,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "project" | "objective" | "artifact" | "memory";
+            kind: "project" | "objective" | "artifact" | "memory" | "idea";
             /** Project Id */
             project_id: string | null;
             /** Score */
@@ -3609,6 +3807,52 @@ export interface components {
          * @enum {string}
          */
         TaskStatus: "WAITING" | "QUEUED" | "RUNNING" | "NEEDS_APPROVAL" | "BLOCKED" | "COMPLETED" | "SKIPPED" | "FAILED" | "CANCELLED";
+        /** TimelineItem */
+        TimelineItem: {
+            /** At */
+            at: string | null;
+            /**
+             * Detail
+             * @default
+             */
+            detail?: string;
+            /** Id */
+            id: string;
+            /** Idea Kind */
+            idea_kind?: ("idea" | "note" | "todo") | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "objective" | "agent_run" | "workflow_run" | "schedule" | "approval" | "idea";
+            /** Project Id */
+            project_id: string | null;
+            /** Ref Id */
+            ref_id?: string | null;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+        };
+        /**
+         * TimelineOut
+         * @description What is happening now, what needs the person, what is coming up, and what they pinned.
+         */
+        TimelineOut: {
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** Next */
+            next: components["schemas"]["TimelineItem"][];
+            /** Now */
+            now: components["schemas"]["TimelineItem"][];
+            /** Pinned */
+            pinned: components["schemas"]["TimelineItem"][];
+            /** Waiting */
+            waiting: components["schemas"]["TimelineItem"][];
+        };
         /** ToolCallOut */
         ToolCallOut: {
             /** Approval Id */
@@ -4571,7 +4815,11 @@ export interface operations {
                 run_id?: string | null;
                 /** @description Comma-separated event types */
                 types?: string | null;
+                /** @description Comma-separated event types to leave out */
+                exclude_types?: string | null;
                 after_seq?: number;
+                /** @description Only events older than this seq (page back in history) */
+                before_seq?: number;
                 limit?: number;
                 newest_first?: boolean;
             };
@@ -4708,6 +4956,227 @@ export interface operations {
                     "application/json": {
                         [key: string]: boolean;
                     };
+                };
+            };
+        };
+    };
+    list_ideas: {
+        parameters: {
+            query?: {
+                status_filter?: "open" | "done" | "all";
+                kind?: ("idea" | "note" | "todo") | null;
+                project_id?: string | null;
+                pinned?: boolean | null;
+                q?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdeaOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_idea: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdeaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdeaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ideas_due_count: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
+                };
+            };
+        };
+    };
+    get_idea: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                idea_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdeaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_idea: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                idea_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_idea: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                idea_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdeaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdeaOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_idea_as_objective: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                idea_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IdeaToObjective"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdeaObjectiveOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -6907,7 +7376,7 @@ export interface operations {
             query: {
                 q: string;
                 project_id?: string | null;
-                kinds?: ("project" | "objective" | "artifact" | "memory")[];
+                kinds?: ("project" | "objective" | "artifact" | "memory" | "idea")[];
                 limit?: number;
             };
             header?: never;
@@ -7104,6 +7573,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    timeline: {
+        parameters: {
+            query?: {
+                project_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineOut"];
                 };
             };
             /** @description Validation Error */

@@ -10,8 +10,10 @@ import { ActivityList } from "../features/events/ActivityList";
 import { isActivityEvent } from "../features/events/describe";
 import { ObjectiveComposer } from "../features/objectives/ObjectiveComposer";
 import { ObjectiveList } from "../features/objectives/ObjectiveList";
+import { QuickCapture } from "../features/ideas/QuickCapture";
 import { NewProjectDialog } from "../features/projects/NewProjectDialog";
 import { ProjectCard } from "../features/projects/ProjectCard";
+import { TimelineGlance } from "../features/timeline/TimelineGlance";
 import { errorMessage, useHealth, useHasRealProvider, useProjects, useSettings, useUnreadCount } from "../lib/queries";
 import { useEvents } from "../stores/events";
 import { Page, Section } from "./Page";
@@ -120,6 +122,11 @@ export function CommandCenterRoute() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mb-8 grid gap-3 lg:grid-cols-2">
+        <TimelineGlance />
+        <QuickCapture />
       </div>
 
       <Section title="Objectives">

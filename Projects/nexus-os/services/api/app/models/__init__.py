@@ -8,5 +8,6 @@ from app.models import orchestration as _orchestration  # noqa: F401  isort:skip
 from app.models import memory as _memory  # noqa: F401  isort:skip
 from app.models import workflows as _workflows  # noqa: F401  isort:skip
 from app.models import integrations as _integrations  # noqa: F401  isort:skip
+from app.models import ideas as _ideas  # noqa: F401  isort:skip
 
 __all__ = ["Base", "Database"]

@@ -6,6 +6,7 @@ import { retryPolicy } from "./lib/queries";
 import { AgentsRoute } from "./routes/Agents";
 import { ApprovalsRoute } from "./routes/Approvals";
 import { CommandCenterRoute } from "./routes/CommandCenter";
+import { IdeasRoute } from "./routes/Ideas";
 import { MemoryRoute } from "./routes/Memory";
 import { NotFoundRoute } from "./routes/NotFound";
 import { ObjectiveRoute } from "./routes/Objective";
@@ -14,6 +15,7 @@ import { ProjectsRoute } from "./routes/Projects";
 import { ProvidersRoute } from "./routes/Providers";
 import { RunRoute } from "./routes/Run";
 import { SearchRoute } from "./routes/Search";
+import { TimelineRoute } from "./routes/Timeline";
 import { GeneralSettingsRoute, HealthRoute, IntegrationsRoute, SettingsLayout, ToolsRoute } from "./routes/Settings";
 import { UsageRoute } from "./routes/Usage";
 import { WorkflowEditorRoute } from "./routes/WorkflowEditor";
@@ -32,6 +34,8 @@ const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <CommandCenterRoute /> },
+      { path: "timeline", element: <TimelineRoute /> },
+      { path: "ideas", element: <IdeasRoute /> },
       { path: "projects", element: <ProjectsRoute /> },
       { path: "projects/:projectId", element: <ProjectDetailRoute /> },
       { path: "agents", element: <AgentsRoute /> },

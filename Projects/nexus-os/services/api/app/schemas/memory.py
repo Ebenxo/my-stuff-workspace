@@ -120,7 +120,7 @@ class ContextReport(BaseModel):
 
 # ---- universal search --------------------------------------------------------------------------
 
-SearchKind = Literal["project", "objective", "artifact", "memory"]
+SearchKind = Literal["project", "objective", "artifact", "memory", "idea"]
 
 
 class SearchHit(BaseModel):

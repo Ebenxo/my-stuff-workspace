@@ -8,7 +8,7 @@ import { useUniversalSearch } from "../lib/memoryQueries";
 import { errorMessage } from "../lib/queries";
 import { Page, PageHeader, Section } from "./Page";
 
-const ORDER: SearchHit["kind"][] = ["project", "objective", "artifact", "memory"];
+const ORDER: SearchHit["kind"][] = ["project", "objective", "artifact", "memory", "idea"];
 
 function Snippet({ text }: { text: string }) {
   return (
@@ -55,7 +55,7 @@ export function SearchRoute() {
 
   return (
     <Page>
-      <PageHeader title="Search" description="Projects, objectives, deliverables and memory in one place." />
+      <PageHeader title="Search" description="Projects, objectives, deliverables, memory and ideas in one place." />
       <SearchBox key={q} initial={q} onSearch={(next) => setParams(next ? { q: next } : {}, { replace: true })} />
 
       {!q ? (

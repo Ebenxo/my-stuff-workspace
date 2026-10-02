@@ -74,6 +74,12 @@ Engine: SQLite (WAL, `foreign_keys=ON`) via SQLAlchemy 2.0 async (`aiosqlite`). 
 
 The plan had `status`, `trust_level` and `secret_ref` columns. As built, status is live state from the running manager, "trust" became the per-server risk level in `config`, and secrets are named per variable instead of one reference.
 
+### Ideas, notes and to-dos — migration `0007` (built, after Phase 10)
+
+| Table | Columns | Notes |
+|---|---|---|
+| `ideas` | `id`, `project_id` (optional), `kind` (`idea`/`note`/`todo`), `text` (≤ 4000 chars, kept as written), `status` (`open`/`done`), `pinned`, `due_at`, `reminded_at`, `done_at`, `objective_id`, timestamps | The person's own small things, separate from memory (which is what agents know). `due_at` drives the timeline's *Coming up* / *Needs you* and one reminder: the scheduler's tick sends a notification and an `IDEA_DUE` event, then sets `reminded_at`; moving `due_at` clears it so the new time gets its own reminder. `objective_id` is set when the idea is started as an objective (the idea is then done). Indexed on `project_id` and (`status`, `due_at`). In universal search as kind `idea`. Event payloads carry only a redacted first line. |
+
 ## Why migrations are split by phase
 
 Each phase ships the tables it needs, so a database created at any phase boundary is valid and the migration history mirrors how the product was built. The aggregate-boundary convention above is what lets earlier tables reference later concepts (`task_id` on `agent_runs`) without a forward foreign key.

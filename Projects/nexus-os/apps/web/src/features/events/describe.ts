@@ -12,6 +12,8 @@ const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v 
 const num = (v: unknown): string => (typeof v === "number" ? String(v) : "?");
 const agent = (v: unknown): string => (typeof v === "string" && v ? agentName(v) : "an agent");
 const capital = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+const IDEA_KIND: Record<string, string> = { idea: "Idea", note: "Note", todo: "To-do" };
+const ideaKind = (p: Record<string, unknown>): string => IDEA_KIND[str(p["kind"]) ?? ""] ?? "Idea";
 const taskName = (p: Record<string, unknown>): string => {
   const title = str(p["title"]);
   return title ? `“${title}”` : (str(p["key"]) ?? "a task");
@@ -228,6 +230,24 @@ export function describeEvent(e: EventRecord): EventView {
       return { text: p["manual"] === true ? "Scheduled workflow run by hand" : "Schedule started a workflow run", tone: "accent" };
     case "SCHEDULE_SKIPPED":
       return { text: `Scheduled run skipped: ${str(p["reason"]) ?? ""}`, tone: "warning" };
+    case "IDEA_CREATED":
+      return { text: `${ideaKind(p)} added: ${str(p["text"]) ?? ""}`, tone: "info" };
+    case "IDEA_UPDATED": {
+      const changed = Array.isArray(p["changed"]) ? (p["changed"] as unknown[]) : [];
+      if (str(p["objective_id"])) return { text: `Started as an objective: ${str(p["text"]) ?? ""}`, tone: "accent" };
+      if (changed.includes("status")) {
+        const done = p["status"] === "done";
+        return { text: `${ideaKind(p)} ${done ? "done" : "reopened"}: ${str(p["text"]) ?? ""}`, tone: done ? "success" : "neutral" };
+      }
+      if (changed.length === 1 && changed[0] === "pinned") {
+        return { text: `${ideaKind(p)} ${p["pinned"] === true ? "pinned" : "unpinned"}: ${str(p["text"]) ?? ""}`, tone: "neutral" };
+      }
+      return { text: `${ideaKind(p)} edited: ${str(p["text"]) ?? ""}`, tone: "neutral" };
+    }
+    case "IDEA_DELETED":
+      return { text: `${ideaKind(p)} deleted: ${str(p["text"]) ?? ""}`, tone: "neutral" };
+    case "IDEA_DUE":
+      return { text: `${ideaKind(p)} due: ${str(p["text"]) ?? ""}`, tone: "warning" };
     case "CLIPBOARD_REQUEST":
       return { text: `Copy offered: ${str(p["label"]) ?? "text"}`, tone: "info" };
     default:
