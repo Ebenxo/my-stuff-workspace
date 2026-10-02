@@ -30,15 +30,17 @@ packages/schemas TypeScript types generated from the API's OpenAPI document
 
 ## Run it (development)
 
-Prerequisites: Python 3.11+, [`uv`](https://docs.astral.sh/uv/), Node 20+, [`pnpm`](https://pnpm.io/).
+Prerequisites: Python 3.11+, [`uv`](https://docs.astral.sh/uv/), Node 20+, [`pnpm`](https://pnpm.io/) (after installing Node, `corepack enable` provides it).
 
-```bash
-pnpm install
-(cd services/api && uv sync)
-python scripts/dev.py          # API on http://127.0.0.1:8765, web on http://localhost:5173
-```
+**Windows:** double-click **`start.cmd`** in this folder. **macOS / Linux:** run `python3 scripts/dev.py`.
 
-Then open **http://localhost:5173** in a browser on the same computer. On Windows use `py scripts\dev.py` if `python` is not on your PATH. Stop it with Ctrl+C.
+Either way it checks the tools above and says how to get any that are missing, installs the project's own packages the first time (a few minutes), starts the API and the web app, waits until they answer, and opens **http://localhost:5173** in your browser. Keep that window open while you use NEXUS; press Ctrl+C or close it to stop. (`--no-browser` skips opening the browser; the manual steps are `pnpm install`, `cd services/api && uv sync`, then `python scripts/dev.py`.)
+
+**"This site can't be reached"?** NEXUS only runs on your own computer, so:
+- open the address **on the computer where `start.cmd` (or `scripts/dev.py`) is running**: a phone or another computer cannot reach it;
+- wait for the window to say *NEXUS is ready* (the first start installs packages first);
+- keep that window open (closing it stops NEXUS);
+- if the window shows an error instead, it says what is missing or what failed.
 
 `scripts/dev.py` stores data in `data/dev/` (gitignored), creates a per-launch API token, and hands it to the Vite dev proxy so it never ships in the browser bundle. Works on Windows, macOS and Linux. Only one API can use a data folder at a time; a second copy needs its own folder and port, e.g. `NEXUS_PORT=8766 python scripts/dev.py --api-only --home data/dev2`.
 
