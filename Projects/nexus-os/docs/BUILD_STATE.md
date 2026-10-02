@@ -1,10 +1,19 @@
 # NEXUS OS — build state
 
-_Last updated: 2026-09-29 (end of Phase 10: the MVP build is complete)_
+_Last updated: 2026-10-02 (after Phase 10: Timeline and Ideas & notes added to the finished MVP)_
 
 ## Current phase
 
 **Phase 10 — polish and end-to-end verification: complete.** Phases 0–10 are done, and every item of the 20-point MVP definition is verified (table below): by unit and integration tests, and again in one scripted browser walkthrough that runs in `scripts/check.py` (items 4 and 14 through the demo objective). What remains is listed under *Not verified / not done*: above all, real models (only scripted ones and a local stand-in were available here), the Tauri shell (cannot be compiled here) and packaging the API for the desktop app.
+
+### Added after Phase 10 (Timeline, Ideas & notes)
+
+Asked for by the owner: one working view of everything that is going on, has gone on and is going to go on, plus a place for ideas and the other small things that matter.
+
+- **Timeline** page (`/timeline`, sidebar, `G T`): *Needs you* (pending approvals, plans awaiting review, paused objectives, agents with a question, workflow runs at an approval step, overdue to-dos), *Happening now* (objectives planning/running/verifying, agents working, workflow runs running), *Coming up* (enabled schedules by next run, dated to-dos), *Keep in mind* (pinned ideas), and *Earlier*: the event log as a history, newest first, grouped by day, every entry linking to what it is about, with *Show every step* and *Load older*. Project filter; live updates. Backed by `GET /api/timeline` (reads the stores of record) and `/api/events` with the new `before_seq` and `exclude_types`.
+- **Ideas & notes** page (`/ideas`, `G I`): capture an idea, note or to-do (Enter saves), with an optional project, pin and due time (quick choices); filter by status and kind, search, mark done, edit in place, delete (with a second click), and **start an idea as an objective** (plan reviewed first by default). Migration `0007` (`ideas` table), `/api/ideas` CRUD, `/api/ideas/{id}/objective`, `/api/ideas/due-count` (sidebar badge).
+- **Due reminders**: when a to-do comes due the scheduler's tick sends one notification and an `IDEA_DUE` event; moving the due time arms a new one. Events `IDEA_CREATED`, `IDEA_UPDATED`, `IDEA_DELETED`, `IDEA_DUE` carry only a redacted first line.
+- Ideas are in universal search (kind `idea`), the command palette (*Ideas & notes*, *Timeline*, *Capture an idea, note or to-do*) and the Command Center (*Needs you & coming up*, *Jot something down* with `todo:`/`note:` prefixes).
 
 ### Added in Phase 10 (polish and verification)
 
@@ -152,9 +161,9 @@ _Last updated: 2026-09-29 (end of Phase 10: the MVP build is complete)_
 
 | Area | Result |
 |---|---|
-| Backend (pytest) | 954 passed |
+| Backend (pytest) | __PYTEST__ passed |
 | Lint / format (ruff), strict types (mypy), import contracts (3) | clean |
-| Frontend (vitest) | 147 passed (shared 9, web 138) |
+| Frontend (vitest) | __VITEST__ |
 | ESLint, `tsc` (all packages) | clean |
 | Web production build | ok |
 | Rust sidecar (`cargo test`) | 8 passed |
@@ -164,10 +173,18 @@ _Last updated: 2026-09-29 (end of Phase 10: the MVP build is complete)_
 | Live memory check (Playwright, real API + web app, scripted demo model) | Demo objective → "Remember this for next time?" → Remember (nav badge showed the suggestion); project Memory tab: add a pinned memory, a key refused in the dialog with its category, "rank as agents would" lists both with reasons; a second demo objective: all 6 runs were given memory (12 items in total), the run page lists what was given; top-bar search finds the report with highlights. No console errors or failed requests besides the deliberate refusal; no overflow at 390 px on Memory, Search, run and objective pages; screenshots checked by eye |
 | Live workflow check (Playwright, real API + web app) | Create a workflow; build Start → Approval → Tool (`write_file`) → Output by clicking, add a Delay and connect it by dragging handle to handle (4 connections); validation says *Ready to run*; save as v2; run with an input: the run waits on the approval and the file does not exist (404), approve → Completed and the file holds the rendered text; a bad cron is explained in words; a weekday schedule is created and previewed. No console errors besides the deliberate bad-cron 422s; no overflow at 390 px on the list, editor and run pages; screenshots checked by eye |
 | Live MCP check (Playwright, real API + web app, fixture MCP server, local stand-in model) | Settings → Integrations: add the fixture as a program with a secret variable → Running, 11 tools · 2 resources · 1 prompt; tools, a resource preview and the server's log shown; the secret appears in no page, API response or event; Tools & approvals lists the 11 tools under the server. An agent allowed `mcp__fixture__*` proposed `mcp__fixture__echo`: the run waited on a HIGH approval whose card named the server and tool; approved → completed, result `echo: hello from an agent`, run tainted `mcp:fixture/echo`. Stop → 11 tools marked "Server not running" and still listed on the card; start → running; check → answered in 0.4 ms; a server with a wrong command explains it could not find the program. Stopping NEXUS stopped the server process too. No console errors or failed requests; no overflow at 390 px; screenshots checked by eye |
-| **Scripted E2E in `check.py`** (`scripts/e2e.py`, Chromium, isolated stack, stand-in model) | 10 steps pass in about a minute: audit self-check, onboarding with a connected model, palette → new project, File Manager tools with an approval (file present before, gone after, both calls in Tool activity), demo objective verified with ≥ 3 agents and ≥ 6 graph nodes, memory kept, search finds Memory and Deliverables, workflow built in the editor and run twice (right outputs, 2 runs), audit chain verified with the key events present, shortcuts; 21 pages at 1440 and 390 px with no sideways scrolling and no accessibility findings; no console errors or failed requests |
+| **Scripted E2E in `check.py`** (`scripts/e2e.py`, Chromium, isolated stack, stand-in model) | 11 steps pass in about a minute: audit self-check, onboarding with a connected model, palette → new project, File Manager tools with an approval (file present before, gone after, both calls in Tool activity), demo objective verified with ≥ 3 agents and ≥ 6 graph nodes, memory kept, search finds Memory and Deliverables, workflow built in the editor and run twice (right outputs, 2 runs), audit chain verified with the key events present, shortcuts, an idea and an overdue to-do (on the timeline under *Needs you* and in today's history, then marked done and gone from it, found by search); 23 pages at 1440 and 390 px with no sideways scrolling and no accessibility findings; no console errors or failed requests |
+| Live Timeline / Ideas check (Playwright, real API + web app, demo objective, workflows, schedules and ideas created through the API) | Timeline lanes, *Keep in mind* and *Earlier* by day; Ideas list with overdue/today badges, projects and pins; Command Center cards. No console errors or failed requests; no sideways scrolling at 1440 or 390 px; screenshots checked by eye (they led to: kind icons on the timeline, no repeated "overdue", a clearer pin button, actions under the text on phones) |
 | Dependency audits (`pip-audit`, `pnpm audit`) | no known vulnerabilities |
 
 Run everything: `python scripts/check.py`.
+
+## Architecture decisions made after Phase 10 (Timeline, Ideas & notes)
+
+- **Ideas are their own table, not memory.** Memory is what agents are given (with a sensitivity guard that refuses secrets); ideas are the person's notes, kept exactly as written and never given to an agent unless started as an objective (which redacts, like any objective).
+- **History is the event log**, paged with `before_seq`, rather than a second store; the timeline's live lists are computed from the stores of record on each request (no cache to go stale).
+- **Reminders ride on the scheduler's tick** through a generic `also_on_tick` hook, so the scheduler keeps no dependency on services (layer contract unchanged) and a failing job never stops schedules.
+- **Timeline links are built by the client** from `kind`, `id` and `ref_id`; the API stays free of UI routes.
 
 ## Architecture decisions made in Phase 10
 

@@ -79,3 +79,11 @@ Shared log between Claude Code and Codex (neither shares chat history). Read `do
 **Not verified:** real models (scripted and stand-in only); Tauri build and API packaging; Windows paths; accessibility beyond structural checks.
 **Next:** see "Next" in `docs/BUILD_STATE.md` (real models first, then the desktop build).
 
+
+## 2026-10-02 — Timeline and Ideas & notes (after Phase 10) — Claude Code
+
+**Request:** "access the functional UI that shows everything going on, that has gone on, or that is going to be going on; also ideas and all the other little things that matter."
+**Built:** a **Timeline** page (*Needs you*, *Happening now*, *Coming up*, *Keep in mind*, and the full history by day with links, *Show every step* and *Load older*; project filter; live) backed by `GET /api/timeline` and `/api/events` paging (`before_seq`, `exclude_types`); an **Ideas & notes** page for ideas, notes and to-dos (project, pin, due time, done, edit, delete, search, start as an objective) on a new `ideas` table (migration `0007`); one reminder per due to-do through the scheduler's tick (`IDEA_DUE` + a notification); ideas in universal search, the command palette, shortcuts (`G T`, `G I`), the sidebar (due badge) and two Command Center cards (*Needs you & coming up*, *Jot something down*).
+**Verified:** __CHECK__
+**Not verified:** reminders only fire while NEXUS is running (like schedules); recurring to-dos, snoozing and calendar views are not built.
+**Next:** unchanged: real models first, then the desktop build (see `docs/BUILD_STATE.md`).
