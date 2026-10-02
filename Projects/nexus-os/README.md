@@ -42,6 +42,8 @@ Either way it checks the tools above and says how to get any that are missing, i
 - keep that window open (closing it stops NEXUS);
 - if the window shows an error instead, it says what is missing or what failed.
 
+**Just want to look?** A browser preview of the interface (no install) can be built with `python scripts/build_preview.py`: one self-contained page in `apps/web/dist-preview/`. In it, the Timeline, Ideas & notes, projects and settings work and are saved (to your account when hosted on claude.ai, otherwise in the browser); agents, AI models, tools and workflows say they need NEXUS on your computer.
+
 `scripts/dev.py` stores data in `data/dev/` (gitignored), creates a per-launch API token, and hands it to the Vite dev proxy so it never ships in the browser bundle. Works on Windows, macOS and Linux. Only one API can use a data folder at a time; a second copy needs its own folder and port, e.g. `NEXUS_PORT=8766 python scripts/dev.py --api-only --home data/dev2`.
 
 ## First run

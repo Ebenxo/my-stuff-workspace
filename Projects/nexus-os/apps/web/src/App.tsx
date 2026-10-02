@@ -1,8 +1,9 @@
 import { TooltipProvider, Toaster } from "@nexus/ui";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createBrowserRouter } from "react-router";
+import { RouterProvider, createBrowserRouter, createHashRouter } from "react-router";
 import { AppShell } from "./layout/AppShell";
 import { retryPolicy } from "./lib/queries";
+import { IS_PREVIEW } from "./preview/flag";
 import { AgentsRoute } from "./routes/Agents";
 import { ApprovalsRoute } from "./routes/Approvals";
 import { CommandCenterRoute } from "./routes/CommandCenter";
@@ -29,7 +30,8 @@ const queryClient = new QueryClient({
   },
 });
 
-const router = createBrowserRouter([
+// The browser preview is one hosted page, so its routes live after the "#".
+const router = (IS_PREVIEW ? createHashRouter : createBrowserRouter)([
   {
     element: <AppShell />,
     children: [

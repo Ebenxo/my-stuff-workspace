@@ -27,3 +27,6 @@ data/runtime/
 .env.local
 api_token
 secrets.json
+
+# Browser preview build (scripts/build_preview.py)
+dist-preview/
