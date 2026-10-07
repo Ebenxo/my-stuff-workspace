@@ -8,6 +8,7 @@ export default tseslint.config(
   {
     ignores: [
       "**/dist/**",
+      "**/dist-preview/**",
       "**/node_modules/**",
       "**/coverage/**",
       "**/target/**",

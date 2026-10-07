@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emptyState, NEEDS_DESKTOP, PREVIEW_ORIGIN, PreviewServer } from "./server";
+import { fakeAi } from "../test/fakeAi";
 
 const at = new Date("2026-10-02T12:00:00Z");
 const u = (path: string) => new URL(path, PREVIEW_ORIGIN);
@@ -76,7 +77,7 @@ describe("browser preview API", () => {
   it("pages back through history and leaves out what it is asked to", () => {
     const s = server();
     for (let n = 0; n < 5; n++) add(s, { text: `Idea ${n}` });
-    const page = (q: string) => (s.handle("GET", u(`/api/events?${q}`), undefined).body as { seq: number; type: string }[]);
+    const page = (q: string) => s.handle("GET", u(`/api/events?${q}`), undefined).body as { seq: number; type: string }[];
     const newest = page("newest_first=true&limit=3");
     expect(newest.map((e) => e.seq)).toEqual([6, 5, 4]);
     expect(page("newest_first=true&limit=3&before_seq=4").map((e) => e.seq)).toEqual([3, 2, 1]);
@@ -102,16 +103,47 @@ describe("browser preview API", () => {
 
   it("says plainly what needs NEXUS on the computer", () => {
     const s = server();
-    expect(s.handle("GET", u("/api/agents"), undefined)).toEqual({ status: 200, body: [] });
     for (const [method, path] of [
-      ["POST", "/api/objectives"],
-      ["POST", "/api/demo"],
-      ["GET", "/api/usage/summary"],
-      ["POST", "/api/ideas/idea_1/objective"],
+      ["POST", "/api/mcp/servers"],
+      ["POST", "/api/approvals/apr_1/decision"],
+      ["PATCH", "/api/tools/read_file"],
+      ["POST", "/api/providers"],
     ] as const) {
       const r = s.handle(method, u(path), {});
       expect(r.status).toBe(501);
       expect(r.body).toEqual({ error: { code: "needs_desktop", message: NEEDS_DESKTOP } });
     }
+    expect(s.handle("POST", u("/api/schedules"), {}).status).toBe(501);
+    expect(s.handle("GET", u("/api/approvals"), undefined)).toEqual({ status: 200, body: [] });
+  });
+
+  it("works without a model, and says so when work needs one", () => {
+    const s = server();
+    const project = s.handle("POST", u("/api/projects"), { name: "Garden" }).body as { id: string };
+    expect((s.handle("GET", u("/api/agents"), undefined).body as unknown[]).length).toBe(10);
+    expect(s.handle("GET", u("/api/providers"), undefined).body).toEqual([]);
+    const r = s.handle("POST", u("/api/objectives"), { project_id: project.id, text: "Plan the beds" });
+    expect(r).toMatchObject({ status: 503, body: { error: { code: "no_model" } } });
+    expect(s.handle("POST", u("/api/demo"), {}).status).toBe(503);
+    const health = s.handle("GET", u("/api/health"), undefined).body as { checks: { detail: string }[] };
+    expect(health.checks[0]?.detail).toMatch(/No model/);
+  });
+
+  it("offers Claude as the model when the page can use it", () => {
+    const s = new PreviewServer(
+      emptyState(at),
+      () => at,
+      fakeAi(() => "SUMMARY: hi"),
+    );
+    const providers = s.handle("GET", u("/api/providers"), undefined).body as { name: string; kind: string }[];
+    expect(providers).toMatchObject([{ kind: "anthropic", name: "Claude (your claude.ai account)" }]);
+    const models = s.handle("GET", u("/api/models"), undefined).body as { ref: string; tier: string }[];
+    expect(models.map((m) => [m.ref, m.tier])).toEqual([
+      ["prov_claude:quick", "fast"],
+      ["prov_claude:default", "balanced"],
+      ["prov_claude:complex", "strong"],
+    ]);
+    expect(s.handle("POST", u("/api/providers/prov_claude/test"), {}).body).toMatchObject({ ok: true });
+    expect(s.handle("DELETE", u("/api/providers/prov_claude"), undefined).status).toBe(403);
   });
 });

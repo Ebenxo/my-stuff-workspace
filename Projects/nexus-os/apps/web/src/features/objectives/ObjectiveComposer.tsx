@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useCreateObjective, useStartDemo } from "../../lib/objectiveQueries";
 import { errorMessage, useHasRealProvider, useProjects } from "../../lib/queries";
+import { IS_PREVIEW } from "../../preview/flag";
 
 /**
  * The Command Center's main input. By default the plan is shown for review before anything runs;
@@ -44,7 +45,11 @@ export function ObjectiveComposer({ projectId, onNewProject }: { projectId?: str
   function startDemo() {
     demo.mutate(undefined, {
       onSuccess: (o) => {
-        toast.success("Demo started with scripted agents. Nothing leaves this machine.");
+        toast.success(
+          IS_PREVIEW
+            ? "Demo started. Claude does the agents' work on your claude.ai account; the three products are fictional."
+            : "Demo started with scripted agents. Nothing leaves this machine.",
+        );
         void navigate(`/objectives/${o.id}`);
       },
       onError: (e) => toast.error(errorMessage(e)),
@@ -75,7 +80,12 @@ export function ObjectiveComposer({ projectId, onNewProject }: { projectId?: str
             <Label htmlFor="objective-project" className="mb-0 text-xs text-fg-muted">
               Project
             </Label>
-            <Select id="objective-project" value={selectedProject} onChange={(e) => setProject(e.target.value)} className="h-8 w-44 text-[13px]">
+            <Select
+              id="objective-project"
+              value={selectedProject}
+              onChange={(e) => setProject(e.target.value)}
+              className="h-8 w-44 text-[13px]"
+            >
               {(projects.data ?? []).map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}

@@ -2,14 +2,19 @@
  * Boots the browser preview: loads the person's saved data, answers API requests in the page
  * (including the live event stream), saves every change, and sends due reminders while open.
  */
-import { choosePersistence, type StorageKind } from "./persist";
-import { emptyState, PREVIEW_ORIGIN, PreviewServer, type PreviewState } from "./server";
+import { claudeAi, type SampleFn } from "./ai";
+import { choosePersistence, type ClaudeRuntime, type StorageKind } from "./persist";
+import { PREVIEW_ORIGIN, PreviewServer } from "./server";
+import { applyDoc, docBody, emptyState } from "./state";
 
 const REMIND_EVERY_MS = 30_000;
 
 let storage: StorageKind = "none";
+let model = false;
 /** Where this preview keeps the person's data (shown in the banner). */
 export const previewStorage = (): StorageKind => storage;
+/** Whether Claude is available as the model in this view (shown in the banner). */
+export const previewHasModel = (): boolean => model;
 
 function json(status: number, body: unknown): Response {
   return status === 204
@@ -45,23 +50,39 @@ function eventStream(server: PreviewServer, req: Request, url: URL): Response {
 }
 
 export async function installPreview(): Promise<void> {
-  const persistence = await choosePersistence();
+  const runtime = (window as unknown as { claude?: ClaudeRuntime }).claude;
+  const [persistence, sample] = await Promise.all([
+    choosePersistence(runtime),
+    runtime?.use ? (runtime.use("sample") as Promise<SampleFn | null>).catch(() => null) : Promise.resolve(null),
+  ]);
   storage = persistence.kind;
-  let loaded: Partial<PreviewState> | null = null;
+  model = sample !== null;
+  let loaded: Map<string, Record<string, unknown>> | null = null;
   try {
     loaded = await persistence.load();
   } catch (error) {
     console.error("NEXUS preview: could not load saved data", error);
   }
-  const server = new PreviewServer({ ...emptyState(new Date()), ...(loaded ?? {}) });
+  const state = emptyState(new Date());
+  for (const [key, body] of loaded ?? []) {
+    try {
+      applyDoc(state, key, body);
+    } catch (error) {
+      console.error(`NEXUS preview: skipped saved ${key}`, error);
+    }
+  }
+  const server = new PreviewServer(state, () => new Date(), claudeAi(sample));
   if (!loaded) server.started();
 
   const save = (): void => {
     if (server.dirty.size === 0) return;
     const keys = [...server.dirty];
     server.dirty.clear();
-    persistence.save(server.state, keys);
+    persistence.save(keys.map((k) => [k, docBody(server.state, k)]));
   };
+  // Work that runs in the background (agents, objectives, workflows) saves as it goes.
+  server.onChange(save);
+  server.recover();
 
   const realFetch = window.fetch.bind(window);
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {

@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """Build the browser preview: the real web app as one self-contained page, with no API behind it.
 
-    python scripts/build_preview.py      # writes apps/web/dist-preview/nexus-os-preview.html
+    python scripts/build_preview.py          # writes apps/web/dist-preview/nexus-os-preview.html
+    python scripts/build_preview.py --check  # then checks it in a real browser (scripts/e2e/preview.mjs)
 
-The preview answers the API inside the page (`apps/web/src/preview/`): ideas, notes and to-dos, the
-timeline, projects and settings work and are saved; agents, models, tools and workflows say they need
+The preview answers the API inside the page (`apps/web/src/preview/`). On claude.ai, Claude (through
+the page's `sample` capability, on the viewer's own account) is the model: objectives, agents, memory,
+files, deliverables, workflows, ideas and the timeline work and are saved privately per person. Tools
+that touch the computer or the internet, schedules, MCP servers and other providers say they need
 NEXUS on the person's computer. The output is page content for a host that supplies the document
 skeleton (claude.ai Artifacts); every script, style, font and image is inlined into it.
 """
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -70,7 +74,20 @@ def main() -> int:
     if size > MAX_BYTES:
         print("  too large for a hosted page", file=sys.stderr)
         return 1
+    if "--check" in sys.argv[1:]:
+        return check()
     return 0
+
+
+def check() -> int:
+    """Drive the built page in Chromium with a stand-in claude.ai runtime. Exit 3 means no browser."""
+    node = shutil.which("node")
+    if not node:
+        print("Need `node` on PATH for --check.", file=sys.stderr)
+        return 1
+    print("\nChecking the preview in a browser:")
+    env = {**os.environ, "PREVIEW_SHOTS": str(DIST / "screenshots")}
+    return subprocess.run([node, "scripts/e2e/preview.mjs", str(OUT)], cwd=ROOT, env=env, check=False).returncode  # noqa: S603
 
 
 if __name__ == "__main__":
