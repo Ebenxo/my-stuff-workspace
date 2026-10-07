@@ -1,0 +1,95 @@
+# NEXUS OS — tools
+
+## ToolDefinition
+
+```python
+class ToolDefinition:
+    name: str                       # snake_case; MCP tools: "mcp__<server>__<tool>"
+    description: str                # shown to the model and the user
+    input_schema: type[BaseModel]   # validated before policy evaluation
+    output_schema: type[BaseModel] | None
+    risk_level: RiskLevel           # static floor: SAFE | MODERATE | HIGH | VERY_HIGH
+    requires_approval: bool         # static: always ask regardless of policy level
+    permissions: set[Capability]    # fs.read, fs.write, fs.delete, proc.exec, net.http, net.search, db.read, memory.write, ui.clipboard …
+    handler: Callable[[ToolContext, BaseModel], Awaitable[Any]]
+    # extensions
+    assess_risk: Callable[[BaseModel], RiskAssessment] | None   # dynamic escalation / denial from arguments
+    returns_untrusted: bool         # result is external content (taints the run)
+    alternatives: list[str]         # tools the recovery planner may try on TOOL_FAILURE
+    timeout_s: float; max_output_chars: int
+    source: str                     # "builtin" | "mcp:<server>" | "skill:<name>"
+```
+
+`ToolContext` gives a handler exactly what it may use and nothing else: the project's `WorkspaceFS` (path-guarded), `SandboxManager`, an SSRF-guarded HTTP client, `ArtifactStore`, `MemoryService` façade, the event emitter, and run/task identity. Handlers never receive the database session, the secret store, or the process environment.
+
+## Effective risk
+
+`effective = max(static risk_level, assess_risk(args).level)`. `assess_risk` may also return `DENY` (never executable, e.g. a path outside the workspace, a `run_command` that matches the hard denylist). Denials are recorded as `ToolCall(status=DENIED)` and returned to the agent as `PERMISSION_DENIED` so it can pick another route.
+
+## Built-in tools
+
+| Tool | Static risk | Always asks | What it does | Key controls |
+|---|---|---|---|---|
+| `list_directory` | SAFE | | List entries in a workspace directory | path guard |
+| `read_file` | SAFE | | Read a text file (size-capped, binary refused) | path guard; result **untrusted** |
+| `search_files` | SAFE | | Keyword/regex search across workspace files | path guard, result caps; result untrusted |
+| `write_file` | MODERATE | | Write/overwrite a text file under `files/` or `temp/` | path guard; overwrite keeps the prior content in `.history/`; writes into a git repo's `.git/` refused |
+| `create_directory` | MODERATE | | `mkdir -p` inside the workspace | path guard |
+| `move_file` | MODERATE → HIGH if it overwrites | | Move/rename inside the workspace | path guard; overwrite escalates |
+| `delete_file` | HIGH | **yes** | Soft-delete: moves the file into the project `.trash/` (recoverable), never `unlink` | path guard; approval even under the permissive policy |
+| `run_python` | MODERATE → HIGH if the code touches process/network/native APIs (AST scan) | | Run Python in the sandbox with a temp cwd | `SandboxManager` limits (below) |
+| `run_command` | HIGH (VERY_HIGH with `network=true`) | **yes, always** (never session-grantable) | Run an executable with an argument list (no shell), or `shell=true` with command text reviewed as a shell command | denylist and shell-launchers-in-argv → DENY before anyone is asked; a working folder outside `files/`/`temp/` or missing → DENY; timeout; env scrubbed; network off unless asked for |
+| `git_status` `git_diff` `git_log` | SAFE | | Read-only git inspection of a repo inside the workspace | fixed argument lists; `--no-pager`; no config/hooks execution (`-c core.fsmonitor=false`, `GIT_CONFIG_NOSYSTEM`) |
+| `http_request` | MODERATE for GET/HEAD; HIGH for other methods | non-GET | HTTP(S) request | SSRF guard, redirect re-validation, size/time caps, optional domain allow-list; result untrusted |
+| `web_search` | MODERATE | | Search via a configured backend (SearXNG, Brave); no backend configured → clear `TOOL_FAILURE` | query leaves the machine (shown in the approval/activity); result untrusted |
+| `database_query` | SAFE | | Read-only SQL against a SQLite file **inside the project workspace** | read-only connection plus an authorizer that allows only SELECT/READ/FUNCTION/RECURSIVE (no `ATTACH`, `PRAGMA`, writes, extensions); progress-handler time limit (stops runaway recursive queries); row cap; NEXUS's own DB is outside the workspace and unreachable |
+| `create_document` | MODERATE | | Create/version an artifact of any type (`report`, `json`, `dataset`, `website`, …) | goes through `ArtifactStore`; names sanitised; versioned |
+| `create_markdown` | MODERATE | | Create/version a Markdown artifact | same |
+| `parse_csv` | SAFE | | Column names, inferred types, row count, sample, basic statistics | stdlib only; row cap |
+| `parse_json` | SAFE | | Parse/validate a JSON file or string, optional JSON-pointer | size cap |
+| `calculator` | SAFE | | Arithmetic via a whitelist-AST evaluator | no names, no calls except a math whitelist |
+| `datetime` | SAFE | | Current time/zone conversions | |
+| `search_memory` | SAFE | | Semantic + keyword recall from project/global memory, ranked like the context engine | limited by the agent's `memory_scope.read`; private-run memories only in private runs; results are fenced data; recalling a memory written after untrusted content taints the run |
+| `remember` | MODERATE | | Propose a memory item (content, scope, tags, optional importance) | limited by `memory_scope.write`; sensitivity guard refuses secrets and personal identifiers; exact/near duplicates reused or merged (never into a person's own words); global scope lands as `pending`; a tainted run's note is marked and capped at low importance; visible and editable in Memory |
+| `clipboard_write` | MODERATE | | Ask the UI to offer a "copy" action | UI-mediated: a toast with a Copy button; nothing is copied without the person's click; there is intentionally **no** `clipboard_read` |
+
+24 tools are built and registered today (everything above). Every built-in agent has `search_memory`; those allowed to write memory (all but the Orchestrator, Planner, Critic and Verifier) also have `remember`.
+
+**Private runs.** A run started with "Keep on this device" only uses local models (router), and tools that can send data off the machine (`Capability.NET_HTTP`, `NET_SEARCH`, `MCP`: `http_request`, `web_search`, every MCP tool) are neither shown to the model nor executable (`ToolExecutor` refuses them with `private_run`). `run_command` with `network=true` is refused in a private run.
+
+Deliberately not built-in yet (registered later through the same interface): Gmail, Drive, Calendar, Notion, Slack, GitHub, Figma, Supabase, browser automation, Spotify, Telegram, WhatsApp. Anything that sends data to a third party is HIGH and always asks.
+
+## Sandbox (`SandboxManager`)
+
+Interface: `run(spec: SandboxSpec) -> SandboxResult` with pluggable backends.
+
+**Backend: local subprocess (built).** Each run gets a fresh temp directory under the project's `temp/`; scrubbed environment (`PATH`, `LANG`, `HOME`=temp dir; nothing inherited — no API keys, no `NEXUS_*`); wall-clock timeout with whole-process-group kill; output capped; on POSIX `RLIMIT_CPU`, `RLIMIT_AS`, `RLIMIT_FSIZE`, `RLIMIT_NPROC` and `RLIMIT_NOFILE`; Python runs with `-I -B` (isolated mode); network isolation through `unshare --net` where the OS permits it. `SandboxResult.enforced` lists exactly which limits were applied on this machine (Windows enforces timeout, env scrubbing and cwd only) and the UI shows it in System Health. **A subprocess sandbox is defence in depth, not a security boundary against hostile code**; the AST scan, approval flow and taint tracking exist because of that.
+
+**Backend: Docker (interface only).** `SandboxSpec` already carries image, mounts and network mode so a `DockerSandbox` can be added without touching tools.
+
+## Registry behaviour
+
+- `ToolRegistry.register(tool)` rejects duplicate names and invalid schemas; unregister removes a source's tools atomically (used when an MCP server stops).
+- `allowed_for(agent.tools, disabled=…)` returns the intersection of the agent's allow-list and the tools the user has not switched off (Settings → Tools & approvals), minus outside-reaching tools for private runs. That list is exactly what the model is shown, so it never sees a tool it cannot call; the executor re-checks every call anyway.
+- Built-ins are mirrored to the `tools` table at startup so the UI can list them and users can disable individual tools.
+- MCP-discovered tools register as `mcp__<server>__<tool>`, default `risk_level=HIGH`, `returns_untrusted=True`; tool annotations from the server (e.g. read-only hints) are treated as *hints shown to the user*, not as permission.
+
+## MCP tools (built in Phase 9)
+
+Add a server under **Settings → Integrations**: a program on this computer (stdio: command, arguments, working folder, environment variables, secret variables) or a web address (streamable HTTP: headers, secret headers). NEXUS starts it, asks what it offers, and registers each tool:
+
+| Property | Value |
+|---|---|
+| Name | `mcp__<server>__<tool>` (characters outside `[A-Za-z0-9_-]` become `_`; clashes get `_2`, `_3`) |
+| Risk | The server's risk level: HIGH by default; MODERATE or VERY_HIGH if the person chooses; never SAFE |
+| Capability | `mcp`: never shown to or run in a private run |
+| Arguments | The server's JSON Schema, checked by NEXUS before policy (type, required, enum, bounds, lengths, items, additionalProperties, anyOf/oneOf/allOf; `pattern` is left to the server) |
+| Result | Text content joined; structured content as JSON when there is no text; images, audio and binary resources described, not included; an `isError` result is a tool failure (`mcp_tool_error`) the agent can read |
+| Approval card | "Sends these arguments to the MCP server “x”, which runs its tool “y”", plus the server's own hints |
+| Time limit | The server's per-call limit (default 60 s); an abandoned call is cancelled on the server |
+
+Agents use MCP tools only when they are on the agent's allow-list (tick them in the agent's tools, or use a pattern such as `mcp__github__*`). A tool whose description looks like instructions to an AI, or whose definition changed since it was last seen, is switched off until the person turns it on in Tools & approvals or on the server's card. Stopping a server withdraws its tools (a call is refused as an unknown tool); the person's on/off choices are kept for next time. Resources and prompts are listed on the server's card, and a resource can be opened there; agents do not read resources or use server prompts yet.
+
+## Tool results
+
+Results are size-capped, redacted for known secret patterns, stored on the `ToolCall`, emitted as `TOOL_COMPLETED`, and returned to the agent wrapped in an **untrusted** fence. A tool with `returns_untrusted=True` also adds its source (URL, file path, MCP server) to the run's **taint set**, which the policy engine and the approval card use (see SECURITY.md §6).
